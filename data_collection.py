@@ -289,9 +289,9 @@ if __name__ == "__main__":
         realsense_sensor = realsense()  
         seek_camera = seekthermal(data_format="color")
         mlx_sensor = MLXSensor("COM6")
-        #senxor_sensor_m08 = senxor(sensor_port="COM5")
+        senxor_sensor_m08 = senxor(sensor_port="COM10")
         
-        #num_rows_m08, num_cols_m08 = senxor_sensor_m08.get_temperature_map_shape()
+        num_rows_m08, num_cols_m08 = senxor_sensor_m08.get_temperature_map_shape()
 
         while True:
             realsense_depth_image, realsense_color_image = realsense_sensor.get_frame()
@@ -299,11 +299,11 @@ if __name__ == "__main__":
 
             seek_camera_frame = seek_camera.get_frame()
             MLX_temperature_map = mlx_sensor.get_temperature_map()
-            # senxor_temperature_map_m08, header1 = senxor_sensor_m08.get_temperature_map()
+            senxor_temperature_map_m08, header1 = senxor_sensor_m08.get_temperature_map()
 
             #seek_camera_frame = None
-            MLX_temperature_map = None
-            senxor_temperature_map_m08 = None
+            #MLX_temperature_map = None
+            #senxor_temperature_map_m08 = None
             
 
             realsense_color_image = cv2.resize(realsense_color_image, (320, 240))
