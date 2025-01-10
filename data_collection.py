@@ -11,6 +11,8 @@ import cv2 as cv
 from pprint import pprint
 import argparse
 import pyrealsense2 as rs
+import matplotlib.pyplot as plt
+
 from seekcamera import (
     SeekCameraIOType,
     SeekCameraColorPalette,
@@ -263,7 +265,7 @@ if __name__ == "__main__":
     Visualization only:
         python data_collection.py --save_data 0
     Collecting data:
-        python data_collection.py --collection_duration 600 --save_data 1 --save_path RawData/exp01 
+        python data_collection.py --collection_duration 600 --save_data 1 --save_path RawData 
 
     '''
 
@@ -320,11 +322,12 @@ if __name__ == "__main__":
                 seek_camera_frame = np.zeros((240, 320, 3), dtype=np.uint8)
                 
             if MLX_temperature_map is not None:
+                print(MLX_temperature_map, "MAP above")
                 MLX_temperature_map = MLX_temperature_map.reshape(24, 32)
                 MLX_temperature_map = np.flip(MLX_temperature_map, 0)
                 MLX_temperature_map = mlx_sensor.SubpageInterpolating(MLX_temperature_map)
                 MLX_temperature_map = MLX_temperature_map.astype(np.uint8)
-                # min_temp, max_temp = np.min(MLX_temperature_map), np.max(MLX_temperature_map)
+                min_temp, max_temp = np.min(MLX_temperature_map), np.max(MLX_temperature_map)
                 MLX_temperature_map = cv2.normalize(MLX_temperature_map, None, 0, 255, cv2.NORM_MINMAX)
                 MLX_temperature_map = cv2.resize(MLX_temperature_map, (320, 240), interpolation=cv2.INTER_NEAREST)
                 MLX_temperature_map = cv2.applyColorMap(MLX_temperature_map, cv2.COLORMAP_JET)
@@ -351,14 +354,24 @@ if __name__ == "__main__":
         seek_camera.close()
         mlx_sensor.close()
         senxor_sensor_m08.close()
+    
+    #===============================save data=============================================
+
     else:
         collection_duration = args.collection_duration
         print("Start collecting data for {} seconds".format(collection_duration))
     
+        # realsense_sensor = realsense()  
+        # seek_camera = seekthermal(data_format= "temperature")
+        # mlx_sensor = MLXSensor("/dev/ttyUSB0")
+        # senxor_sensor_m08 = senxor(sensor_port="/dev/ttyACM0")
+
         realsense_sensor = realsense()  
-        seek_camera = seekthermal(data_format= "temperature")
-        mlx_sensor = MLXSensor("/dev/ttyUSB0")
-        senxor_sensor_m08 = senxor(sensor_port="/dev/ttyACM0")
+        seek_camera = seekthermal(data_format="color")
+        mlx_sensor = MLXSensor("COM6")
+        senxor_sensor_m08 = senxor(sensor_port="COM10")
+        
+        num_rows_m08, num_cols_m08 = senxor_sensor_m08.get_temperature_map_shape()
         
         start_time = time.time()
         collection_counter = 0
@@ -368,15 +381,22 @@ if __name__ == "__main__":
             seek_camera_frame = seek_camera.get_frame()
             MLX_temperature_map = mlx_sensor.get_temperature_map()
             senxor_temperature_map_m08, header1 = senxor_sensor_m08.get_temperature_map()
+            senxor_temperature_map_m08 = senxor_temperature_map_m08.reshape(num_cols_m08, num_rows_m08)
             num_cols_m08, num_rows_m08 = senxor_sensor_m08.get_temperature_map_shape()
 
-            if realsense_depth_image is None or realsense_color_image is None or seek_camera_frame is None or MLX_temperature_map is None or senxor_temperature_map_m08 is None or senxor_temperature_map_m16 is None:
+            if realsense_depth_image is None or realsense_color_image is None or seek_camera_frame is None or MLX_temperature_map is None or senxor_temperature_map_m08 is None: # or senxor_temperature_map_m16 is None:
                 continue
             else:
                 timestamp = time.time()
                 np.save(f"{args.save_path}/realsense_depth/{timestamp}.npy", realsense_depth_image)
                 np.save(f"{args.save_path}/realsense_color/{timestamp}.npy", realsense_color_image)
                 np.save(f"{args.save_path}/seek_thermal/{timestamp}.npy", seek_camera_frame)
+
+                # image = MLX_temperature_map
+                # plt.imshow(image)
+                # plt.title(dir)
+                # plt.show()
+
                 np.save(f"{args.save_path}/MLX/{timestamp}.npy", MLX_temperature_map)
                 np.save(f"{args.save_path}/senxor_m08/{timestamp}.npy", senxor_temperature_map_m08)
                 
