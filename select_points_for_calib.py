@@ -7,7 +7,7 @@ import numpy as np
 #depth_image = cv2.imread('depth_image.png', cv2.IMREAD_GRAYSCALE)
 
 thermal_image=np.load("color.npy")
-thermal_image=depth_image = cv2.cvtColor(thermal_image, cv2.COLOR_BGR2GRAY)
+thermal_image= cv2.cvtColor(thermal_image, cv2.COLOR_BGR2GRAY)
 depth_image=np.load("depth.npy")
 depth_image = cv2.rotate(depth_image, cv2.ROTATE_90_CLOCKWISE)
 

@@ -21,7 +21,7 @@ points = [
 ]
 
 # Define the rotation angle in degrees
-theta = 90  # Example: rotate by 45 degrees
+theta = 45  # Example: rotate by 45 degrees
 
 # Rotate each point and print the new coordinates
 rotated_points = []
