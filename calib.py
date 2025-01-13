@@ -2,6 +2,10 @@ import numpy as np
 import yaml
 import matplotlib.pyplot as plt
 import cv2 as cv
+#
+#根据需求，认为需要把distance对应到thermal上，即将distance通过resize，平移和旋转贴合到thermal上。
+#下方示例是将thermal通过转换对应到distance上，只要把thermal和distance的文件交换即可。
+#
 
 # Load the YAML file
 with open('config.yaml', 'r') as file:
@@ -62,58 +66,13 @@ print(R)
 print("Translation Vector (T):")
 print(T)
 
-#=============testing
-
-# # Step 1: Center the points
-# thermal_centroid = np.mean(thermal_points, axis=0)
-# depth_centroid = np.mean(depth_points, axis=0)
-
-# thermal_centered = thermal_points - thermal_centroid
-# depth_centered = depth_points - depth_centroid
-
-
-# # Step 2: Compute the covariance matrix
-# H = thermal_centered.T @ depth_centered
-
-# # Step 3: Perform Singular Value Decomposition (SVD)
-# U, S, Vt = np.linalg.svd(H)
-
-# # Step 4: Compute the rotation matrix R
-# R = Vt.T @ U.T
-
-# # Handle reflection case (ensure determinant of R is 1)
-# if np.linalg.det(R) < 0:
-#     print("determinant of R is negative, flip it.")
-#     Vt[-1, :] *= -1
-#     R = Vt.T @ U.T
-
-# # Step 5: Compute the translation vector T
-# T = depth_centroid - R @ thermal_centroid
-
-# # Print the results
-# print("Rotation Matrix (R):")
-# print(R)
-# print("Translation Vector (T):")
-# print(T)
-
 # =================== now we map the depth image to thermal array ===============
 
 # Load the depth image
 # thermal = np.load("color.npy")
 thermal_image=np.load("color.npy")
 thermal= cv.cvtColor(thermal_image, cv.COLOR_BGR2GRAY)
-#depth_image = cv.rotate(depth_image, cv.ROTATE_90_CLOCKWISE)
-# Define the padding size (top, bottom, left, right)
-# top = 200
-# bottom = 200
-# left = 200
-# right = 200
 
-# Zero-pad the image using cv2.copyMakeBorder
-# padded_image = cv.copyMakeBorder(thermal, top, bottom, left, right, cv.BORDER_CONSTANT, value=[0, 0, 0])
-
-# Define the scaling factor, rotation matrix, and translation vector
-# s = dist_t / dist_d  # Scaling factor (computed earlier)
 
 # Get the shape of the depth image
 height, width = thermal.shape
@@ -123,8 +82,7 @@ x, y = np.meshgrid(np.arange(width), np.arange(height))
 coords = np.vstack((x.flatten(), y.flatten()))  # Shape: (2, N), where N = height * width
 
 # Step 1: Apply scaling
-#coords_scaled = s * coords
-coords_scaled = coords #DEBUG ONLY==============================================
+coords_scaled = coords
 
 # Step 2: Apply rotation and translation
 coords_transformed = np.dot(R, coords_scaled) + T[:, np.newaxis]
