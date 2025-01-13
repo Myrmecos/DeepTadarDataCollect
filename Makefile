@@ -13,3 +13,6 @@ visualize:
 
 calib:
 	D:/ProgramData/miniconda/envs/py3.8/python.exe calib.py
+
+select:
+	D:/ProgramData/miniconda/envs/py3.8/python.exe select_points_for_calib.py 

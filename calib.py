@@ -27,54 +27,95 @@ dist_t = np.linalg.norm(P_t[1] - P_t[0])  # Distance between two points in therm
 s = dist_t / dist_d  # Scaling factor
 print("scaling factor (thermal/depth) is:", s)
 
-# Step 2: Rescale depth image
-P_d_scaled = s * P_d
+# =============== now we calculate rotation and transformation ========
+# # Step 1: Center the points
+# thermal_centroid = np.mean(thermal_points, axis=0)
+# depth_centroid = np.mean(depth_points, axis=0)
 
-# Step 3: Compute rotation and translation
-# Center the points
-center_d = np.mean(P_d_scaled, axis=0)
-center_t = np.mean(P_t, axis=0)
-P_d_centered = P_d_scaled - center_d
-P_t_centered = P_t - center_t
+# thermal_centered = thermal_points - thermal_centroid
+# depth_centered = depth_points - depth_centroid
 
-# Compute the covariance matrix
-H = P_d_centered.T @ P_t_centered
 
-# Singular Value Decomposition
+# # Step 2: Compute the covariance matrix
+# H = depth_centered.T @ thermal_centered
+
+# # Step 3: Perform Singular Value Decomposition (SVD)
+# U, S, Vt = np.linalg.svd(H)
+
+# # Step 4: Compute the rotation matrix R
+# R = Vt.T @ U.T
+
+# # Handle reflection case (ensure determinant of R is 1)
+# if np.linalg.det(R) < 0:
+#     print("determinant of R is negative, flip it.")
+#     Vt[-1, :] *= -1
+#     R = Vt.T @ U.T
+
+# # Step 5: Compute the translation vector T
+# T = thermal_centroid - R @ depth_centroid
+
+# # Print the results
+# print("Rotation Matrix (R):")
+# print(R)
+# print("Translation Vector (T):")
+# print(T)
+
+#=============testing
+
+# Step 1: Center the points
+thermal_centroid = np.mean(thermal_points, axis=0)
+depth_centroid = np.mean(depth_points, axis=0)
+
+thermal_centered = thermal_points - thermal_centroid
+depth_centered = depth_points - depth_centroid
+
+
+# Step 2: Compute the covariance matrix
+H = thermal_centered.T @ depth_centered
+
+# Step 3: Perform Singular Value Decomposition (SVD)
 U, S, Vt = np.linalg.svd(H)
 
-# Rotation matrix
+# Step 4: Compute the rotation matrix R
 R = Vt.T @ U.T
 
-# Translation vector
-T = center_t - R @ center_d
+# Handle reflection case (ensure determinant of R is 1)
+if np.linalg.det(R) < 0:
+    print("determinant of R is negative, flip it.")
+    Vt[-1, :] *= -1
+    R = Vt.T @ U.T
 
-# print("Rotation:\n", R)
-# print("Translation:\n", T)
+# Step 5: Compute the translation vector T
+T = depth_centroid - R @ thermal_centroid
 
-# # Step 4: Apply transformation
-# P_d_transformed = (R @ P_d_scaled.T).T + T
+# Print the results
+print("Rotation Matrix (R):")
+print(R)
+print("Translation Vector (T):")
+print(T)
 
-# # Now P_d_transformed should be aligned with P_t
-# print("before scaled: ")
-# print("after scaled: ", P_d_scaled.shape)
-# print("before transform: ", P_d_centered.shape)
-# print("afte transform: ", P_d_transformed.shape)
+# =================== now we map the depth image to thermal array ===============
 
-depth_image=np.load("depth.npy")
-#shape
-depth_image = cv.cvtColor(depth_image, cv.COLOR_BGR2GRAY)
-print(depth_image.shape)
+# Load the depth image
+depth_image = np.load("depth.npy")
+depth_image = cv.rotate(depth_image, cv.ROTATE_90_CLOCKWISE)
+
+# Define the scaling factor, rotation matrix, and translation vector
+s = dist_t / dist_d  # Scaling factor (computed earlier)
+
+# Get the shape of the depth image
 height, width = depth_image.shape
-#grid of coordinates for depth image
+
+# Create a grid of coordinates for the depth image
 x, y = np.meshgrid(np.arange(width), np.arange(height))
-coords = np.vstack((x.flatten(), y.flatten()))
+coords = np.vstack((x.flatten(), y.flatten()))  # Shape: (2, N), where N = height * width
 
 # Step 1: Apply scaling
 coords_scaled = s * coords
 
 # Step 2: Apply rotation and translation
 coords_transformed = np.dot(R, coords_scaled) + T[:, np.newaxis]
+print("after rotation: ", coords_transformed)
 
 # Reshape the transformed coordinates back to the image shape
 x_transformed = coords_transformed[0, :].reshape(height, width)
@@ -94,8 +135,8 @@ values = depth_image.flatten()
 transformed_depth = griddata(points, values, (x_transformed, y_transformed), method='linear')
 
 # Step 4: Visualize the transformed depth image
+print(transformed_depth)
 plt.imshow(transformed_depth, cmap='gray')
 plt.title("Transformed Depth Image")
 plt.colorbar()
 plt.show()
-
