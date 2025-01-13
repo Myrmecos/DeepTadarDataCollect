@@ -9,3 +9,7 @@ clean:
 
 visualize: 
 	D:/ProgramData/miniconda/envs/py3.8/python.exe "c:/Users/Nick LIU/Desktop/winter project/DeepTADARData/DeepTADARDataCollection/visualize.py"
+
+
+calib:
+	D:/ProgramData/miniconda/envs/py3.8/python.exe calib.py
