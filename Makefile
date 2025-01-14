@@ -16,3 +16,6 @@ calib:
 
 select:
 	D:/ProgramData/miniconda/envs/py3.8/python.exe select_points_for_calib.py 
+
+mock: 
+	D:/ProgramData/miniconda/envs/py3.8/python.exe mock_data_prepare.py

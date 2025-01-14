@@ -6,10 +6,10 @@ import numpy as np
 #transform_image = cv2.imread('transform_image.png', cv2.IMREAD_GRAYSCALE)
 #reference_image = cv2.imread('reference_image.png', cv2.IMREAD_GRAYSCALE)
 
-transform_image=np.load("depth.npy")
-reference_image=np.load("color.npy")
-reference_image= cv2.cvtColor(reference_image, cv2.COLOR_BGR2GRAY)
-transform_image = cv2.rotate(transform_image, cv2.ROTATE_90_CLOCKWISE) #TESTING ONLY!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+transform_image=np.load("ori.npy") #image to be rotated, transform and resized
+reference_image=np.load("trans.npy")
+#reference_image= cv2.cvtColor(reference_image, cv2.COLOR_BGR2GRAY)
+#transform_image = cv2.rotate(transform_image, cv2.ROTATE_90_CLOCKWISE) #TESTING ONLY!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 print(transform_image.shape)
 print(reference_image.shape)

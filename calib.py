@@ -70,13 +70,18 @@ print(T)
 
 # Load the reference image
 # transform = np.load("color.npy")
-transform_image=np.load("color.npy")
+transform_image=np.load("ori.npy")
 
 # Define the padding size (top, bottom, left, right)
-top = 640-480
-bottom = 0
-left = 0
-right = 0
+print("image shape:", transform_image.shape)
+if (transform_image.shape[1]-transform_image.shape[0]>0):
+    top = 0 #abs(transform_image.shape[1]-transform_image.shape[0])
+    bottom = abs(transform_image.shape[1]-transform_image.shape[0])
+    left = 0
+    right = 0
+else: 
+    # we will check later how to deal with a tall image
+    exit(1)
 #Zero-pad the image using cv2.copyMakeBorder
 transform_image = cv.copyMakeBorder(transform_image, top, bottom, left, right, cv.BORDER_CONSTANT, value=[0, 0, 0])
 # plt.imshow(transform_image , cmap='gray')
@@ -86,11 +91,12 @@ transform_image = cv.copyMakeBorder(transform_image, top, bottom, left, right, c
 
 
 
-transform_image = cv.rotate(transform_image, cv.ROTATE_90_CLOCKWISE) #testing only!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-transform= cv.cvtColor(transform_image, cv.COLOR_BGR2GRAY) #testing only!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#transform_image = cv.rotate(transform_image, cv.ROTATE_90_CLOCKWISE) #testing only!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#transform= cv.cvtColor(transform_image, cv.COLOR_BGR2GRAY) #testing only!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
 # Get the shape of the reference image
+transform = transform_image
 height, width = transform.shape
 
 # Create a grid of coordinates for the reference image
