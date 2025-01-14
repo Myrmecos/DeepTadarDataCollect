@@ -2,6 +2,8 @@ import numpy as np
 import yaml
 import matplotlib.pyplot as plt
 import cv2 as cv
+from scipy.interpolate import griddata
+
 #
 #根据需求，认为需要把distance对应到transform上，即将distance通过resize，平移和旋转贴合到transform上。
 #下方示例是将transform通过转换对应到distance上，只要把transform和distance的文件交换即可。
@@ -33,7 +35,7 @@ print("scaling factor (transform/reference) is:", s)
 
 reference_points = P_d*s
 
-# =============== now we calculate rotation and transformation ========
+# =============== now we calculate rotation and transformation ========================
 # Step 1: Center the points
 transform_centroid = np.mean(transform_points, axis=0)
 reference_centroid = np.mean(reference_points, axis=0)
@@ -66,7 +68,7 @@ print(R)
 print("Translation Vector (T):")
 print(T)
 
-# =================== now we map the transform array to reference image===============
+# =================== now we map the transform array to reference image==========================
 
 # Load the reference image
 # transform = np.load("color.npy")
@@ -83,17 +85,14 @@ else:
     # we will check later how to deal with a tall image
     exit(1)
 #Zero-pad the image using cv2.copyMakeBorder
-transform_image = cv.copyMakeBorder(transform_image, top, bottom, left, right, cv.BORDER_CONSTANT, value=[0, 0, 0])
+transform_image = cv.copyMakeBorder(transform_image, top, bottom, left, right, cv.BORDER_CONSTANT, value=np.nan)
 # plt.imshow(transform_image , cmap='gray')
 # plt.title("Transformed reference Image")
 # plt.colorbar()
 # plt.show()
 
-
-
 #transform_image = cv.rotate(transform_image, cv.ROTATE_90_CLOCKWISE) #testing only!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #transform= cv.cvtColor(transform_image, cv.COLOR_BGR2GRAY) #testing only!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
 
 # Get the shape of the reference image
 transform = transform_image
@@ -115,25 +114,31 @@ x_transformed = coords_transformed[0, :].reshape(height, width)
 y_transformed = coords_transformed[1, :].reshape(height, width)
 
 # Step 3: Interpolate the reference values at the transformed coordinates
-from scipy.interpolate import griddata
 
 # Create a grid of original coordinates
 grid_x, grid_y = np.meshgrid(np.arange(width), np.arange(height))
+print("meshgrid ok")
 
 # Flatten the reference image and original coordinates
 points = np.vstack((grid_x.flatten(), grid_y.flatten())).T
 values = transform.flatten()
+print("flatten ok")
 
 # Interpolate the reference values at the transformed coordinates
 transformed_reference = griddata(points, values, (x_transformed, y_transformed), method='linear')
+print("transform_reference ok")
 
 #resize
 # Compute the new dimensions
 new_width = int(transformed_reference.shape[1] / s)
 new_height = int(transformed_reference.shape[0] / s)
 
+print("transform ok")
+
 # Resize the distance image using interpolation
 resized_distance = cv.resize(transformed_reference, (new_width, new_height), interpolation=cv.INTER_LINEAR)
+
+print("resize ok")
 
 # Step 4: Visualize the transformed reference image
 print(resized_distance)
