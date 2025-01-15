@@ -139,6 +139,7 @@ print("transform ok")
 # Resize the distance image using interpolation
 #resized_distance = cv.resize(transformed_reference, (new_width, new_height), interpolation=cv.INTER_LINEAR)
 transformed_reference = map_coordinates(transform_image, [y_transformed, x_transformed], order=1, mode='constant', cval=np.nan)
+transformed_reference = cv.resize(transformed_reference, (int(transform.shape[0]/s), int(transform.shape[1]/s)), interpolation=cv.INTER_AREA)
 print("resize ok")
 
 # Step 4: Visualize the transformed reference image
