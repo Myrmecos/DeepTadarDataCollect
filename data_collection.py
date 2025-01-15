@@ -285,107 +285,45 @@ if __name__ == "__main__":
             os.makedirs(args.save_path + "/seek_thermal/")
             os.makedirs(args.save_path + "/MLX/")
             os.makedirs(args.save_path + "/senxor_m08/")
+            os.makedirs(args.save_path + "/senxor_m08_1/")
         else:
             print(f"The directory {args.save_path} already exists")
             exit(1)
     
-    if args.save_data == 0:
-        realsense_sensor = realsense()  
-        seek_camera = seekthermal(data_format="color")
-        mlx_sensor = MLXSensor("/dev/ttyUSB0")
-        senxor_sensor_m08 = senxor(sensor_port="/dev/ttyACM0")
-        senxor_sensor_m08_1 = senxor(sensor_port="/dev/ttyACM1")
-        
-        num_rows_m08, num_cols_m08 = senxor_sensor_m08.get_temperature_map_shape()
-        num_rows_m08_1, num_cols_m08_1 = senxor_sensor_m08_1.get_temperature_map_shape()
-
-        framecnt = 0
-        while True:
-            print("===========debug: start collecting data, frame:", framecnt, "================") 
-            framecnt+=1
-            realsense_depth_image, realsense_color_image = realsense_sensor.get_frame()
-            seek_camera_frame = seek_camera.get_frame()
-            MLX_temperature_map = mlx_sensor.get_temperature_map()
-            senxor_temperature_map_m08, header1 = senxor_sensor_m08.get_temperature_map()
-            senxor_temperature_map_m08_1, header2 = senxor_sensor_m08_1.get_temperature_map()
-
-            realsense_color_image = cv2.resize(realsense_color_image, (320, 240))
-            realsense_depth_image = cv2.resize(realsense_depth_image, (320, 240))   
-            realsense_depth_image = cv2.applyColorMap(cv2.convertScaleAbs(realsense_depth_image, alpha=0.03), cv2.COLORMAP_JET)
-            if seek_camera_frame is not None:
-                if seek_camera_frame.shape[0] > 201:
-                    seek_camera_frame = cv2.resize(argb2bgr(seek_camera_frame), (320, 240))
-                else:
-                    seek_camera_frame = np.flip(np.flip(cv2.resize(argb2bgr(seek_camera_frame), (320, 240)),0),1)
-            else:
-                seek_camera_frame = np.zeros((240, 320, 3), dtype=np.uint8)
-                
-            if MLX_temperature_map is not None:
-                MLX_temperature_map = MLX_temperature_map.reshape(24, 32)
-                #MLX_temperature_map = np.flip(MLX_temperature_map, 0)
-                MLX_temperature_map = np.flip(MLX_temperature_map, 1)
-                MLX_temperature_map = mlx_sensor.SubpageInterpolating(MLX_temperature_map)
-                MLX_temperature_map = MLX_temperature_map.astype(np.uint8)
-                # min_temp, max_temp = np.min(MLX_temperature_map), np.max(MLX_temperature_map)
-                MLX_temperature_map = cv2.normalize(MLX_temperature_map, None, 0, 255, cv2.NORM_MINMAX)
-                MLX_temperature_map = cv2.resize(MLX_temperature_map, (320, 240), interpolation=cv2.INTER_NEAREST)
-                MLX_temperature_map = cv2.applyColorMap(MLX_temperature_map, cv2.COLORMAP_JET)
-            else:
-                MLX_temperature_map = np.zeros((240, 320, 3), dtype=np.uint8)
-                
-            if senxor_temperature_map_m08 is not None:
-                senxor_temperature_map_m08 = senxor_temperature_map_m08.reshape(num_cols_m08, num_rows_m08)
-                senxor_temperature_map_m08 = np.flip(senxor_temperature_map_m08, 0)
-                senxor_temperature_map_m08 = senxor_temperature_map_m08.astype(np.uint8)
-                senxor_temperature_map_m08 = cv2.normalize(senxor_temperature_map_m08, None, 0, 255, cv2.NORM_MINMAX)
-                senxor_temperature_map_m08 = cv2.resize(senxor_temperature_map_m08, (320, 240), interpolation=cv2.INTER_NEAREST)
-                senxor_temperature_map_m08 = cv2.applyColorMap(senxor_temperature_map_m08, cv2.COLORMAP_JET)
-            else:
-                senxor_temperature_map_m08 = np.zeros((240, 320, 3), dtype=np.uint8)
-
-            if senxor_temperature_map_m08_1 is not None:
-                senxor_temperature_map_m08_1 = senxor_temperature_map_m08_1.reshape(num_cols_m08_1, num_rows_m08_1)
-                senxor_temperature_map_m08_1 = np.flip(senxor_temperature_map_m08_1, 0)
-                senxor_temperature_map_m08_1 = senxor_temperature_map_m08_1.astype(np.uint8)
-                senxor_temperature_map_m08_1 = cv2.normalize(senxor_temperature_map_m08_1, None, 0, 255, cv2.NORM_MINMAX)
-                senxor_temperature_map_m08_1 = cv2.resize(senxor_temperature_map_m08_1, (320, 240), interpolation=cv2.INTER_NEAREST)
-                senxor_temperature_map_m08_1 = cv2.applyColorMap(senxor_temperature_map_m08_1, cv2.COLORMAP_JET)
-            else:
-                senxor_temperature_map_m08_1 = np.zeros((240, 320, 3), dtype=np.uint8)
-                
-            print(realsense_depth_image.shape, realsense_color_image.shape, seek_camera_frame.shape,  senxor_temperature_map_m08.shape, MLX_temperature_map.shape,)
-            interm1 = np.concatenate((realsense_depth_image, realsense_color_image, seek_camera_frame), axis=1)
-            interm2 = np.concatenate((senxor_temperature_map_m08, MLX_temperature_map, senxor_temperature_map_m08_1), axis=1)
-            final_image = np.concatenate((interm1, interm2), axis=0)
-            cv2.imshow("Final Image", final_image)
-
-            #cv2.imshow("Realsense Color Image", realsense_color_image)
-            key = cv.waitKey(1)
-            if key in [ord("q"), ord('Q'), 27]:
-                break
-        seek_camera.close()
-        mlx_sensor.close()
-        senxor_sensor_m08.close()
-    else:
-        collection_duration = args.collection_duration
-        print("Start collecting data for {} seconds".format(collection_duration))
     
-        realsense_sensor = realsense()  
-        seek_camera = seekthermal(data_format= "temperature")
-        mlx_sensor = MLXSensor("/dev/ttyUSB0")
-        senxor_sensor_m08 = senxor(sensor_port="/dev/ttyACM0")
-        
-        start_time = time.time()
-        collection_counter = 0
+    realsense_sensor = realsense()  
+    seek_camera = seekthermal(data_format="color")
+    mlx_sensor = MLXSensor("/dev/ttyUSB0")
+    senxor_sensor_m08 = senxor(sensor_port="/dev/ttyACM0")
+    senxor_sensor_m08_1 = senxor(sensor_port="/dev/ttyACM1")
+    
+    num_rows_m08, num_cols_m08 = senxor_sensor_m08.get_temperature_map_shape()
+    num_rows_m08_1, num_cols_m08_1 = senxor_sensor_m08_1.get_temperature_map_shape()
 
-        while True:
-            realsense_depth_image, realsense_color_image = realsense_sensor.get_frame()
-            seek_camera_frame = seek_camera.get_frame()
-            MLX_temperature_map = mlx_sensor.get_temperature_map()
-            senxor_temperature_map_m08, header1 = senxor_sensor_m08.get_temperature_map()
-            num_cols_m08, num_rows_m08 = senxor_sensor_m08.get_temperature_map_shape()
+    framecnt = 0
+    collection_counter = 0
+    start_time = time.time()
+    collection_duration = args.collection_duration
+    while True:
+        print("===========debug: start collecting data, frame:", framecnt, "================") 
+        framecnt+=1
+        realsense_depth_image, realsense_color_image = realsense_sensor.get_frame()
+        seek_camera_frame = seek_camera.get_frame()
+        MLX_temperature_map = mlx_sensor.get_temperature_map()
+        senxor_temperature_map_m08, header1 = senxor_sensor_m08.get_temperature_map()
+        senxor_temperature_map_m08_1, header2 = senxor_sensor_m08_1.get_temperature_map()
 
-            if realsense_depth_image is None or realsense_color_image is None or seek_camera_frame is None or MLX_temperature_map is None or senxor_temperature_map_m08 is None or senxor_temperature_map_m16  is None:
+        realsense_color_image = cv2.resize(realsense_color_image, (320, 240))
+        realsense_depth_image = cv2.resize(realsense_depth_image, (320, 240))   
+        realsense_depth_image = cv2.applyColorMap(cv2.convertScaleAbs(realsense_depth_image, alpha=0.03), cv2.COLORMAP_JET)
+
+
+
+
+
+        # save data part: 
+        if args.save_data==1:
+            if realsense_depth_image is None or realsense_color_image is None or seek_camera_frame is None or MLX_temperature_map is None or senxor_temperature_map_m08 is None or senxor_temperature_map_m08_1  is None:
                 continue
             else:
                 timestamp = time.time()
@@ -394,6 +332,7 @@ if __name__ == "__main__":
                 np.save(f"{args.save_path}/seek_thermal/{timestamp}.npy", seek_camera_frame)
                 np.save(f"{args.save_path}/MLX/{timestamp}.npy", MLX_temperature_map)
                 np.save(f"{args.save_path}/senxor_m08/{timestamp}.npy", senxor_temperature_map_m08)
+                np.save(f"{args.save_path}/senxor_m08_1/{timestamp}.npy", senxor_temperature_map_m08_1)
                 
                 collection_counter += 1
                 time_lasting = time.time() - start_time
@@ -402,6 +341,7 @@ if __name__ == "__main__":
                     print(f"Realsense depth and color image collected at {timestamp}", realsense_depth_image.shape, realsense_color_image.shape)
                     print(f"MLX temperature map collected at {timestamp}", MLX_temperature_map.shape)
                     print(f"Senxor temperature map m08 collected at {timestamp}", senxor_temperature_map_m08.shape)
+                    print(f"Senxor temperature map m08_1 collected at {timestamp}", senxor_temperature_map_m08_1.shape)
                     print("-------------------------------------------------------------")
                 if time_lasting > collection_duration:
                     print(f"Seek camera frame collected at {timestamp}", seek_camera_frame.shape)
@@ -409,6 +349,7 @@ if __name__ == "__main__":
                     print(f"MLX temperature map collected at {timestamp}", MLX_temperature_map.shape)
                     print(f"Senxor temperature map m08 collected at {timestamp}", senxor_temperature_map_m08.shape)
                     print(f"Total frames collected: {collection_counter}")
+                    print(f"Senxor temperature map m08_1 collected at {timestamp}", senxor_temperature_map_m08_1.shape)
                     print(f"Frame rate: {collection_counter / time_lasting} Hz")
 
                     # save the above as metadata in meta.log in the save_path
@@ -421,6 +362,59 @@ if __name__ == "__main__":
                         f.write(f"MLX temperature map collected at {timestamp} {MLX_temperature_map.shape}\n")
                         f.write(f"Senxor temperature map m08 collected at {timestamp} {senxor_temperature_map_m08.shape}\n")
                     break
-        seek_camera.close()
-        mlx_sensor.close()
-        senxor_sensor_m08.close()
+
+        # show all images
+        if seek_camera_frame is not None:
+            if seek_camera_frame.shape[0] > 201:
+                seek_camera_frame = cv2.resize(argb2bgr(seek_camera_frame), (320, 240))
+            else:
+                seek_camera_frame = np.flip(np.flip(cv2.resize(argb2bgr(seek_camera_frame), (320, 240)),0),1)
+        else:
+            seek_camera_frame = np.zeros((240, 320, 3), dtype=np.uint8)
+            
+        if MLX_temperature_map is not None:
+            MLX_temperature_map = MLX_temperature_map.reshape(24, 32)
+            #MLX_temperature_map = np.flip(MLX_temperature_map, 0)
+            MLX_temperature_map = np.flip(MLX_temperature_map, 1)
+            MLX_temperature_map = mlx_sensor.SubpageInterpolating(MLX_temperature_map)
+            MLX_temperature_map = MLX_temperature_map.astype(np.uint8)
+            # min_temp, max_temp = np.min(MLX_temperature_map), np.max(MLX_temperature_map)
+            MLX_temperature_map = cv2.normalize(MLX_temperature_map, None, 0, 255, cv2.NORM_MINMAX)
+            MLX_temperature_map = cv2.resize(MLX_temperature_map, (320, 240), interpolation=cv2.INTER_NEAREST)
+            MLX_temperature_map = cv2.applyColorMap(MLX_temperature_map, cv2.COLORMAP_JET)
+        else:
+            MLX_temperature_map = np.zeros((240, 320, 3), dtype=np.uint8)
+            
+        if senxor_temperature_map_m08 is not None:
+            senxor_temperature_map_m08 = senxor_temperature_map_m08.reshape(num_cols_m08, num_rows_m08)
+            senxor_temperature_map_m08 = np.flip(senxor_temperature_map_m08, 0)
+            senxor_temperature_map_m08 = senxor_temperature_map_m08.astype(np.uint8)
+            senxor_temperature_map_m08 = cv2.normalize(senxor_temperature_map_m08, None, 0, 255, cv2.NORM_MINMAX)
+            senxor_temperature_map_m08 = cv2.resize(senxor_temperature_map_m08, (320, 240), interpolation=cv2.INTER_NEAREST)
+            senxor_temperature_map_m08 = cv2.applyColorMap(senxor_temperature_map_m08, cv2.COLORMAP_JET)
+        else:
+            senxor_temperature_map_m08 = np.zeros((240, 320, 3), dtype=np.uint8)
+
+        if senxor_temperature_map_m08_1 is not None:
+            senxor_temperature_map_m08_1 = senxor_temperature_map_m08_1.reshape(num_cols_m08_1, num_rows_m08_1)
+            senxor_temperature_map_m08_1 = np.flip(senxor_temperature_map_m08_1, 0)
+            senxor_temperature_map_m08_1 = senxor_temperature_map_m08_1.astype(np.uint8)
+            senxor_temperature_map_m08_1 = cv2.normalize(senxor_temperature_map_m08_1, None, 0, 255, cv2.NORM_MINMAX)
+            senxor_temperature_map_m08_1 = cv2.resize(senxor_temperature_map_m08_1, (320, 240), interpolation=cv2.INTER_NEAREST)
+            senxor_temperature_map_m08_1 = cv2.applyColorMap(senxor_temperature_map_m08_1, cv2.COLORMAP_JET)
+        else:
+            senxor_temperature_map_m08_1 = np.zeros((240, 320, 3), dtype=np.uint8)
+            
+        print(realsense_depth_image.shape, realsense_color_image.shape, seek_camera_frame.shape,  senxor_temperature_map_m08.shape, MLX_temperature_map.shape,)
+        interm1 = np.concatenate((realsense_depth_image, realsense_color_image, seek_camera_frame), axis=1)
+        interm2 = np.concatenate((senxor_temperature_map_m08, MLX_temperature_map, senxor_temperature_map_m08_1), axis=1)
+        final_image = np.concatenate((interm1, interm2), axis=0)
+        cv2.imshow("Final Image", final_image)
+
+        #cv2.imshow("Realsense Color Image", realsense_color_image)
+        key = cv.waitKey(1)
+        if key in [ord("q"), ord('Q'), 27]:
+            break
+    seek_camera.close()
+    mlx_sensor.close()
+    senxor_sensor_m08.close()
