@@ -3,6 +3,7 @@ import yaml
 import matplotlib.pyplot as plt
 import cv2 as cv
 from scipy.interpolate import griddata
+from scipy.ndimage import map_coordinates
 
 #
 #根据需求，认为需要把distance对应到transform上，即将distance通过resize，平移和旋转贴合到transform上。
@@ -113,36 +114,36 @@ print("after rotation: ", coords_transformed)
 x_transformed = coords_transformed[0, :].reshape(height, width)
 y_transformed = coords_transformed[1, :].reshape(height, width)
 
-# Step 3: Interpolate the reference values at the transformed coordinates
+# # Step 3: Interpolate the reference values at the transformed coordinates
 
-# Create a grid of original coordinates
-grid_x, grid_y = np.meshgrid(np.arange(width), np.arange(height))
-print("meshgrid ok")
+# # Create a grid of original coordinates
+# grid_x, grid_y = np.meshgrid(np.arange(width), np.arange(height))
+# print("meshgrid ok")
 
-# Flatten the reference image and original coordinates
-points = np.vstack((grid_x.flatten(), grid_y.flatten())).T
-values = transform.flatten()
-print("flatten ok")
+# # Flatten the reference image and original coordinates
+# points = np.vstack((grid_x.flatten(), grid_y.flatten())).T
+# values = transform.flatten()
+# print("flatten ok")
 
-# Interpolate the reference values at the transformed coordinates
-transformed_reference = griddata(points, values, (x_transformed, y_transformed), method='linear')
-print("transform_reference ok")
+# # Interpolate the reference values at the transformed coordinates
+# transformed_reference = griddata(points, values, (x_transformed, y_transformed), method='linear')
+# print("transform_reference ok")
 
-#resize
-# Compute the new dimensions
-new_width = int(transformed_reference.shape[1] / s)
-new_height = int(transformed_reference.shape[0] / s)
+# #resize
+# # Compute the new dimensions
+# new_width = int(transformed_reference.shape[1] / s)
+# new_height = int(transformed_reference.shape[0] / s)
 
 print("transform ok")
 
 # Resize the distance image using interpolation
-resized_distance = cv.resize(transformed_reference, (new_width, new_height), interpolation=cv.INTER_LINEAR)
-
+#resized_distance = cv.resize(transformed_reference, (new_width, new_height), interpolation=cv.INTER_LINEAR)
+transformed_reference = map_coordinates(transform_image, [y_transformed, x_transformed], order=1, mode='constant', cval=np.nan)
 print("resize ok")
 
 # Step 4: Visualize the transformed reference image
-print(resized_distance)
-plt.imshow(resized_distance, cmap='gray')
+#print(transformed_reference)
+plt.imshow(transformed_reference, cmap='gray')
 plt.title("Transformed reference Image")
 plt.colorbar()
 plt.show()

@@ -291,7 +291,7 @@ if __name__ == "__main__":
         realsense_sensor = realsense()  
         seek_camera = seekthermal(data_format="color")
         mlx_sensor = MLXSensor("COM6")
-        senxor_sensor_m08 = senxor(sensor_port="COM10")
+        senxor_sensor_m08 = senxor(sensor_port="COM9")
         
         num_rows_m08, num_cols_m08 = senxor_sensor_m08.get_temperature_map_shape()
 
@@ -370,7 +370,7 @@ if __name__ == "__main__":
         realsense_sensor = realsense()  
         seek_camera = seekthermal(data_format="color")
         mlx_sensor = MLXSensor("COM6")
-        senxor_sensor_m08 = senxor(sensor_port="COM10")
+        senxor_sensor_m08 = senxor(sensor_port="COM9")
         
         num_rows_m08, num_cols_m08 = senxor_sensor_m08.get_temperature_map_shape()
         
