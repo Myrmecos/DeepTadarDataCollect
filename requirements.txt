@@ -1,0 +1,14 @@
+# python==3.7.16
+matplotlib==3.5.2
+numba==0.55.1
+numpy==1.21.5
+opencv_contrib_python
+opencv_python
+opencv_python_headless
+pandas
+plotly==5.9.0
+pyrealsense2==2.53.1.4623
+tqdm==4.64.1
+cmapy==0.6.6
+crcmod==1.7
+pyserial==3.5
