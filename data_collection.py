@@ -408,7 +408,7 @@ if __name__ == "__main__":
                         f.write(f"Realsense depth and color image collected at {timestamp} {realsense_depth_image.shape} {realsense_color_image.shape}\n")
                         f.write(f"MLX temperature map collected at {timestamp} {MLX_temperature_map.shape}\n")
                         f.write(f"Senxor temperature map m08 collected at {timestamp} {senxor_temperature_map_m08.shape}\n")
-                    break
+                    # break
 
         # show all images
         realsense_depth_image, realsense_color_image, seek_camera_frame, MLX_temperature_map, senxor_temperature_map_m08, senxor_temperature_map_m08_1 = realsense_depth_image_ori, realsense_color_image_ori, seek_camera_frame_ori, MLX_temperature_map_ori, senxor_temperature_map_m08_ori, senxor_temperature_map_m08_1_ori
