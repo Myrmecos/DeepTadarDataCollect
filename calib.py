@@ -69,12 +69,7 @@ def transform_img(transform_image, R, T, s):
     transformed_reference = cv.resize(transformed_reference, (int(transform.shape[0]/s), int(transform.shape[1]/s)), interpolation=cv.INTER_AREA)
     print("resize ok")
 
-    # Step 4: Visualize the transformed reference image
-    #print(transformed_reference)
-    plt.imshow(transformed_reference, cmap='gray')
-    plt.title("Transformed reference Image")
-    plt.colorbar()
-    plt.show()
+    return transformed_reference
 
 #calculates rotation matrix R, transformation matrix T and Scaling factor s
 def calc_RT(reference_points, transform_points):
@@ -135,6 +130,23 @@ if __name__=="__main__":
     R, T = calc_RT(reference_points, transform_points)
 
     # map the transform array to reference image
-    transform_image=np.load("ori.npy")
-    transform_img(transform_image, R, T, s)
+    transform_image=np.load("RawData/exp01/realsense_depth/1.npy")
+    transform_image= cv.cvtColor(transform_image, cv.COLOR_BGR2GRAY)
+    transform_image = cv.normalize(transform_image.astype('float'), None, 0.0, 1.0, cv.NORM_MINMAX)
+
+    reference_image = np.load("RawData/exp01/seek_thermal/1.npy")
+    reference_image= cv.cvtColor(reference_image, cv.COLOR_BGR2GRAY)
+    reference_image = cv.normalize(reference_image.astype('float'), None, 0.0, 1.0, cv.NORM_MINMAX)
+
+    transformed_image = transform_img(transform_image, R, T, s)
+
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
+    ax1.imshow(transform_image, cmap='gray')
+    ax1.set_title('transform Image')
+    ax2.imshow(reference_image, cmap='gray')
+    ax2.set_title('reference Image')
+
+    plt.tight_layout()
+    plt.title("Transformed reference Image")
+    plt.show()
     

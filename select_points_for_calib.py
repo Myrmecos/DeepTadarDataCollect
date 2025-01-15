@@ -43,16 +43,21 @@ def showImagePanels():
     plt.show()
 
 if __name__=='__main__':
+    baseDir = "RawData/exp01/"
+    for i in range(8):
+        transform_image=np.load(baseDir+"realsense_depth/"+str(i)+".npy") #image to be rotated, transform and resized
+        reference_image=np.load(baseDir+"seek_thermal/"+str(i)+".npy")
 
-    transform_image=np.load("ori.npy") #image to be rotated, transform and resized
-    reference_image=np.load("trans.npy")
-    #reference_image= cv2.cvtColor(reference_image, cv2.COLOR_BGR2GRAY)
-    #transform_image = cv2.rotate(transform_image, cv2.ROTATE_90_CLOCKWISE) #TESTING ONLY!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        #to grayscale and normalize the images
+        reference_image= cv2.cvtColor(reference_image, cv2.COLOR_BGR2GRAY)
+        reference_image = cv2.normalize(reference_image.astype('float'), None, 0.0, 1.0, cv2.NORM_MINMAX)
+        transform_image = cv2.cvtColor(transform_image, cv2.COLOR_BGR2GRAY)
+        transform_image = cv2.normalize(transform_image.astype('float'), None, 0.0, 1.0, cv2.NORM_MINMAX)
 
-    print(transform_image.shape)
-    print(reference_image.shape)
+        print(transform_image.shape)
+        print(reference_image.shape)
 
-    showImagePanels()
+        showImagePanels()
 
     # Print the selected points
     # print("Selected transform Points:", transform_points) #transform refers to those points to be transformed and mapped (should be depth)
