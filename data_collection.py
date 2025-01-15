@@ -307,6 +307,7 @@ if __name__ == "__main__":
             seek_camera_frame = seek_camera.get_frame()
             MLX_temperature_map = mlx_sensor.get_temperature_map()
             senxor_temperature_map_m08, header1 = senxor_sensor_m08.get_temperature_map()
+            senxor_temperature_map_m08_1, header2 = senxor_sensor_m08_1.get_temperature_map()
 
             realsense_color_image = cv2.resize(realsense_color_image, (320, 240))
             realsense_depth_image = cv2.resize(realsense_depth_image, (320, 240))   
@@ -341,10 +342,20 @@ if __name__ == "__main__":
                 senxor_temperature_map_m08 = cv2.applyColorMap(senxor_temperature_map_m08, cv2.COLORMAP_JET)
             else:
                 senxor_temperature_map_m08 = np.zeros((240, 320, 3), dtype=np.uint8)
+
+            if senxor_temperature_map_m08_1 is not None:
+                senxor_temperature_map_m08_1 = senxor_temperature_map_m08_1.reshape(num_cols_m08_1, num_rows_m08_1)
+                senxor_temperature_map_m08_1 = np.flip(senxor_temperature_map_m08_1, 0)
+                senxor_temperature_map_m08_1 = senxor_temperature_map_m08_1.astype(np.uint8)
+                senxor_temperature_map_m08_1 = cv2.normalize(senxor_temperature_map_m08_1, None, 0, 255, cv2.NORM_MINMAX)
+                senxor_temperature_map_m08_1 = cv2.resize(senxor_temperature_map_m08_1, (320, 240), interpolation=cv2.INTER_NEAREST)
+                senxor_temperature_map_m08_1 = cv2.applyColorMap(senxor_temperature_map_m08_1, cv2.COLORMAP_JET)
+            else:
+                senxor_temperature_map_m08_1 = np.zeros((240, 320, 3), dtype=np.uint8)
                 
             print(realsense_depth_image.shape, realsense_color_image.shape, seek_camera_frame.shape,  senxor_temperature_map_m08.shape, MLX_temperature_map.shape,)
             interm1 = np.concatenate((realsense_depth_image, realsense_color_image, seek_camera_frame), axis=1)
-            interm2 = np.concatenate((senxor_temperature_map_m08, MLX_temperature_map, senxor_temperature_map_m08), axis=1)
+            interm2 = np.concatenate((senxor_temperature_map_m08, MLX_temperature_map, senxor_temperature_map_m08_1), axis=1)
             final_image = np.concatenate((interm1, interm2), axis=0)
             cv2.imshow("Final Image", final_image)
 
@@ -374,7 +385,7 @@ if __name__ == "__main__":
             senxor_temperature_map_m08, header1 = senxor_sensor_m08.get_temperature_map()
             num_cols_m08, num_rows_m08 = senxor_sensor_m08.get_temperature_map_shape()
 
-            if realsense_depth_image is None or realsense_color_image is None or seek_camera_frame is None or MLX_temperature_map is None or senxor_temperature_map_m08 is None or senxor_temperature_map_m16 is None:
+            if realsense_depth_image is None or realsense_color_image is None or seek_camera_frame is None or MLX_temperature_map is None or senxor_temperature_map_m08 is None or senxor_temperature_map_m16  is None:
                 continue
             else:
                 timestamp = time.time()
