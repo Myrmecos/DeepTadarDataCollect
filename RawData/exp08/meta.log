@@ -1,0 +1,7 @@
+Collecting time: 7.296051740646362 seconds
+Total frames collected: 17
+Frame rate: 2.3300273359209975 Hz
+Seek camera frame collected at 1736943015.5842307 (150, 200, 4)
+Realsense depth and color image collected at 1736943015.5842307 (480, 640, 3) (480, 640, 3)
+MLX temperature map collected at 1736943015.5842307 (24, 32, 3)
+Senxor temperature map m08 collected at 1736943015.5842307 (62, 80, 3)
