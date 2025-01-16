@@ -252,7 +252,7 @@ class seekthermal:
                     if frame is not None:
                         return frame
         else:
-            print(self.data_frame)
+            #print(self.data_frame)
             return self.data_frame
         return None
 
@@ -306,8 +306,9 @@ if __name__ == "__main__":
     start_time = time.time()
     collection_duration = args.collection_duration
     collect = 0
+    last_collect_time = time.time()
     while True:
-        print("===========debug: start collecting data, frame:", framecnt, "================") 
+        #print("===========debug: start collecting data, frame:", framecnt, "================") 
         framecnt+=1
         realsense_depth_image_ori, realsense_color_image_ori = realsense_sensor.get_frame()
         seek_camera_frame_ori = seek_camera.get_frame()
@@ -318,8 +319,14 @@ if __name__ == "__main__":
         # realsense_color_image_ori = cv2.resize(realsense_color_image_ori, (320, 240))
         # realsense_depth_image_ori = cv2.resize(realsense_depth_image_ori, (320, 240))   
         realsense_depth_image_ori = cv2.applyColorMap(cv2.convertScaleAbs(realsense_depth_image_ori, alpha=0.03), cv2.COLORMAP_JET)
-
         # save data part: 
+        print("time elapsed: ", time.time() - last_collect_time)
+        
+        if (time.time()-last_collect_time) > 2:
+            print("time to collect image!")
+            collect = 1
+            last_collect_time = time.time()
+
         if args.save_data==1 and collect==1:
             if realsense_depth_image_ori is None or realsense_color_image_ori is None or seek_camera_frame_ori is None or MLX_temperature_map_ori is None or senxor_temperature_map_m08_ori is None or senxor_temperature_map_m08_1_ori  is None:
                 continue
@@ -370,8 +377,6 @@ if __name__ == "__main__":
                     #senxor_temperature_map_m08_1 = cv2.applyColorMap(senxor_temperature_map_m08_1, cv2.COLORMAP_JET)
                 else:
                     senxor_temperature_map_m08_1 = np.zeros((240, 320, 3), dtype=np.uint8)
-
-
 
                 if collect == 1:
                     collect = 0
