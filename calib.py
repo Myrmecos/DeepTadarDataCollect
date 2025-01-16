@@ -136,13 +136,28 @@ def on_mouse_move(event):
         cursor1.set_data(event.xdata, event.ydata)
     plt.draw()
 
+def draw_black_margin(image, margin_width):
+    height, width = image.shape
+    image[:margin_width, :] = 0  # Top margin
+    image[-margin_width:, :] = 0  # Bottom margin
+    image[:, :margin_width] = 0  # Left margin
+    image[:, -margin_width:] = 0  # Right margin
+    return image
+
+def get_contour_image(image):
+    blurred = cv.GaussianBlur(image, (5, 5), 0)
+    _, binary = cv.threshold(blurred, 127, 255, cv.THRESH_BINARY)
+    contours, _ = cv.findContours(binary, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+    contour_image = np.zeros_like(image)
+    cv.drawContours(contour_image, contours, -1, 255, 1)
+    return contour_image
 
 if __name__=="__main__":
     transform_points, reference_points = load_yaml("config.yaml")
     baseDir = "RawData/exp04/"
     transform_dir = "realsense_depth/"
     reference_dir = "MLX/"
-    ind = 2
+    ind = 16
     transform_files = os.listdir(baseDir+transform_dir)
     reference_files = os.listdir(baseDir+reference_dir)
     
@@ -163,6 +178,7 @@ if __name__=="__main__":
     #transform_image = cv.imread("shifted.png")
     transform_image= cv.cvtColor(transform_image, cv.COLOR_BGR2GRAY)
     transform_image = cv.normalize(transform_image.astype('float'), None, 0.0, 1.0, cv.NORM_MINMAX)
+    #transform_image = draw_black_margin(transform_image, 10)
 
     reference_image = np.load(baseDir+"seek_thermal/"+reference_files[ind])
     #reference_image = np.load("trans.npy")
@@ -183,13 +199,20 @@ if __name__=="__main__":
     cursor2, = ax2.plot([], [], 'r+')
     fig.canvas.mpl_connect('motion_notify_event', on_mouse_move)
 
-
     plt.tight_layout()
     plt.title("Transformed reference Image")
     plt.show()
 
+    # transform_image_8u = cv.normalize(transform_image, None, 0, 255, cv.NORM_MINMAX, dtype=cv.CV_8U)
+    # reference_image_8u = cv.normalize(reference_image, None, 0, 255, cv.NORM_MINMAX, dtype=cv.CV_8U)
+    # transform_image = get_contour_image(transform_image_8u)
+    # reference_image = get_contour_image(reference_image_8u)
+    # print(transform_image)
+    # _, transform_image = cv.threshold(transform_image, 0.5, 255, cv.THRESH_BINARY)
+    # _, reference_image = cv.threshold(reference_image, 0.5, 255, cv.THRESH_BINARY)
+
     plt.imshow(transform_image, cmap='gray', alpha=0.5)
-    plt.imshow(reference_image, cmap='gray', alpha=0.2)
+    plt.imshow(reference_image, cmap='gray', alpha=0.5)
     plt.show()
 
     
