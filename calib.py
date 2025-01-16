@@ -35,7 +35,12 @@ def transform_img(transform_image, R, T, s):
         right = 0
     else: 
         # we will check later how to deal with a tall image
-        exit(1)
+        print("it's a tall image")
+        #exit(1)
+        top = 0 #abs(transform_image.shape[1]-transform_image.shape[0])
+        bottom = 0#abs(transform_image.shape[1]-transform_image.shape[0])
+        left = 0
+        right = 0 #abs(transform_image.shape[1]-transform_image.shape[0])
     #Zero-pad the image using cv2.copyMakeBorder
     transform_image = cv.copyMakeBorder(transform_image, top, bottom, left, right, cv.BORDER_CONSTANT, value=np.nan)
 
@@ -134,15 +139,19 @@ if __name__=="__main__":
     R, T = calc_RT(reference_points, transform_points)
 
     # map the transform array to reference image
-    transform_image=np.load("RawData/exp01/realsense_depth/1.npy")
-    transform_image= cv.cvtColor(transform_image, cv.COLOR_BGR2GRAY)
-    transform_image = cv.normalize(transform_image.astype('float'), None, 0.0, 1.0, cv.NORM_MINMAX)
+    #transform_image=np.load("RawData/exp01/realsense_depth/1.npy")
+    transform_image = np.load("ori.npy")
+    #transform_image = cv.imread("shifted.png")
+    #transform_image= cv.cvtColor(transform_image, cv.COLOR_BGR2GRAY)
+    #transform_image = cv.normalize(transform_image.astype('float'), None, 0.0, 1.0, cv.NORM_MINMAX)
 
-    reference_image = np.load("RawData/exp01/seek_thermal/1.npy")
-    reference_image= cv.cvtColor(reference_image, cv.COLOR_BGR2GRAY)
-    reference_image = cv.normalize(reference_image.astype('float'), None, 0.0, 1.0, cv.NORM_MINMAX)
+    #reference_image = np.load("RawData/exp01/seek_thermal/1.npy")
+    #reference_image = np.load("trans.npy")
+    reference_image = cv.imread("shifted.png")
+    #reference_image= cv.cvtColor(reference_image, cv.COLOR_BGR2GRAY)
+    #reference_image = cv.normalize(reference_image.astype('float'), None, 0.0, 1.0, cv.NORM_MINMAX)
 
-    transformed_image = transform_img(transform_image, R, T, s)
+    transform_image = transform_img(transform_image, R, T, s)
 
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
     ax1.imshow(transform_image, cmap='gray')
