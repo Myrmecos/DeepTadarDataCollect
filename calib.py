@@ -142,7 +142,7 @@ if __name__=="__main__":
     baseDir = "RawData/exp04/"
     transform_dir = "realsense_depth/"
     reference_dir = "MLX/"
-    ind = 0
+    ind = 2
     transform_files = os.listdir(baseDir+transform_dir)
     reference_files = os.listdir(baseDir+reference_dir)
     
@@ -183,8 +183,13 @@ if __name__=="__main__":
     cursor2, = ax2.plot([], [], 'r+')
     fig.canvas.mpl_connect('motion_notify_event', on_mouse_move)
 
+
     plt.tight_layout()
     plt.title("Transformed reference Image")
+    plt.show()
+
+    plt.imshow(transform_image, cmap='gray', alpha=0.5)
+    plt.imshow(reference_image, cmap='gray', alpha=0.2)
     plt.show()
 
     

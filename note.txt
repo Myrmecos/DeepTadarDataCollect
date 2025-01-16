@@ -1,1 +1,2 @@
 1. at 0.5 m, not ok because depth camera image distorts and get too wide
+2. if necessary, calib for multiple Distance    在实际计算某个distance时用最接近它的transformation去算，减少视差带来的误差

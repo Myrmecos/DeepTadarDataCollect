@@ -50,7 +50,7 @@ if __name__=='__main__':
     reference_files = os.listdir(baseDir+"MLX/")
     for i in range(5):
         # load image
-        ind = i+5
+        ind = i
         transform_image=np.load(baseDir+"realsense_depth/"+transform_files[ind]) #image to be rotated, transform and resized
         reference_image=np.load(baseDir+"seek_thermal/"+reference_files[ind])
         #transform_image = np.load("ori.npy")
