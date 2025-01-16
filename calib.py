@@ -48,9 +48,6 @@ def transform_img(transform_image, R, T, s):
     #Zero-pad the image using cv2.copyMakeBorder
     transform_image = cv.copyMakeBorder(transform_image, top, bottom, left, right, cv.BORDER_CONSTANT, value=np.nan)
 
-    #transform_image = cv.rotate(transform_image, cv.ROTATE_90_CLOCKWISE) #testing only!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    #transform= cv.cvtColor(transform_image, cv.COLOR_BGR2GRAY) #testing only!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
     # Get the shape of the reference image
     transform = transform_image
     height, width = transform.shape
@@ -69,7 +66,6 @@ def transform_img(transform_image, R, T, s):
     # Reshape the transformed coordinates back to the image shape
     x_transformed = coords_transformed[0, :].reshape(height, width)
     y_transformed = coords_transformed[1, :].reshape(height, width)
-
     print("transform ok")
 
     # Resize the distance image using interpolation
@@ -80,7 +76,9 @@ def transform_img(transform_image, R, T, s):
 
     return transformed_reference
 
-#calculates rotation matrix R, transformation matrix T and Scaling factor s
+# calculates rotation matrix R, transformation matrix T and Scaling factor s
+# caution: relative distance of reference points must already be scaled to same scale 
+# (i.e. only rotation and translation, no scaling is needed)
 def calc_RT(reference_points, transform_points):
      # Step 1: Center the points
     transform_centroid = np.mean(transform_points, axis=0)
@@ -88,7 +86,6 @@ def calc_RT(reference_points, transform_points):
 
     transform_centered = transform_points - transform_centroid
     reference_centered = reference_points - reference_centroid
-
 
     # Step 2: Compute the covariance matrix
     H = reference_centered.T @ transform_centered
@@ -129,6 +126,7 @@ def calc_scale(reference_points, transform_points):
     s = dist_t / dist_d  # Scaling factor
     return s
 
+# callback function, for moving cursor
 def on_mouse_move(event):
     if event.inaxes == ax1:
         cursor2.set_data(event.xdata, event.ydata)
@@ -136,6 +134,7 @@ def on_mouse_move(event):
         cursor1.set_data(event.xdata, event.ydata)
     plt.draw()
 
+#draw a black margin inside image without affecting image shape.
 def draw_black_margin(image, margin_width):
     height, width = image.shape
     image[:margin_width, :] = 0  # Top margin
@@ -144,15 +143,8 @@ def draw_black_margin(image, margin_width):
     image[:, -margin_width:] = 0  # Right margin
     return image
 
-def get_contour_image(image):
-    blurred = cv.GaussianBlur(image, (5, 5), 0)
-    _, binary = cv.threshold(blurred, 127, 255, cv.THRESH_BINARY)
-    contours, _ = cv.findContours(binary, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
-    contour_image = np.zeros_like(image)
-    cv.drawContours(contour_image, contours, -1, 255, 1)
-    return contour_image
-
 if __name__=="__main__":
+    # load image
     transform_points, reference_points = load_yaml("config.yaml")
     baseDir = "RawData/exp04/"
     transform_dir = "realsense_depth/"
@@ -160,7 +152,6 @@ if __name__=="__main__":
     ind = 16
     transform_files = os.listdir(baseDir+transform_dir)
     reference_files = os.listdir(baseDir+reference_dir)
-    
 
     # calculate scale
     s = calc_scale(reference_points, transform_points)
@@ -173,44 +164,32 @@ if __name__=="__main__":
     R, T = calc_RT(reference_points, transform_points)
 
     # map the transform array to reference image
+    #1. load the to-be-conferted image and reference image
     transform_image=np.load(baseDir+"realsense_depth/"+transform_files[ind])
-    #transform_image = np.load("ori.npy")
-    #transform_image = cv.imread("shifted.png")
     transform_image= cv.cvtColor(transform_image, cv.COLOR_BGR2GRAY)
     transform_image = cv.normalize(transform_image.astype('float'), None, 0.0, 1.0, cv.NORM_MINMAX)
-    #transform_image = draw_black_margin(transform_image, 10)
-
     reference_image = np.load(baseDir+"seek_thermal/"+reference_files[ind])
-    #reference_image = np.load("trans.npy")
-    #reference_image = cv.imread("shifted.png")
     reference_image= cv.cvtColor(reference_image, cv.COLOR_BGR2GRAY)
     reference_image = cv.normalize(reference_image.astype('float'), None, 0.0, 1.0, cv.NORM_MINMAX)
-
+    #2. transform with R, T and S
     transform_image = transform_img(transform_image, R, T, s)
-
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
     ax1.imshow(transform_image, cmap='gray')
     ax1.set_title('transform Image')
     ax2.imshow(reference_image, cmap='gray')
     ax2.set_title('reference Image')
 
-    #add cursor
+    #visualize the calibration result
+    #1. add cursor to show corresponding points
     cursor1, = ax1.plot([], [], 'r+')
     cursor2, = ax2.plot([], [], 'r+')
     fig.canvas.mpl_connect('motion_notify_event', on_mouse_move)
-
+    #2. layout and show
     plt.tight_layout()
     plt.title("Transformed reference Image")
     plt.show()
 
-    # transform_image_8u = cv.normalize(transform_image, None, 0, 255, cv.NORM_MINMAX, dtype=cv.CV_8U)
-    # reference_image_8u = cv.normalize(reference_image, None, 0, 255, cv.NORM_MINMAX, dtype=cv.CV_8U)
-    # transform_image = get_contour_image(transform_image_8u)
-    # reference_image = get_contour_image(reference_image_8u)
-    # print(transform_image)
-    # _, transform_image = cv.threshold(transform_image, 0.5, 255, cv.THRESH_BINARY)
-    # _, reference_image = cv.threshold(reference_image, 0.5, 255, cv.THRESH_BINARY)
-
+    # show overlapping image
     plt.imshow(transform_image, cmap='gray', alpha=0.5)
     plt.imshow(reference_image, cmap='gray', alpha=0.5)
     plt.show()

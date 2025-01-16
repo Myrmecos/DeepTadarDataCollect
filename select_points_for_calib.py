@@ -5,6 +5,8 @@ import os
 
 ax1 = None
 ax2 = None
+cursor1 = None
+cursor2 = None
 transform_points = []
 reference_points = []
 
@@ -12,6 +14,8 @@ reference_points = []
 # Function to handle mouse clicks
 def onclick(event):
     global ax1, ax2
+    cursor1, = ax1.plot([], [], 'r+')
+    cursor2, = ax2.plot([], [], 'r+')
     if event.inaxes == ax1:
         x, y = int(event.xdata), int(event.ydata)
         transform_points.append((x, y))
@@ -43,6 +47,14 @@ def showImagePanels():
 
     plt.tight_layout()
     plt.show()
+
+# callback function, for moving cursor
+def on_mouse_move(event):
+    if event.inaxes == ax1:
+        cursor1.set_data(event.xdata, event.ydata)
+    elif event.inaxes == ax2:
+        cursor2.set_data(event.xdata, event.ydata)
+    plt.draw()
 
 if __name__=='__main__':
     baseDir = "RawData/exp04/"

@@ -1,2 +1,21 @@
 1. at 0.5 m, not ok because depth camera image distorts and get too wide
 2. if necessary, calib for multiple Distance    在实际计算某个distance时用最接近它的transformation去算，减少视差带来的误差
+
+
+
+1: 0, 1
+2: 0, 1
+3: 0, 1
+4: 0, 1
+5: 0, 1, 2
+6: 0, 1, 
+7: 0, 
+8: 2
+
+11: 0, 1, 2
+12: 0, 1, 2
+13: 0, 1, 2
+14: 0, 1, 2
+15: 0, 2
+16: 0,1,2
+17: 0, 1, 2, 3, 4, 5, 6, 7
