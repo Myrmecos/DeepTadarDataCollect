@@ -5,6 +5,7 @@ import cv2 as cv
 from scipy.interpolate import griddata
 from scipy.ndimage import map_coordinates
 import mplcursors
+import os
 
 #
 #根据需求，认为需要把distance对应到transform上，即将distance通过resize，平移和旋转贴合到transform上。
@@ -129,7 +130,6 @@ def calc_scale(reference_points, transform_points):
     return s
 
 def on_mouse_move(event):
-    print("mouse moving==============")
     if event.inaxes == ax1:
         cursor2.set_data(event.xdata, event.ydata)
     elif event.inaxes == ax2:
@@ -139,6 +139,13 @@ def on_mouse_move(event):
 
 if __name__=="__main__":
     transform_points, reference_points = load_yaml("config.yaml")
+    baseDir = "RawData/exp04/"
+    transform_dir = "realsense_depth/"
+    reference_dir = "MLX/"
+    ind = 3
+    transform_files = os.listdir(baseDir+transform_dir)
+    reference_files = os.listdir(baseDir+reference_dir)
+    
 
     # calculate scale
     s = calc_scale(reference_points, transform_points)
@@ -151,17 +158,17 @@ if __name__=="__main__":
     R, T = calc_RT(reference_points, transform_points)
 
     # map the transform array to reference image
-    #transform_image=np.load("RawData/exp01/realsense_depth/1.npy")
-    transform_image = np.load("ori.npy")
+    transform_image=np.load(baseDir+"realsense_depth/"+transform_files[ind])
+    #transform_image = np.load("ori.npy")
     #transform_image = cv.imread("shifted.png")
-    #transform_image= cv.cvtColor(transform_image, cv.COLOR_BGR2GRAY)
-    #transform_image = cv.normalize(transform_image.astype('float'), None, 0.0, 1.0, cv.NORM_MINMAX)
+    transform_image= cv.cvtColor(transform_image, cv.COLOR_BGR2GRAY)
+    transform_image = cv.normalize(transform_image.astype('float'), None, 0.0, 1.0, cv.NORM_MINMAX)
 
-    #reference_image = np.load("RawData/exp01/seek_thermal/1.npy")
+    reference_image = np.load(baseDir+"seek_thermal/"+reference_files[ind])
     #reference_image = np.load("trans.npy")
-    reference_image = cv.imread("shifted.png")
-    #reference_image= cv.cvtColor(reference_image, cv.COLOR_BGR2GRAY)
-    #reference_image = cv.normalize(reference_image.astype('float'), None, 0.0, 1.0, cv.NORM_MINMAX)
+    #reference_image = cv.imread("shifted.png")
+    reference_image= cv.cvtColor(reference_image, cv.COLOR_BGR2GRAY)
+    reference_image = cv.normalize(reference_image.astype('float'), None, 0.0, 1.0, cv.NORM_MINMAX)
 
     transform_image = transform_img(transform_image, R, T, s)
 

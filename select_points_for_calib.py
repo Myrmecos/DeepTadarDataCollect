@@ -1,6 +1,8 @@
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
+import os
+
 ax1 = None
 ax2 = None
 transform_points = []
@@ -43,20 +45,23 @@ def showImagePanels():
     plt.show()
 
 if __name__=='__main__':
-    baseDir = "RawData/exp01/"
-    for i in range(1):
+    baseDir = "RawData/exp09/"
+    transform_files = os.listdir(baseDir+"realsense_depth/")
+    reference_files = os.listdir(baseDir+"MLX/")
+    for i in range(5):
         # load image
-        #transform_image=np.load(baseDir+"realsense_depth/"+str(i)+".npy") #image to be rotated, transform and resized
-        #reference_image=np.load(baseDir+"seek_thermal/"+str(i)+".npy")
-        transform_image = np.load("ori.npy")
+        ind = i
+        transform_image=np.load(baseDir+"realsense_depth/"+transform_files[ind]) #image to be rotated, transform and resized
+        reference_image=np.load(baseDir+"seek_thermal/"+reference_files[ind])
+        #transform_image = np.load("ori.npy")
         #reference_image = np.load("trans.npy")
-        reference_image = cv2.imread("shifted.png")
+        #reference_image = cv2.imread("shifted.png")
 
         #to grayscale and normalize the images
         reference_image= cv2.cvtColor(reference_image, cv2.COLOR_BGR2GRAY)
         reference_image = cv2.normalize(reference_image.astype('float'), None, 0.0, 1.0, cv2.NORM_MINMAX)
-        # transform_image = cv2.cvtColor(transform_image, cv2.COLOR_BGR2GRAY)
-        # transform_image = cv2.normalize(transform_image.astype('float'), None, 0.0, 1.0, cv2.NORM_MINMAX)
+        transform_image = cv2.cvtColor(transform_image, cv2.COLOR_BGR2GRAY)
+        transform_image = cv2.normalize(transform_image.astype('float'), None, 0.0, 1.0, cv2.NORM_MINMAX)
 
         print(transform_image.shape)
         print(reference_image.shape)
