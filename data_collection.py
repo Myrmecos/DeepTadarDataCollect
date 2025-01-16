@@ -336,6 +336,8 @@ if __name__ == "__main__":
                     #     seek_camera_frame = cv2.resize(argb2bgr(seek_camera_frame), (320, 240))
                     # else:
                     #     seek_camera_frame = np.flip(np.flip(cv2.resize(argb2bgr(seek_camera_frame), (320, 240)),0),1)
+                    seek_camera_frame = np.flip(seek_camera_frame, 0)
+                    seek_camera_frame = np.flip(seek_camera_frame, 1)
                     pass
                 else:
                     seek_camera_frame = np.zeros((240, 320, 3), dtype=np.uint8)
