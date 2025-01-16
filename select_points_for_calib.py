@@ -45,12 +45,12 @@ def showImagePanels():
     plt.show()
 
 if __name__=='__main__':
-    baseDir = "RawData/exp09/"
+    baseDir = "RawData/exp04/"
     transform_files = os.listdir(baseDir+"realsense_depth/")
     reference_files = os.listdir(baseDir+"MLX/")
     for i in range(5):
         # load image
-        ind = i
+        ind = i+5
         transform_image=np.load(baseDir+"realsense_depth/"+transform_files[ind]) #image to be rotated, transform and resized
         reference_image=np.load(baseDir+"seek_thermal/"+reference_files[ind])
         #transform_image = np.load("ori.npy")

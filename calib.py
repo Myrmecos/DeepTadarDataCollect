@@ -142,7 +142,7 @@ if __name__=="__main__":
     baseDir = "RawData/exp04/"
     transform_dir = "realsense_depth/"
     reference_dir = "MLX/"
-    ind = 3
+    ind = 0
     transform_files = os.listdir(baseDir+transform_dir)
     reference_files = os.listdir(baseDir+reference_dir)
     

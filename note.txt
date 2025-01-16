@@ -1,0 +1,1 @@
+1. at 0.5 m, not ok because depth camera image distorts and get too wide
