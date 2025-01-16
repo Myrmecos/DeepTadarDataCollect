@@ -4,11 +4,14 @@ import matplotlib.pyplot as plt
 import cv2 as cv
 from scipy.interpolate import griddata
 from scipy.ndimage import map_coordinates
+import mplcursors
 
 #
 #根据需求，认为需要把distance对应到transform上，即将distance通过resize，平移和旋转贴合到transform上。
 #下方示例是将transform通过转换对应到distance上，只要把transform和distance的文件交换即可。
 #
+cursor1 = None
+cursor2 = None
 
 # Load the YAML file
 def load_yaml(filename):
@@ -125,6 +128,15 @@ def calc_scale(reference_points, transform_points):
     s = dist_t / dist_d  # Scaling factor
     return s
 
+def on_mouse_move(event):
+    print("mouse moving==============")
+    if event.inaxes == ax1:
+        cursor2.set_data(event.xdata, event.ydata)
+    elif event.inaxes == ax2:
+        cursor1.set_data(event.xdata, event.ydata)
+    plt.draw()
+
+
 if __name__=="__main__":
     transform_points, reference_points = load_yaml("config.yaml")
 
@@ -159,7 +171,13 @@ if __name__=="__main__":
     ax2.imshow(reference_image, cmap='gray')
     ax2.set_title('reference Image')
 
+    #add cursor
+    cursor1, = ax1.plot([], [], 'r+')
+    cursor2, = ax2.plot([], [], 'r+')
+    fig.canvas.mpl_connect('motion_notify_event', on_mouse_move)
+
     plt.tight_layout()
     plt.title("Transformed reference Image")
     plt.show()
+
     
