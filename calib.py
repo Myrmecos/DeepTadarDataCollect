@@ -111,8 +111,12 @@ def calc_scale(reference_points, transform_points):
     P_d = np.array(reference_points)  # reference image points
     P_t = np.array(transform_points)  # transform image points
     # Compute scaling factor
-    dist_d = np.linalg.norm(P_d[1] - P_d[0])  # Distance between two points in reference image
-    dist_t = np.linalg.norm(P_t[1] - P_t[0])  # Distance between two points in transform image
+    dist_d = 0
+    dist_t = 0
+    for i in range(1, len(P_d)):
+        dist_d += np.linalg.norm(P_d[i] - P_d[0])  # Distance between two points in reference image
+        dist_t += np.linalg.norm(P_t[i] - P_t[0])  # Distance between two points in transform image
+    
     s = dist_t / dist_d  # Scaling factor
     return s
 
