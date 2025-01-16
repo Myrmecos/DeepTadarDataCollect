@@ -319,10 +319,6 @@ if __name__ == "__main__":
         # realsense_depth_image_ori = cv2.resize(realsense_depth_image_ori, (320, 240))   
         realsense_depth_image_ori = cv2.applyColorMap(cv2.convertScaleAbs(realsense_depth_image_ori, alpha=0.03), cv2.COLORMAP_JET)
 
-
-
-
-
         # save data part: 
         if args.save_data==1 and collect==1:
             if realsense_depth_image_ori is None or realsense_color_image_ori is None or seek_camera_frame_ori is None or MLX_temperature_map_ori is None or senxor_temperature_map_m08_ori is None or senxor_temperature_map_m08_1_ori  is None:
