@@ -252,6 +252,7 @@ class seekthermal:
                     if frame is not None:
                         return frame
         else:
+            print(self.data_frame)
             return self.data_frame
         return None
 
@@ -292,7 +293,7 @@ if __name__ == "__main__":
     
     
     realsense_sensor = realsense()  
-    seek_camera = seekthermal(data_format="color")
+    seek_camera = seekthermal(data_format="others")
     mlx_sensor = MLXSensor("/dev/ttyUSB0")
     senxor_sensor_m08 = senxor(sensor_port="/dev/ttyACM0")
     senxor_sensor_m08_1 = senxor(sensor_port="/dev/ttyACM1")
@@ -330,6 +331,7 @@ if __name__ == "__main__":
                 realsense_depth_image, realsense_color_image, seek_camera_frame, MLX_temperature_map, senxor_temperature_map_m08, senxor_temperature_map_m08_1 = realsense_depth_image_ori, realsense_color_image_ori, seek_camera_frame_ori, MLX_temperature_map_ori, senxor_temperature_map_m08_ori, senxor_temperature_map_m08_1_ori
                 # show all images
                 if seek_camera_frame is not None:
+                    
                     # if seek_camera_frame.shape[0] > 201:
                     #     seek_camera_frame = cv2.resize(argb2bgr(seek_camera_frame), (320, 240))
                     # else:
@@ -339,35 +341,35 @@ if __name__ == "__main__":
                     seek_camera_frame = np.zeros((240, 320, 3), dtype=np.uint8)
                     
                 if MLX_temperature_map is not None:
-                    MLX_temperature_map = MLX_temperature_map.reshape(24, 32)
+                    #MLX_temperature_map = MLX_temperature_map.reshape(24, 32)
                     #MLX_temperature_map = np.flip(MLX_temperature_map, 0)
                     MLX_temperature_map = np.flip(MLX_temperature_map, 1)
                     MLX_temperature_map = mlx_sensor.SubpageInterpolating(MLX_temperature_map)
-                    MLX_temperature_map = MLX_temperature_map.astype(np.uint8)
+                    #MLX_temperature_map = MLX_temperature_map.astype(np.uint8)
                     # min_temp, max_temp = np.min(MLX_temperature_map), np.max(MLX_temperature_map)
-                    MLX_temperature_map = cv2.normalize(MLX_temperature_map, None, 0, 255, cv2.NORM_MINMAX)
+                    #MLX_temperature_map = cv2.normalize(MLX_temperature_map, None, 0, 255, cv2.NORM_MINMAX)
                     #MLX_temperature_map = cv2.resize(MLX_temperature_map, (320, 240), interpolation=cv2.INTER_NEAREST)
-                    MLX_temperature_map = cv2.applyColorMap(MLX_temperature_map, cv2.COLORMAP_JET)
+                    #MLX_temperature_map = cv2.applyColorMap(MLX_temperature_map, cv2.COLORMAP_JET)
                 else:
                     MLX_temperature_map = np.zeros((240, 320, 3), dtype=np.uint8)
                     
                 if senxor_temperature_map_m08 is not None:
                     senxor_temperature_map_m08 = senxor_temperature_map_m08.reshape(num_cols_m08, num_rows_m08)
                     senxor_temperature_map_m08 = np.flip(senxor_temperature_map_m08, 0)
-                    senxor_temperature_map_m08 = senxor_temperature_map_m08.astype(np.uint8)
-                    senxor_temperature_map_m08 = cv2.normalize(senxor_temperature_map_m08, None, 0, 255, cv2.NORM_MINMAX)
+                    #senxor_temperature_map_m08 = senxor_temperature_map_m08.astype(np.uint8)
+                    #senxor_temperature_map_m08 = cv2.normalize(senxor_temperature_map_m08, None, 0, 255, cv2.NORM_MINMAX)
                     #senxor_temperature_map_m08 = cv2.resize(senxor_temperature_map_m08, (320, 240), interpolation=cv2.INTER_NEAREST)
-                    senxor_temperature_map_m08 = cv2.applyColorMap(senxor_temperature_map_m08, cv2.COLORMAP_JET)
+                    #senxor_temperature_map_m08 = cv2.applyColorMap(senxor_temperature_map_m08, cv2.COLORMAP_JET)
                 else:
                     senxor_temperature_map_m08 = np.zeros((240, 320, 3), dtype=np.uint8)
 
                 if senxor_temperature_map_m08_1 is not None:
                     senxor_temperature_map_m08_1 = senxor_temperature_map_m08_1.reshape(num_cols_m08_1, num_rows_m08_1)
                     senxor_temperature_map_m08_1 = np.flip(senxor_temperature_map_m08_1, 0)
-                    senxor_temperature_map_m08_1 = senxor_temperature_map_m08_1.astype(np.uint8)
-                    senxor_temperature_map_m08_1 = cv2.normalize(senxor_temperature_map_m08_1, None, 0, 255, cv2.NORM_MINMAX)
+                    #senxor_temperature_map_m08_1 = senxor_temperature_map_m08_1.astype(np.uint8)
+                    #senxor_temperature_map_m08_1 = cv2.normalize(senxor_temperature_map_m08_1, None, 0, 255, cv2.NORM_MINMAX)
                     #senxor_temperature_map_m08_1 = cv2.resize(senxor_temperature_map_m08_1, (320, 240), interpolation=cv2.INTER_NEAREST)
-                    senxor_temperature_map_m08_1 = cv2.applyColorMap(senxor_temperature_map_m08_1, cv2.COLORMAP_JET)
+                    #senxor_temperature_map_m08_1 = cv2.applyColorMap(senxor_temperature_map_m08_1, cv2.COLORMAP_JET)
                 else:
                     senxor_temperature_map_m08_1 = np.zeros((240, 320, 3), dtype=np.uint8)
 
@@ -418,10 +420,16 @@ if __name__ == "__main__":
         # show all images
         realsense_depth_image, realsense_color_image, seek_camera_frame, MLX_temperature_map, senxor_temperature_map_m08, senxor_temperature_map_m08_1 = realsense_depth_image_ori, realsense_color_image_ori, seek_camera_frame_ori, MLX_temperature_map_ori, senxor_temperature_map_m08_ori, senxor_temperature_map_m08_1_ori
         if seek_camera_frame is not None:
-            if seek_camera_frame.shape[0] > 201:
-                seek_camera_frame = cv2.resize(argb2bgr(seek_camera_frame), (320, 240))
-            else:
-                seek_camera_frame = np.flip(np.flip(cv2.resize(argb2bgr(seek_camera_frame), (320, 240)),0),1)
+            # if seek_camera_frame.shape[0] > 201:
+            #     seek_camera_frame = cv2.resize(argb2bgr(seek_camera_fqrame), (320, 240))
+            # else:
+            #     seek_camera_frame = np.flip(np.flip(cv2.resize(argb2bgr(seek_camera_frame), (320, 240)),0),1)
+            seek_camera_frame = np.flip(seek_camera_frame, 0)
+            seek_camera_frame = np.flip(seek_camera_frame, 1)
+            seek_camera_frame = seek_camera_frame.astype(np.uint8)
+            seek_camera_frame = cv2.normalize(seek_camera_frame, None, 0, 255, cv2.NORM_MINMAX)
+            seek_camera_frame = cv2.resize(seek_camera_frame, (320, 240), interpolation=cv2.INTER_NEAREST)
+            seek_camera_frame = cv2.applyColorMap(seek_camera_frame, cv2.COLORMAP_JET)
         else:
             seek_camera_frame = np.zeros((240, 320, 3), dtype=np.uint8)
             
