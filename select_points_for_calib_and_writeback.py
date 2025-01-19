@@ -21,7 +21,7 @@ target = "seek_thermal/"
 
 image_names = []
 # goal: exp1/***.npy, exp11/***.npy, exp21/***.npy
-distance = "4"
+distance = "5"
 dirinds = [distance, "1"+distance, "2"+distance] #1, 11, 21
 
 transform_image_names = []
