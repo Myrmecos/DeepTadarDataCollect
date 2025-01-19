@@ -4,8 +4,10 @@ import matplotlib.pyplot as plt
 import cv2 as cv
 from scipy.interpolate import griddata
 from scipy.ndimage import map_coordinates
+from matplotlib.widgets import Slider
 import mplcursors
 import os
+import math
 
 #
 #根据需求，认为需要把distance对应到transform上，即将distance通过resize，平移和旋转贴合到transform上。
@@ -13,6 +15,8 @@ import os
 #
 cursor1 = None
 cursor2 = None
+im = None
+transform_image_ori = None
 
 # Load the YAML file
 def load_yaml(filename):
@@ -143,6 +147,24 @@ def draw_black_margin(image, margin_width):
     image[:, -margin_width:] = 0  # Right margin
     return image
 
+def update(val):
+    # Get current slider values
+    angle = angle_slider.val
+    xshift = xshift_slider.val
+    yshift = yshift_slider.val
+    scale = scale_slider.val
+
+    # Apply transformations
+    R = np.array([[math.cos(angle), -math.sin(angle)],[math.sin(angle), math.cos(angle)]])
+    T = np.array([xshift, yshift])
+    print(R.shape, T.shape, type(R))
+    print(R, T, s)
+    # Update the displayed image
+    im.set_data(transform_img(transform_image_ori, R, T, s))
+    fig.canvas.draw_idle()
+
+
+
 if __name__=="__main__":
     margin = 50
     # load image
@@ -184,13 +206,37 @@ if __name__=="__main__":
     padded_transform = np.full((new_h, new_w), 255, dtype=np.uint8)
     padded_transform[margin:margin + transform_image.shape[0], margin:margin + transform_image.shape[1]] = transform_image
     transform_image = padded_transform
+    transform_image_ori = transform_image
 
-    transform_image = transform_img(transform_image, R, T, s)
+    print(R.shape, T.shape, type(R))
+    transform_image = transform_img(transform_image_ori, R, T, s)
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
-    ax1.imshow(transform_image, cmap='gray')
+    im = ax1.imshow(transform_image, cmap='gray')
     ax1.set_title('transform Image')
     ax2.imshow(reference_image, cmap='gray')
     ax2.set_title('reference Image')
+
+
+    # Create axes for the sliders
+    ax_angle = plt.axes([0.25, 0.25, 0.65, 0.03])
+    ax_xshift = plt.axes([0.25, 0.20, 0.65, 0.03])
+    ax_yshift = plt.axes([0.25, 0.15, 0.65, 0.03])
+    ax_scale = plt.axes([0.25, 0.10, 0.65, 0.03])
+
+    # Create sliders
+    angle_slider = Slider(ax_angle, 'Angle', -math.pi/2, math.pi/2, valinit=math.asin(R[1][0]))
+    xshift_slider = Slider(ax_xshift, 'X Shift', -100, 100, valinit=T[0])
+    yshift_slider = Slider(ax_yshift, 'Y Shift', -100, 100, valinit=T[1])
+    scale_slider = Slider(ax_scale, 'Scale', 0.1, 2.0, valinit=s)
+
+
+    # Attach the update function to the sliders
+    angle_slider.on_changed(update)
+    xshift_slider.on_changed(update)
+    yshift_slider.on_changed(update)
+    scale_slider.on_changed(update)
+
+
 
     #visualize the calibration result
     #1. add cursor to show corresponding points
