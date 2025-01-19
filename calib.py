@@ -39,7 +39,7 @@ def transform_img(transform_image, R, T, scale):
     
     # Define the padding size (top, bottom, left, right)
     print("image shape:", transform_image.shape)
-    if (transform_image.shape[1]-transform_image.shape[0]>0):
+    if (transform_image.shape[1]-transform_image.shape[0]>=0):
         top = 0 #abs(transform_image.shape[1]-transform_image.shape[0])
         bottom = abs(transform_image.shape[1]-transform_image.shape[0])
         left = 0
@@ -80,6 +80,8 @@ def transform_img(transform_image, R, T, scale):
     transformed_reference = map_coordinates(transform_image, [y_transformed, x_transformed], order=1, mode='constant', cval=np.nan)
     transformed_reference = cv.resize(transformed_reference, (int(transform.shape[0]/scale), int(transform.shape[1]/scale)), interpolation=cv.INTER_AREA)
     print("resize ok")
+
+
 
     return transformed_reference
 
@@ -174,15 +176,22 @@ def update(val):
     fig.canvas.draw_idle()
 
 
+def MLX_process(MLX_temperature_map):
+    MLX_temperature_map = MLX_temperature_map.astype(np.uint8)
+    print("MLX: ", MLX_temperature_map)
+    MLX_temperature_map = cv.normalize(MLX_temperature_map, None, 0, 255, cv.NORM_MINMAX)
+    #MLX_temperature_map = cv.resize(MLX_temperature_map, (320, 240), interpolation=cv.INTER_NEAREST)
+    MLX_temperature_map = cv.applyColorMap(MLX_temperature_map, cv.COLORMAP_JET)
+    return MLX_temperature_map
 
 if __name__=="__main__":
-    margin = 50
+    margin = 100
     # load image
     transform_points, reference_points = load_yaml("config.yaml")
-    baseDir = "RawData/exp26/"
+    baseDir = "RawData/exp24/"
     transform_dir = "realsense_depth/"
-    reference_dir = "seek_thermal/"
-    ind = 0
+    reference_dir = "MLX/"
+    ind = 4
     transform_files = os.listdir(baseDir+transform_dir)
     reference_files = os.listdir(baseDir+reference_dir)
 
@@ -198,14 +207,17 @@ if __name__=="__main__":
 
     # map the transform array to reference image
     #1. load the to-be-conferted image and reference image
-    transform_image=np.load(baseDir+"realsense_depth/"+transform_files[ind])
+    transform_image=np.load(baseDir+transform_dir+transform_files[ind])
+    transform_image = cv.normalize(transform_image, None, 0, 255, cv.NORM_MINMAX)
     transform_image= cv.cvtColor(transform_image, cv.COLOR_BGR2GRAY)
     # transform_image = cv.normalize(transform_image.astype('float'), None, 0.0, 1.0, cv.NORM_MINMAX)
-    reference_image = np.load(baseDir+"seek_thermal/"+reference_files[ind])
+    reference_image = np.load(baseDir+reference_dir+reference_files[ind])
+    reference_image = cv.normalize(reference_image, None, 0, 255, cv.NORM_MINMAX)
+
     rmargin = round(margin/scale)
     new_h = reference_image.shape[0]+round(2*rmargin)
     new_w = reference_image.shape[1]+round(2*rmargin)
-    padded_reference = np.full((new_h, new_w), 40, dtype=np.uint8)
+    padded_reference = np.full((new_h, new_w), 255, dtype=np.uint8)
     padded_reference[rmargin:rmargin + reference_image.shape[0], rmargin:rmargin + reference_image.shape[1]] = reference_image
     reference_image = padded_reference
     # reference_image= cv.cvtColor(reference_image, cv.COLOR_BGR2GRAY)
@@ -221,9 +233,14 @@ if __name__=="__main__":
     print(R.shape, T.shape, type(R))
     transform_image = transform_img(transform_image_ori, R, T, scale)
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
+
+    
     im = ax1.imshow(transform_image, cmap='gray')
     ax1.set_title('transform Image')
-    ax2.imshow(reference_image, cmap='gray')
+
+    reference_image_ori = reference_image
+    reference_image = MLX_process(reference_image)
+    ax2.imshow(reference_image)
     ax2.set_title('reference Image')
 
 
@@ -260,10 +277,11 @@ if __name__=="__main__":
     plt.show()
     # cursor done=================================================
 
+    #plt.clear()
     # show overlapping image
     transform_image = transform_img(transform_image_ori, R, T, scale)
     plt.imshow(transform_image, cmap='gray', alpha=0.5)
-    plt.imshow(reference_image, cmap='gray', alpha=0.5)
+    plt.imshow(reference_image_ori, cmap='gray', alpha=0.5)
     plt.xlim(-10, 250)
     plt.ylim(200, -10)
     plt.show()
