@@ -190,8 +190,8 @@ if __name__=="__main__":
     transform_points, reference_points = load_yaml("config.yaml")
     baseDir = "RawData/exp27/"
     transform_dir = "realsense_depth/"
-    reference_dir = "senxor_m08_1/"
-    ind = 1
+    reference_dir = "seek_thermal/"
+    ind = 2
     transform_files = os.listdir(baseDir+transform_dir)
     reference_files = os.listdir(baseDir+reference_dir)
 

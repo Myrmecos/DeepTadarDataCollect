@@ -17,7 +17,7 @@ with open('image.yaml', 'r') as file:
 baseDir = "RawData/"
 
 transform = "realsense_depth/"
-target = "senxor_m08_1/"
+target = "seek_thermal/"
 
 image_names = []
 # goal: exp1/***.npy, exp11/***.npy, exp21/***.npy
