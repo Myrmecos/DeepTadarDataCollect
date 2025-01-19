@@ -31,7 +31,7 @@ def onclick(event):
     plt.draw()
 
 
-def showImagePanels():
+def showImagePanels(transform_image, reference_image):
     # Lists to store clicked points
     global ax1, ax2
     # Create a figure with two subplots
@@ -47,6 +47,17 @@ def showImagePanels():
 
     plt.tight_layout()
     plt.show()
+
+def return_list():
+    return transform_points, reference_points
+
+def print_list():
+    print("transform_points: ")
+    for p in transform_points:
+        print(" - [",p[0] ,", ", p[1], "]", sep = "")
+    print("reference_points:")
+    for p in reference_points:
+        print(" - [",p[0], ", ", p[1], "]", sep = "")
 
 # callback function, for moving cursor
 def on_mouse_move(event):
@@ -78,7 +89,7 @@ if __name__=='__main__':
         print(transform_image.shape)
         print(reference_image.shape)
 
-        showImagePanels()
+        showImagePanels(transform_image, reference_image)
 
     # Print the selected points
     # print("Selected transform Points:", transform_points) #transform refers to those points to be transformed and mapped (should be depth)

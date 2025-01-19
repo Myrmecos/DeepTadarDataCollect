@@ -42,49 +42,32 @@ for dirind in dirinds:
 print(len(transform_image_names))
 
 
+#===================================calib start!==============================================
 
+for i in range(1):
+    # load image
+    ind = i + 0
+    transform_image=np.load(transform_image_names[ind]) #image to be rotated, transform and resized
+    reference_image=np.load(target_image_names[ind])
+    #transform_image = np.load("ori.npy")
+    #reference_image = np.load("trans.npy")
+    #reference_image = cv2.imread("shifted.png")
 
+    #to grayscale and normalize the images
+    # reference_image= cv2.cvtColor(reference_image, cv2.COLOR_BGR2GRAY)
+    # reference_image = cv2.normalize(reference_image.astype('float'), None, 0.0, 1.0, cv2.NORM_MINMAX)
+    # transform_image = cv2.cvtColor(transform_image, cv2.COLOR_BGR2GRAY)
+    # transform_image = cv2.normalize(transform_image.astype('float'), None, 0.0, 1.0, cv2.NORM_MINMAX)
 
+    # print(transform_image.shape)
+    # print(reference_image.shape)
 
+    sc.showImagePanels(transform_image, reference_image)
+    sc.print_list()
 
-
-
-
-
-
-
-
-
-
-
-# for i in range(5):
-#     # load image
-#     ind = i + 16
-#     transform_image=np.load(baseDir+"realsense_depth/"+transform_files[ind]) #image to be rotated, transform and resized
-#     reference_image=np.load(baseDir+"seek_thermal/"+reference_files[ind])
-#     #transform_image = np.load("ori.npy")
-#     #reference_image = np.load("trans.npy")
-#     #reference_image = cv2.imread("shifted.png")
-
-#     #to grayscale and normalize the images
-#     reference_image= cv2.cvtColor(reference_image, cv2.COLOR_BGR2GRAY)
-#     reference_image = cv2.normalize(reference_image.astype('float'), None, 0.0, 1.0, cv2.NORM_MINMAX)
-#     transform_image = cv2.cvtColor(transform_image, cv2.COLOR_BGR2GRAY)
-#     transform_image = cv2.normalize(transform_image.astype('float'), None, 0.0, 1.0, cv2.NORM_MINMAX)
-
-#     print(transform_image.shape)
-#     print(reference_image.shape)
-
-#     sc.showImagePanels()
-
-# # Print the selected points
-# # print("Selected transform Points:", transform_points) #transform refers to those points to be transformed and mapped (should be depth)
-# # print("Selected reference Points:", reference_points)
-# print("transform_points: ")
-# for p in transform_points:
-#     print("- [",p[0] ,", ", p[1], "]", sep = "")
-# print("reference_points:")
-# for p in reference_points:
-#     print("- [",p[0], ", ", p[1], "]", sep = "")
+# Print the selected points
+# print("Selected transform Points:", transform_points) #transform refers to those points to be transformed and mapped (should be depth)
+# print("Selected reference Points:", reference_points)
+    
     
 
