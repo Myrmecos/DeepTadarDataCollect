@@ -188,10 +188,10 @@ if __name__=="__main__":
     margin = 100
     # load image
     transform_points, reference_points = load_yaml("config.yaml")
-    baseDir = "RawData/exp24/"
+    baseDir = "RawData/exp26/"
     transform_dir = "realsense_depth/"
-    reference_dir = "MLX/"
-    ind = 4
+    reference_dir = "senxor_m08_1/"
+    ind = 2
     transform_files = os.listdir(baseDir+transform_dir)
     reference_files = os.listdir(baseDir+reference_dir)
 
@@ -212,6 +212,8 @@ if __name__=="__main__":
     transform_image= cv.cvtColor(transform_image, cv.COLOR_BGR2GRAY)
     # transform_image = cv.normalize(transform_image.astype('float'), None, 0.0, 1.0, cv.NORM_MINMAX)
     reference_image = np.load(baseDir+reference_dir+reference_files[ind])
+    print(reference_image)
+    reference_image = reference_image.astype(np.float32)
     reference_image = cv.normalize(reference_image, None, 0, 255, cv.NORM_MINMAX)
 
     rmargin = round(margin/scale)
