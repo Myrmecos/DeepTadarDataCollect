@@ -144,12 +144,13 @@ def draw_black_margin(image, margin_width):
     return image
 
 if __name__=="__main__":
+    margin = 30
     # load image
     transform_points, reference_points = load_yaml("config.yaml")
-    baseDir = "RawData/exp04/"
+    baseDir = "RawData/exp21/"
     transform_dir = "realsense_depth/"
-    reference_dir = "MLX/"
-    ind = 16
+    reference_dir = "seek_thermal/"
+    ind = 0
     transform_files = os.listdir(baseDir+transform_dir)
     reference_files = os.listdir(baseDir+reference_dir)
 
@@ -167,11 +168,23 @@ if __name__=="__main__":
     #1. load the to-be-conferted image and reference image
     transform_image=np.load(baseDir+"realsense_depth/"+transform_files[ind])
     transform_image= cv.cvtColor(transform_image, cv.COLOR_BGR2GRAY)
-    transform_image = cv.normalize(transform_image.astype('float'), None, 0.0, 1.0, cv.NORM_MINMAX)
+    # transform_image = cv.normalize(transform_image.astype('float'), None, 0.0, 1.0, cv.NORM_MINMAX)
     reference_image = np.load(baseDir+"seek_thermal/"+reference_files[ind])
-    reference_image= cv.cvtColor(reference_image, cv.COLOR_BGR2GRAY)
-    reference_image = cv.normalize(reference_image.astype('float'), None, 0.0, 1.0, cv.NORM_MINMAX)
+    rmargin = round(margin/s)
+    new_h = reference_image.shape[0]+round(2*rmargin)
+    new_w = reference_image.shape[1]+round(2*rmargin)
+    padded_reference = np.full((new_h, new_w), 40, dtype=np.uint8)
+    padded_reference[rmargin:rmargin + reference_image.shape[0], rmargin:rmargin + reference_image.shape[1]] = reference_image
+    reference_image = padded_reference
+    # reference_image= cv.cvtColor(reference_image, cv.COLOR_BGR2GRAY)
+    # reference_image = cv.normalize(reference_image.astype('float'), None, 0.0, 1.0, cv.NORM_MINMAX)
     #2. transform with R, T and S
+    new_h = transform_image.shape[0]+2*margin
+    new_w = transform_image.shape[1]+2*margin
+    padded_transform = np.full((new_h, new_w), 255, dtype=np.uint8)
+    padded_transform[margin:margin + transform_image.shape[0], margin:margin + transform_image.shape[1]] = transform_image
+    transform_image = padded_transform
+
     transform_image = transform_img(transform_image, R, T, s)
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
     ax1.imshow(transform_image, cmap='gray')

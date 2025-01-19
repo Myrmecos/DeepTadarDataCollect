@@ -46,6 +46,7 @@ def showImagePanels(transform_image, reference_image):
     #fig.canvas.mpl_connect('button_press_event', lambda event: onclick(event, 'reference'))
 
     plt.tight_layout()
+    
     plt.show()
 
 def return_list():
