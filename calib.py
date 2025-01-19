@@ -17,6 +17,9 @@ cursor1 = None
 cursor2 = None
 im = None
 transform_image_ori = None
+R = None
+T = None
+s = 0
 
 # Load the YAML file
 def load_yaml(filename):
@@ -30,7 +33,7 @@ def load_yaml(filename):
     return (transform_points, reference_points)
 
 # transform image give the rotation matrix R, translation matrix T and scale s
-def transform_img(transform_image, R, T, s):
+def transform_img(transform_image, R, T, scale):
     # Load the reference image
     # transform = np.load("color.npy")
     
@@ -75,7 +78,7 @@ def transform_img(transform_image, R, T, s):
     # Resize the distance image using interpolation
     #resized_distance = cv.resize(transformed_reference, (new_width, new_height), interpolation=cv.INTER_LINEAR)
     transformed_reference = map_coordinates(transform_image, [y_transformed, x_transformed], order=1, mode='constant', cval=np.nan)
-    transformed_reference = cv.resize(transformed_reference, (int(transform.shape[0]/s), int(transform.shape[1]/s)), interpolation=cv.INTER_AREA)
+    transformed_reference = cv.resize(transformed_reference, (int(transform.shape[0]/scale), int(transform.shape[1]/scale)), interpolation=cv.INTER_AREA)
     print("resize ok")
 
     return transformed_reference
@@ -148,6 +151,7 @@ def draw_black_margin(image, margin_width):
     return image
 
 def update(val):
+    global R, T
     # Get current slider values
     angle = angle_slider.val
     xshift = xshift_slider.val
@@ -158,9 +162,15 @@ def update(val):
     R = np.array([[math.cos(angle), -math.sin(angle)],[math.sin(angle), math.cos(angle)]])
     T = np.array([xshift, yshift])
     print(R.shape, T.shape, type(R))
-    print(R, T, s)
+    print(R, T, scale)
     # Update the displayed image
-    im.set_data(transform_img(transform_image_ori, R, T, s))
+    layer1 = transform_img(transform_image_ori, R, T, scale)
+    layer2 = reference_image
+    im.set_data(layer1)
+    #res = 0.5*layer1 + 0.5*layer2
+    #ax1.clear()
+    #ax1.imshow(layer1, alpha=0.5)
+    #ax1.imshow(layer2, alpha=0.5)
     fig.canvas.draw_idle()
 
 
@@ -177,11 +187,11 @@ if __name__=="__main__":
     reference_files = os.listdir(baseDir+reference_dir)
 
     # calculate scale
-    s = calc_scale(reference_points, transform_points)
-    print("scaling factor (transform/reference) is:", s)
+    scale = calc_scale(reference_points, transform_points)
+    print("scaling factor (transform/reference) is:", scale)
 
     # rescale refernce points
-    reference_points = np.array(reference_points)*s
+    reference_points = np.array(reference_points)*scale
 
     # calculate rotation and transformation
     R, T = calc_RT(reference_points, transform_points)
@@ -192,7 +202,7 @@ if __name__=="__main__":
     transform_image= cv.cvtColor(transform_image, cv.COLOR_BGR2GRAY)
     # transform_image = cv.normalize(transform_image.astype('float'), None, 0.0, 1.0, cv.NORM_MINMAX)
     reference_image = np.load(baseDir+"seek_thermal/"+reference_files[ind])
-    rmargin = round(margin/s)
+    rmargin = round(margin/scale)
     new_h = reference_image.shape[0]+round(2*rmargin)
     new_w = reference_image.shape[1]+round(2*rmargin)
     padded_reference = np.full((new_h, new_w), 40, dtype=np.uint8)
@@ -209,7 +219,7 @@ if __name__=="__main__":
     transform_image_ori = transform_image
 
     print(R.shape, T.shape, type(R))
-    transform_image = transform_img(transform_image_ori, R, T, s)
+    transform_image = transform_img(transform_image_ori, R, T, scale)
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
     im = ax1.imshow(transform_image, cmap='gray')
     ax1.set_title('transform Image')
@@ -217,7 +227,7 @@ if __name__=="__main__":
     ax2.set_title('reference Image')
 
 
-    # Create axes for the sliders
+    # Create axes for the sliders=====================
     ax_angle = plt.axes([0.25, 0.25, 0.65, 0.03])
     ax_xshift = plt.axes([0.25, 0.20, 0.65, 0.03])
     ax_yshift = plt.axes([0.25, 0.15, 0.65, 0.03])
@@ -225,9 +235,9 @@ if __name__=="__main__":
 
     # Create sliders
     angle_slider = Slider(ax_angle, 'Angle', -math.pi/2, math.pi/2, valinit=math.asin(R[1][0]))
-    xshift_slider = Slider(ax_xshift, 'X Shift', -100, 100, valinit=T[0])
-    yshift_slider = Slider(ax_yshift, 'Y Shift', -100, 100, valinit=T[1])
-    scale_slider = Slider(ax_scale, 'Scale', 0.1, 2.0, valinit=s)
+    xshift_slider = Slider(ax_xshift, 'X Shift', T[0]-20, T[0]+20, valinit=T[0])
+    yshift_slider = Slider(ax_yshift, 'Y Shift', T[1]-20, T[1]+20, valinit=T[1])
+    scale_slider = Slider(ax_scale, 'Scale', scale-0.2, scale+0.2, valinit=scale)
 
 
     # Attach the update function to the sliders
@@ -236,9 +246,10 @@ if __name__=="__main__":
     yshift_slider.on_changed(update)
     scale_slider.on_changed(update)
 
+    # sliders done==============================================
 
 
-    #visualize the calibration result
+    #curser===================================================
     #1. add cursor to show corresponding points
     cursor1, = ax1.plot([], [], 'r+')
     cursor2, = ax2.plot([], [], 'r+')
@@ -247,9 +258,10 @@ if __name__=="__main__":
     plt.tight_layout()
     plt.title("Transformed reference Image")
     plt.show()
-
+    # cursor done=================================================
 
     # show overlapping image
+    transform_image = transform_img(transform_image_ori, R, T, scale)
     plt.imshow(transform_image, cmap='gray', alpha=0.5)
     plt.imshow(reference_image, cmap='gray', alpha=0.5)
     plt.xlim(-10, 250)
