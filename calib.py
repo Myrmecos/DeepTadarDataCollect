@@ -144,10 +144,10 @@ def draw_black_margin(image, margin_width):
     return image
 
 if __name__=="__main__":
-    margin = 30
+    margin = 50
     # load image
     transform_points, reference_points = load_yaml("config.yaml")
-    baseDir = "RawData/exp21/"
+    baseDir = "RawData/exp23/"
     transform_dir = "realsense_depth/"
     reference_dir = "seek_thermal/"
     ind = 0
@@ -202,9 +202,12 @@ if __name__=="__main__":
     plt.title("Transformed reference Image")
     plt.show()
 
+
     # show overlapping image
     plt.imshow(transform_image, cmap='gray', alpha=0.5)
     plt.imshow(reference_image, cmap='gray', alpha=0.5)
+    plt.xlim(-10, 250)
+    plt.ylim(200, -10)
     plt.show()
 
     
