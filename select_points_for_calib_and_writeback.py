@@ -23,18 +23,37 @@ image_names = []
 # goal: exp1/***.npy, exp11/***.npy, exp21/***.npy
 distance = "2"
 dirinds = [distance, "1"+distance, "2"+distance] #1, 11, 21
+
+transform_image_names = []
+target_image_names = []
 for dirind in dirinds:
     dirname = "exp"+dirind+"/"
     validInd = data[dirind]
     #list all files under exp**, and select the names corresponding to validInd
-    imageNames=os.listdir(baseDir+dirname+transform)
+    imageNamesTrans=os.listdir(baseDir+dirname+transform)
+    imageNamesTarget=os.listdir(baseDir+dirname+target)
     # add the names to image_names
     
     for i in validInd:
-        image_names.append(baseDir+dirname+transform+imageNames[i])
+        transform_image_names.append(baseDir+dirname+transform+imageNamesTrans[i])
+        target_image_names.append(baseDir+dirname+target+imageNamesTarget[i])
     
 
-print(len(image_names))
+print(len(transform_image_names))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
