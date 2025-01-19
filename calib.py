@@ -147,7 +147,7 @@ if __name__=="__main__":
     margin = 50
     # load image
     transform_points, reference_points = load_yaml("config.yaml")
-    baseDir = "RawData/exp25/"
+    baseDir = "RawData/exp26/"
     transform_dir = "realsense_depth/"
     reference_dir = "seek_thermal/"
     ind = 0
