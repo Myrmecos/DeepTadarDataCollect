@@ -13,8 +13,13 @@ import math
 #根据需求，认为需要把distance对应到transform上，即将distance通过resize，平移和旋转贴合到transform上。
 #下方示例是将transform通过转换对应到distance上，只要把transform和distance的文件交换即可。
 #
+
+# TODO: seek/1m.yaml; 2m.yaml; ... 7m.yaml;
+# senxor_m08/...; senxor_m16/...; mlx/...;
 cursor1 = None
+cursor11 = None
 cursor2 = None
+cursor21 = None
 im = None
 transform_image_ori = None
 R = None
@@ -138,8 +143,10 @@ def calc_scale(reference_points, transform_points):
 # callback function, for moving cursor
 def on_mouse_move(event):
     if event.inaxes == ax1:
+        cursor11.set_data(event.xdata, event.ydata)
         cursor2.set_data(event.xdata, event.ydata)
     elif event.inaxes == ax2:
+        cursor21.set_data(event.xdata, event.ydata)
         cursor1.set_data(event.xdata, event.ydata)
     plt.draw()
 
@@ -203,23 +210,29 @@ def read_yaml(filename):
 if __name__=="__main__":
     margin = 100
     # load image
-    transform_points, reference_points = load_yaml("seekPoints.yaml")
-    distance = "7"
-    baseDir = "RawData/exp2"+distance+"/"
+    src_distance = "2"
+    dest_distance = "1" #which distance we want to adjust our RTS to(e.g. we can read calib result at 7m, transform it to use at 6m)
+    baseDir = "RawData/exp2"+dest_distance+"/"
     transform_dir = "realsense_depth/"
     reference_dir = "seek_thermal/"
     mode = "adjust" # adjust previous R, T, S
     #mode = "pointcalib"
-    RTSfile = "seekRTS.yaml"
+
+    
+    pointsfile = "calibpoints/"+reference_dir[:-1]+".yaml"
+    RTSfileSrc = "calibresults/"+reference_dir+src_distance+".yaml"
+    RTSfileDst = "calibresults/"+reference_dir+dest_distance+".yaml"
+    #RTSfile = "seekRTS.yaml"
     ind = 2
 
+    transform_points, reference_points = load_yaml(pointsfile)
     transform_files = os.listdir(baseDir+transform_dir)
     reference_files = os.listdir(baseDir+reference_dir)
 
     if mode != "adjust":
         # calculate scale
         scale = calc_scale(reference_points, transform_points)
-        print("scaling factor (transform/reference) is:", scale)
+        #print("scaling factor (transform/reference) is:", scale)
 
         # rescale refernce points
         reference_points = np.array(reference_points)*scale
@@ -228,7 +241,8 @@ if __name__=="__main__":
         R, T = calc_RT(reference_points, transform_points)
 
     else:
-        R, T, scale = read_yaml(RTSfile)
+        R, T, scale = read_yaml(RTSfileSrc)
+        print("read: ", R, T, scale)
 
     # map the transform array to reference image
     #1. load the to-be-conferted image and reference image
@@ -237,7 +251,7 @@ if __name__=="__main__":
     transform_image= cv.cvtColor(transform_image, cv.COLOR_BGR2GRAY)
     # transform_image = cv.normalize(transform_image.astype('float'), None, 0.0, 1.0, cv.NORM_MINMAX)
     reference_image = np.load(baseDir+reference_dir+reference_files[ind])
-    print(reference_image)
+    #print(reference_image)
     reference_image = reference_image.astype(np.float32)
     reference_image = cv.normalize(reference_image, None, 0, 255, cv.NORM_MINMAX)
 
@@ -257,7 +271,7 @@ if __name__=="__main__":
     transform_image = padded_transform
     transform_image_ori = transform_image
 
-    print(R.shape, T.shape, type(R))
+    #print(R.shape, T.shape, type(R))
     transform_image = transform_img(transform_image_ori, R, T, scale)
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
 
@@ -297,6 +311,9 @@ if __name__=="__main__":
     #1. add cursor to show corresponding points
     cursor1, = ax1.plot([], [], 'r+')
     cursor2, = ax2.plot([], [], 'r+')
+
+    cursor11, = ax1.plot([], [], 'r+')
+    cursor21, = ax2.plot([], [], 'r+')
     fig.canvas.mpl_connect('motion_notify_event', on_mouse_move)
     #2. layout and show
     plt.tight_layout()
@@ -315,6 +332,6 @@ if __name__=="__main__":
 
     to_save = input("save R, T and s? y/n")
     if to_save=="y":
-        dump_yaml(R, T, scale, RTSfile)
+        dump_yaml(R, T, scale, RTSfileDst)
 
     
