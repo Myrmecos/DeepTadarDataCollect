@@ -16,7 +16,7 @@ with open('image.yaml', 'r') as file:
 
 baseDir = "RawData/"
 transform = "realsense_depth/"
-target = "seek_thermal/"
+target = "MLX/"
 distance = "1"
 
 def calib_for_distance_m(ps, transform_dir, target_dir, distance_str):
