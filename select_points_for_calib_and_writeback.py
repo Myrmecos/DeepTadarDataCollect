@@ -1,5 +1,5 @@
 import yaml
-import select_points_for_calib as sc
+from select_points_for_calib import PointSelector
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
@@ -19,7 +19,7 @@ transform = "realsense_depth/"
 target = "seek_thermal/"
 distance = "2"
 
-def calib_for_distance_m(transform_dir, target_dir, distance_str):
+def calib_for_distance_m(ps, transform_dir, target_dir, distance_str):
     dirinds = [distance_str, "1"+distance_str, "2"+distance_str] #1, 11, 21
     transform_image_names = []
     target_image_names = []
@@ -44,16 +44,17 @@ def calib_for_distance_m(transform_dir, target_dir, distance_str):
         ind = i + 0
         transform_image=np.load(transform_image_names[ind]) #image to be rotated, transform and resized
         reference_image=np.load(target_image_names[ind])
-        sc.showImagePanels(transform_image, reference_image)
+        ps.showImagePanels(transform_image, reference_image)
 
-    return sc.return_list()
+    return ps.return_list()
 
 if __name__=="__main__":
     image_names = []
+    ps = PointSelector()
     # goal: exp1/***.npy, exp11/***.npy, exp21/***.npy
-    retpoints = calib_for_distance_m(transform, target, distance)
-    sc.print_list()
-    sc.clear_list()
+    retpoints = calib_for_distance_m(ps, transform, target, distance)
+    ps.print_list()
+    ps.clear_list()
 
     # Print the selected points
     # print("Selected transform Points:", transform_points) #transform refers to those points to be transformed and mapped (should be depth)
