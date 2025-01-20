@@ -23,13 +23,13 @@ class PointSelector:
         cursor2, = ax2.plot([], [], 'r+')
         if event.inaxes == ax1:
             x, y = int(event.xdata), int(event.ydata)
-            self.transform_points.append((x, y))
+            self.transform_points.append([x, y])
             print(f"transform Image: Clicked at ({x}, {y})")
             ax1.scatter(x, y, c='red', s=50)
             
         elif event.inaxes == ax2:
             x, y = int(event.xdata), int(event.ydata)
-            self.reference_points.append((x, y))
+            self.reference_points.append([x, y])
             print(f"reference Image: Clicked at ({x}, {y})")
             ax2.scatter(x, y, c='red', s=50)  # Mark the point
             
@@ -53,6 +53,7 @@ class PointSelector:
         plt.tight_layout()
         
         plt.show()
+        return self.return_list()
 
     def return_list(self):
         return self.transform_points, self.reference_points

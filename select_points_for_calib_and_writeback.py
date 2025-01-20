@@ -17,7 +17,7 @@ with open('image.yaml', 'r') as file:
 baseDir = "RawData/"
 transform = "realsense_depth/"
 target = "seek_thermal/"
-distance = "2"
+distance = "1"
 
 def calib_for_distance_m(ps, transform_dir, target_dir, distance_str):
     dirinds = [distance_str, "1"+distance_str, "2"+distance_str] #1, 11, 21
@@ -52,13 +52,24 @@ if __name__=="__main__":
     image_names = []
     ps = PointSelector()
     # goal: exp1/***.npy, exp11/***.npy, exp21/***.npy
-    retpoints = calib_for_distance_m(ps, transform, target, distance)
+    transform_points, reference_points = calib_for_distance_m(ps, transform, target, distance)
     ps.print_list()
     ps.clear_list()
 
     # Print the selected points
     # print("Selected transform Points:", transform_points) #transform refers to those points to be transformed and mapped (should be depth)
     # print("Selected reference Points:", reference_points)
+
+    data = {
+        "transform_points": transform_points,
+        "reference_points": reference_points
+    }
+    print(data)
+    with open('config.yaml', 'w') as file:
+        to_write = input("Write to yaml file? y/n")
+        if (to_write=="y"):
+            print("write stuffs back!")
+            yaml.dump(data, file, default_flow_style=True)
         
         
 
