@@ -184,26 +184,51 @@ def MLX_process(MLX_temperature_map):
     MLX_temperature_map = cv.applyColorMap(MLX_temperature_map, cv.COLORMAP_JET)
     return MLX_temperature_map
 
+def dump_yaml(R, T, s, filename):
+    R = R.tolist()
+    T = T.tolist()
+    s = float(s)
+    
+    data = {
+        "R": R, "T": T, "s": s
+    }
+    with open(filename, 'w') as file:
+        yaml.dump(data, file, default_flow_style=True)
+
+def read_yaml(filename):
+    with open(filename) as file:
+        data = yaml.safe_load(file)
+    return np.array(data["R"]), np.array(data["T"]), np.float64(data["s"])
+
 if __name__=="__main__":
     margin = 100
     # load image
-    transform_points, reference_points = load_yaml("config.yaml")
-    baseDir = "RawData/exp27/"
+    transform_points, reference_points = load_yaml("seekPoints.yaml")
+    distance = "7"
+    baseDir = "RawData/exp2"+distance+"/"
     transform_dir = "realsense_depth/"
     reference_dir = "seek_thermal/"
+    mode = "adjust" # adjust previous R, T, S
+    #mode = "pointcalib"
+    RTSfile = "seekRTS.yaml"
     ind = 2
+
     transform_files = os.listdir(baseDir+transform_dir)
     reference_files = os.listdir(baseDir+reference_dir)
 
-    # calculate scale
-    scale = calc_scale(reference_points, transform_points)
-    print("scaling factor (transform/reference) is:", scale)
+    if mode != "adjust":
+        # calculate scale
+        scale = calc_scale(reference_points, transform_points)
+        print("scaling factor (transform/reference) is:", scale)
 
-    # rescale refernce points
-    reference_points = np.array(reference_points)*scale
+        # rescale refernce points
+        reference_points = np.array(reference_points)*scale
 
-    # calculate rotation and transformation
-    R, T = calc_RT(reference_points, transform_points)
+        # calculate rotation and transformation
+        R, T = calc_RT(reference_points, transform_points)
+
+    else:
+        R, T, scale = read_yaml(RTSfile)
 
     # map the transform array to reference image
     #1. load the to-be-conferted image and reference image
@@ -287,5 +312,9 @@ if __name__=="__main__":
     plt.xlim(-10, 250)
     plt.ylim(200, -10)
     plt.show()
+
+    to_save = input("save R, T and s? y/n")
+    if to_save=="y":
+        dump_yaml(R, T, scale, RTSfile)
 
     
