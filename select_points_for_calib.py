@@ -60,6 +60,10 @@ def print_list():
     for p in reference_points:
         print(" - [",p[0], ", ", p[1], "]", sep = "")
 
+def clear_list():
+    transform_points = []
+    reference_points = []
+
 # callback function, for moving cursor
 def on_mouse_move(event):
     if event.inaxes == ax1:
