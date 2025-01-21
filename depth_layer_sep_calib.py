@@ -47,6 +47,7 @@ def read_yaml(filename):
 
 R2, T2, s2 = read_yaml("calibresults/seek_thermal/2.yaml")
 R3, T3, s3 = read_yaml("calibresults/seek_thermal/3.yaml")
+R7, T7, s7 = read_yaml("calibresults/seek_thermal/3.yaml")
 
 depth_ori = np.load("recov.npy")
 depth_ori1 = copy.copy(depth_ori)
@@ -63,8 +64,14 @@ depth_ori2[depth_ori>3.5]=np.nan
 transformed_image1 = calib.transform_img(depth_ori1, R2, T2, s2)
 transformed_image2 = calib.transform_img(depth_ori2, R3, T3, s3)
 
-plt.imshow(transformed_image1, alpha=1)
-plt.imshow(transformed_image2, alpha=1)
+background = calib.transform_img(depth_ori, R7, T7, s7)
+
+mask = ~np.isnan(transformed_image1)
+transformed_image2[mask] = transformed_image1[mask]
+
+
+#plt.imshow(transformed_image1, alpha=1)
+plt.imshow(transformed_image2)
 plt.show()
 
 # 3. mask the image back to original image. Use valid values to cover up original values. Invalid values are ignored.
