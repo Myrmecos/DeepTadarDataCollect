@@ -37,6 +37,7 @@ def load_yaml(filename):
 
 # transform image give the rotation matrix R, translation matrix T and scale s
 def transform_img(transform_image, R, T, scale):
+    print("starting normal calib")
     # Load the reference image
     # transform = np.load("color.npy")
     transform_image = transform_image.astype(np.float32)
@@ -85,18 +86,22 @@ def transform_img(transform_image, R, T, scale):
     return transformed_reference
 
 def transform_image_layered(base_dir, max_dist, depth_ori):
-    R7, T7, s7 = read_yaml(base_dir + max_dist + ".yaml")
-    background = transform_img(depth_ori, R7, T7, s7)
-    background[(background<0.5) & (background>6.5)] = np.nan
-
+    print("starting multi-layer calib")
+    Rd, Td, sd = read_yaml(base_dir + max_dist + ".yaml")
+    background = transform_img(depth_ori, Rd, Td, sd)
+    background[(background<6.5) | (background>6.5)] = np.nan
     # calib for each distance range
     for i in range(int(max_dist)):
+    #for i in range(0):
         print(i, "th")
         ind = i+1
         depth_ori1 = copy.copy(depth_ori)
         #1.1. make all areas outside the range nan
         depth_ori1[depth_ori<ind-0.5]=np.nan
         depth_ori1[depth_ori>=ind+0.5]=np.nan
+        # plt.imshow(depth_ori1)
+        # plt.title("should see this as bg")
+        # plt.show()
         # 2. apply transformation (RTS) to the image
         R2, T2, s2 = read_yaml(base_dir+f"{ind}.yaml")
         transformed_image1 = transform_img(depth_ori1, R2, T2, s2)
@@ -104,8 +109,11 @@ def transform_image_layered(base_dir, max_dist, depth_ori):
         mask = ~np.isnan(transformed_image1)
         background[mask] = transformed_image1[mask]
 
-
+    # plt.imshow(background)
+    # plt.title("and see this actually")
+    # plt.show()
     #plt.imshow(transformed_image1, alpha=1)
+    #background[background==-1]=np.nan
     return background
 
 # calculates rotation matrix R, transformation matrix T and Scaling factor s
@@ -181,7 +189,7 @@ def draw_black_margin(image, margin_width):
 
 # update the transform image according to adjusted R, T and S
 def update(val):
-    global R, T, scale
+    global R, T, scale, transform_dir, max_dir, depth_ori
     # Get current slider values
     angle = angle_slider.val
     xshift = xshift_slider.val
@@ -193,7 +201,10 @@ def update(val):
     T = np.array([xshift, yshift])
     print(R, T, scale)
     # Update the displayed image
-    layer1 = transform_img(transform_image, R, T, scale)
+    if mode != "mlc":
+        layer1 = transform_img(transform_image, R, T, scale)
+    else:
+        layer1 = transform_image_layered(basedir1, maxlen1, depth_ori1)
     layer2 = reference_image
     im.set_data(layer1)
     fig.canvas.draw_idle()
@@ -365,7 +376,10 @@ def visualize_calib_result(transform_image, reference_image, mode, R, T, scale):
     print(transform_image_ori.shape)
     #plt.clear()
     # show overlapping image
-    transform_image = transform_img(transform_image_ori, R, T, scale)
+    if mode != "mlc":
+        transform_image = transform_img(transform_image_ori, R, T, scale)
+    else:
+        transform_image = transform_image_layered(basedir1, maxlen1, depth_ori1)
     print(transform_image.shape)
     plt.imshow(transform_image, cmap='gray', alpha=0.5)
     plt.imshow(reference_image, cmap='gray', alpha=0.5)
@@ -375,14 +389,15 @@ def visualize_calib_result(transform_image, reference_image, mode, R, T, scale):
 
 
 if __name__=="__main__":
+    global mode
     margin = 0
     # prepare arguments =====================================================================
-    src_distance = "2"
-    dest_distance = "6" #which distance we want to adjust our RTS to(e.g. we can read calib result at 7m, transform it to use at 6m)
+    src_distance = "5"
+    dest_distance = "2" #which distance we want to adjust our RTS to(e.g. we can read calib result at 7m, transform it to use at 6m)
     baseDir = "RawData/exp2"+dest_distance+"/"
     transform_dir = "realsense_depth/"
-    reference_dir = "senxor_m08_1/"
-    ind = 1 #index of the image we want to visualize. 1 means 2nd valid image
+    reference_dir = "seek_thermal/"
+    ind = 2 #index of the image we want to visualize. 1 means 2nd valid image
     mode = "adjust" # adjust previous R, T, S
     #mode = "pointcalib"
     mode = "mlc" #multilayercalib
@@ -409,7 +424,7 @@ if __name__=="__main__":
     # plt.show()
 
     #1. transform the transform image ==============================================================================
-    basedir1 = "calibresults/senxor_m08_1/"
+    basedir1 = "calibresults/"+reference_dir
     maxlen1 = "6"
     depth_ori1 = transform_image
     #transform_image = transform_img(transform_image, R, T, scale) #for debugging
