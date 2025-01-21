@@ -9,10 +9,7 @@ import mplcursors
 import os
 import math
 
-#
-#根据需求，认为需要把distance对应到transform上，即将distance通过resize，平移和旋转贴合到transform上。
-#下方示例是将transform通过转换对应到distance上，只要把transform和distance的文件交换即可。
-#
+# calibration for one sensor to map to depth camera, at different distance (one distance gives one set of (R, T, S))
 
 # TODO: seek/1m.yaml; 2m.yaml; ... 7m.yaml;
 # senxor_m08/...; senxor_m16/...; mlx/...;
@@ -86,8 +83,6 @@ def transform_img(transform_image, R, T, scale):
     transformed_reference = cv.resize(transformed_reference, (int(transform.shape[0]/scale), int(transform.shape[1]/scale)), interpolation=cv.INTER_AREA)
     print("resize ok")
 
-
-
     return transformed_reference
 
 # calculates rotation matrix R, transformation matrix T and Scaling factor s
@@ -140,7 +135,7 @@ def calc_scale(reference_points, transform_points):
     s = dist_t / dist_d  # Scaling factor
     return s
 
-# callback function, for moving cursor
+# callback function, for moving cursor at corresponding positions
 def on_mouse_move(event):
     if event.inaxes == ax1:
         cursor11.set_data(event.xdata, event.ydata)
@@ -159,6 +154,7 @@ def draw_black_margin(image, margin_width):
     image[:, -margin_width:] = 0  # Right margin
     return image
 
+# update the transform image according to adjusted R, T and S
 def update(val):
     global R, T
     # Get current slider values
@@ -176,12 +172,7 @@ def update(val):
     layer1 = transform_img(transform_image_ori, R, T, scale)
     layer2 = reference_image
     im.set_data(layer1)
-    #res = 0.5*layer1 + 0.5*layer2
-    #ax1.clear()
-    #ax1.imshow(layer1, alpha=0.5)
-    #ax1.imshow(layer2, alpha=0.5)
     fig.canvas.draw_idle()
-
 
 def MLX_process(MLX_temperature_map):
     MLX_temperature_map = MLX_temperature_map.astype(np.uint8)
@@ -209,7 +200,7 @@ def read_yaml(filename):
 
 if __name__=="__main__":
     margin = 0
-    # load image
+    # prepare arguments =====================================================================
     src_distance = "7"
     dest_distance = "7" #which distance we want to adjust our RTS to(e.g. we can read calib result at 7m, transform it to use at 6m)
     baseDir = "RawData/exp2"+dest_distance+"/"
@@ -218,7 +209,7 @@ if __name__=="__main__":
     mode = "adjust" # adjust previous R, T, S
     #mode = "pointcalib"
 
-    
+    # read data, get names of files =============================================================
     pointsfile = "calibpoints/"+reference_dir[:-1]+".yaml"
     RTSfileSrc = "calibresults/"+reference_dir+src_distance+".yaml"
     RTSfileDst = "calibresults/"+reference_dir+dest_distance+".yaml"
@@ -245,7 +236,7 @@ if __name__=="__main__":
         print("read: ", R, T, scale)
 
     # map the transform array to reference image
-    #1. load the to-be-conferted image and reference image
+    #0. load the to-be-conferted image and reference image================================================================
     transform_image=np.load(baseDir+transform_dir+transform_files[ind])
     transform_image = cv.normalize(transform_image, None, 0, 255, cv.NORM_MINMAX)
     transform_image= cv.cvtColor(transform_image, cv.COLOR_BGR2GRAY)
@@ -255,6 +246,7 @@ if __name__=="__main__":
     reference_image = reference_image.astype(np.float32)
     reference_image = cv.normalize(reference_image, None, 0, 255, cv.NORM_MINMAX)
 
+    # 0. add margin for transform ==========================================================
     rmargin = round(margin/scale)
     new_h = reference_image.shape[0]+round(2*rmargin)
     new_w = reference_image.shape[1]+round(2*rmargin)
@@ -263,7 +255,7 @@ if __name__=="__main__":
     reference_image = padded_reference
     # reference_image= cv.cvtColor(reference_image, cv.COLOR_BGR2GRAY)
     # reference_image = cv.normalize(reference_image.astype('float'), None, 0.0, 1.0, cv.NORM_MINMAX)
-    #2. transform with R, T and S
+    # add margin for target=============================================================================
     new_h = transform_image.shape[0]+2*margin
     new_w = transform_image.shape[1]+2*margin
     padded_transform = np.full((new_h, new_w), 255, dtype=np.uint8)
@@ -271,8 +263,10 @@ if __name__=="__main__":
     transform_image = padded_transform
     transform_image_ori = transform_image
 
-    #print(R.shape, T.shape, type(R))
+    #1. transform the transform image ==============================================================================
     transform_image = transform_img(transform_image_ori, R, T, scale)
+
+    #2. visualize the transformed image
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
 
     
