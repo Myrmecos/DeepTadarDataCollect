@@ -97,8 +97,14 @@ def transform_image_layered(base_dir, max_dist, depth_ori):
         ind = i+1
         depth_ori1 = copy.copy(depth_ori)
         #1.1. make all areas outside the range nan
-        depth_ori1[depth_ori<ind-0.5]=np.nan
-        depth_ori1[depth_ori>=ind+0.5]=np.nan
+        min_ind = depth_ori<ind-0.5
+        max_ind = depth_ori>=ind+0.5
+        if ind==1: 
+            min_ind = 0
+        if ind==max_dist:
+            max_ind = 100000
+        depth_ori1[min_ind]=np.nan
+        depth_ori1[max_ind]=np.nan
         # plt.imshow(depth_ori1)
         # plt.title("should see this as bg")
         # plt.show()
