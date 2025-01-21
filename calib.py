@@ -214,7 +214,7 @@ if __name__=="__main__":
     dest_distance = "7" #which distance we want to adjust our RTS to(e.g. we can read calib result at 7m, transform it to use at 6m)
     baseDir = "RawData/exp2"+dest_distance+"/"
     transform_dir = "realsense_depth/"
-    reference_dir = "senxor_m08/"
+    reference_dir = "senxor_m08_1/"
     mode = "adjust" # adjust previous R, T, S
     #mode = "pointcalib"
 
@@ -223,7 +223,7 @@ if __name__=="__main__":
     RTSfileSrc = "calibresults/"+reference_dir+src_distance+".yaml"
     RTSfileDst = "calibresults/"+reference_dir+dest_distance+".yaml"
     #RTSfile = "seekRTS.yaml"
-    ind = 6
+    ind = 1
 
     transform_points, reference_points = load_yaml(pointsfile)
     transform_files = os.listdir(baseDir+transform_dir)
