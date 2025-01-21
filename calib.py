@@ -87,9 +87,10 @@ def transform_img(transform_image, R, T, scale):
 def transform_image_layered(base_dir, max_dist, depth_ori):
     R7, T7, s7 = read_yaml(base_dir + max_dist + ".yaml")
     background = transform_img(depth_ori, R7, T7, s7)
+    background[(background<0.5) & (background>6.5)] = np.nan
 
     # calib for each distance range
-    for i in range(6):
+    for i in range(int(max_dist)):
         print(i, "th")
         ind = i+1
         depth_ori1 = copy.copy(depth_ori)
@@ -309,8 +310,10 @@ def visualize_calib_result(transform_image, reference_image, mode, R, T, scale):
     # plt.imshow(transform_image_ori)
     # plt.show()
     if (mode == "mlc"): #multi-layer calib
+        print("multi-layer calib!")
         transform_image = transform_image_layered(basedir1, maxlen1, depth_ori1)
     else:
+        print("normal calib!")
         transform_image = transform_img(transform_image, R, T, scale)
     
     im = ax1.imshow(transform_image, cmap='gray')
@@ -374,15 +377,15 @@ def visualize_calib_result(transform_image, reference_image, mode, R, T, scale):
 if __name__=="__main__":
     margin = 0
     # prepare arguments =====================================================================
-    src_distance = "1"
-    dest_distance = "1" #which distance we want to adjust our RTS to(e.g. we can read calib result at 7m, transform it to use at 6m)
+    src_distance = "2"
+    dest_distance = "6" #which distance we want to adjust our RTS to(e.g. we can read calib result at 7m, transform it to use at 6m)
     baseDir = "RawData/exp2"+dest_distance+"/"
     transform_dir = "realsense_depth/"
     reference_dir = "senxor_m08_1/"
     ind = 1 #index of the image we want to visualize. 1 means 2nd valid image
     mode = "adjust" # adjust previous R, T, S
     #mode = "pointcalib"
-    #mode = "mlc"#multilayercalib
+    mode = "mlc" #multilayercalib
 
     # read data, get names of files =============================================================
     R, T, scale = read_RTS(src_distance, reference_dir, mode)
@@ -412,8 +415,9 @@ if __name__=="__main__":
     #transform_image = transform_img(transform_image, R, T, scale) #for debugging
 
     visualize_calib_result(transform_image, reference_image, mode, R, T, scale)
-    to_save = input("save R, T and s? y/n")
-    if to_save=="y":
-        dump_yaml(R, T, scale, RTSfileDst)
+    if mode != "mlc":
+        to_save = input("save R, T and s? y/n")
+        if to_save=="y":
+            dump_yaml(R, T, scale, RTSfileDst)
 
     
