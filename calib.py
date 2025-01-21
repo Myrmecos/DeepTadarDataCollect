@@ -121,6 +121,7 @@ def calc_RT(reference_points, transform_points):
     print(T)
     return (R, T)
 
+
 # calculate scale give reference (thermal) and transform (depth) points
 def calc_scale(reference_points, transform_points):
     P_d = np.array(reference_points)  # reference image points
@@ -220,6 +221,17 @@ def read_RTS(src_distance, reference_dir, mode):
         print("read: ", R, T, scale)
     return R, T, scale
 
+def load_image(baseDir, transform_dir, transform_files, reference_dir, reference_files):
+    transform_image=np.load(baseDir+transform_dir+transform_files[ind])
+    transform_image = cv.normalize(transform_image, None, 0, 255, cv.NORM_MINMAX)
+    transform_image= cv.cvtColor(transform_image, cv.COLOR_BGR2GRAY)
+    # transform_image = cv.normalize(transform_image.astype('float'), None, 0.0, 1.0, cv.NORM_MINMAX)
+    reference_image = np.load(baseDir+reference_dir+reference_files[ind])
+    #print(reference_image)
+    reference_image = reference_image.astype(np.float32)
+    reference_image = cv.normalize(reference_image, None, 0, 255, cv.NORM_MINMAX)
+    return transform_image, reference_image
+
 
 if __name__=="__main__":
     margin = 0
@@ -241,14 +253,7 @@ if __name__=="__main__":
 
     # map the transform array to reference image
     #0. load the to-be-conferted image and reference image================================================================
-    transform_image=np.load(baseDir+transform_dir+transform_files[ind])
-    transform_image = cv.normalize(transform_image, None, 0, 255, cv.NORM_MINMAX)
-    transform_image= cv.cvtColor(transform_image, cv.COLOR_BGR2GRAY)
-    # transform_image = cv.normalize(transform_image.astype('float'), None, 0.0, 1.0, cv.NORM_MINMAX)
-    reference_image = np.load(baseDir+reference_dir+reference_files[ind])
-    #print(reference_image)
-    reference_image = reference_image.astype(np.float32)
-    reference_image = cv.normalize(reference_image, None, 0, 255, cv.NORM_MINMAX)
+    transform_image, reference_image = load_image(baseDir,transform_dir,transform_files,reference_dir,reference_files)
 
     # 0. add margin for transform ==========================================================
     rmargin = round(margin/scale)
