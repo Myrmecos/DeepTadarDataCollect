@@ -45,33 +45,38 @@ def read_yaml(filename):
         data = yaml.safe_load(file)
     return np.array(data["R"]), np.array(data["T"]), np.float64(data["s"])
 
-R2, T2, s2 = read_yaml("calibresults/seek_thermal/2.yaml")
-R3, T3, s3 = read_yaml("calibresults/seek_thermal/3.yaml")
 R7, T7, s7 = read_yaml("calibresults/seek_thermal/3.yaml")
 
+
 depth_ori = np.load("recov.npy")
-depth_ori1 = copy.copy(depth_ori)
-depth_ori2 = copy.copy(depth_ori)
-
-#1.1. at 1.5-2.5m
-depth_ori1[depth_ori<1.5]=np.nan
-depth_ori1[depth_ori>2.5]=np.nan
-#2.2. at 2.5-3.5m
-depth_ori2[depth_ori<2.5]=np.nan
-depth_ori2[depth_ori>3.5]=np.nan
-
-# 2. apply transformation (RTS) to the image
-transformed_image1 = calib.transform_img(depth_ori1, R2, T2, s2)
-transformed_image2 = calib.transform_img(depth_ori2, R3, T3, s3)
+# plt.imshow(depth_ori)
+# plt.show()
 
 background = calib.transform_img(depth_ori, R7, T7, s7)
+#background[(background<7.5) & (background>=0.5)]=np.nan
 
-mask = ~np.isnan(transformed_image1)
-transformed_image2[mask] = transformed_image1[mask]
+
+for i in range(6):
+    ind = i+1
+    depth_ori1 = copy.copy(depth_ori)
+    
+
+    #1.1. at 1.5-2.5m
+    depth_ori1[depth_ori<ind-0.5]=np.nan
+    depth_ori1[depth_ori>=ind+0.5]=np.nan
+
+    R2, T2, s2 = read_yaml(f"calibresults/seek_thermal/{ind}.yaml")
+    
+
+    # 2. apply transformation (RTS) to the image
+    transformed_image1 = calib.transform_img(depth_ori1, R2, T2, s2)
+
+    mask = ~np.isnan(transformed_image1)
+    background[mask] = transformed_image1[mask]
 
 
 #plt.imshow(transformed_image1, alpha=1)
-plt.imshow(transformed_image2)
+plt.imshow(background)
 plt.show()
 
 # 3. mask the image back to original image. Use valid values to cover up original values. Invalid values are ignored.
