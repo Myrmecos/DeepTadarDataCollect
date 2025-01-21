@@ -1,52 +1,37 @@
+import cv2
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.widgets import Slider
-from scipy.ndimage import rotate, shift, zoom
 
-# Load or create an example image
-image = np.random.rand(100, 100)  # Replace this with your image
+# Step 1: Generate the COLORMAP_JET lookup table
+colormap_jet = cv2.applyColorMap(np.arange(256, dtype=np.uint8).reshape(1, 256), cv2.COLORMAP_JET)
+colormap_jet = colormap_jet.squeeze()  # Shape: (256, 3)
 
-# Create the figure and axes
-fig, ax = plt.subplots()
-plt.subplots_adjust(left=0.25, bottom=0.4)  # Adjust layout to make room for sliders
+# Step 2: Create a reverse mapping from RGB to depth
+# We'll use a dictionary for fast lookup
+rgb_to_depth = {tuple(colormap_jet[i]): i for i in range(256)}
 
-# Display the initial image
-im = ax.imshow(image, cmap='gray')
+# Step 3: Load the colored depth image
+colored_depth_image = np.load("dep.npy")  # Replace with your image path
 
-# Create axes for the sliders
-ax_angle = plt.axes([0.25, 0.25, 0.65, 0.03])
-ax_xshift = plt.axes([0.25, 0.20, 0.65, 0.03])
-ax_yshift = plt.axes([0.25, 0.15, 0.65, 0.03])
-ax_scale = plt.axes([0.25, 0.10, 0.65, 0.03])
+# Step 4: Recover the depth image
+depth_image = np.zeros((colored_depth_image.shape[0], colored_depth_image.shape[1]), dtype=np.uint8)
 
-# Create sliders
-angle_slider = Slider(ax_angle, 'Angle', -30, 30, valinit=0)
-xshift_slider = Slider(ax_xshift, 'X Shift', -100, 100, valinit=0)
-yshift_slider = Slider(ax_yshift, 'Y Shift', -100, 100, valinit=0)
-scale_slider = Slider(ax_scale, 'Scale', 0.1, 2.0, valinit=1.0)
+for i in range(colored_depth_image.shape[0]):
+    for j in range(colored_depth_image.shape[1]):
+        pixel_color = tuple(colored_depth_image[i, j])
+        if pixel_color in rgb_to_depth:
+            depth_image[i, j] = rgb_to_depth[pixel_color]
+        else:
+            # Handle unknown colors (e.g., use nearest neighbor or default value)
+            depth_image[i, j] = 0  # Default to 0 (or handle differently)
 
-# Function to update the image based on slider values
-def update(val):
-    # Get current slider values
-    angle = angle_slider.val
-    xshift = xshift_slider.val
-    yshift = yshift_slider.val
-    scale = scale_slider.val
+# Step 5: Scale the depth image back to original depth range
+# Assuming the depth was scaled by alpha=0.03 during the original mapping
+original_depth_image = depth_image / 0.03/1000
 
-    # Apply transformations
-    transformed_image = rotate(image, angle, reshape=False)  # Rotate
-    transformed_image = shift(transformed_image, (yshift, xshift))  # Shift
-    transformed_image = zoom(transformed_image, scale)  # Scale
-
-    # Update the displayed image
-    im.set_data(transformed_image)
-    fig.canvas.draw_idle()
-
-# Attach the update function to the sliders
-angle_slider.on_changed(update)
-xshift_slider.on_changed(update)
-yshift_slider.on_changed(update)
-scale_slider.on_changed(update)
-
-# Show the plot
+# Save or display the recovered depth image
+cv2.imwrite("recov.png", original_depth_image)
+plt.imshow(original_depth_image)
 plt.show()
+np.save("recov.npy", original_depth_image)
+print("Depth image recovered successfully!")
