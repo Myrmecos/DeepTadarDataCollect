@@ -8,6 +8,7 @@ from matplotlib.widgets import Slider
 import mplcursors
 import os
 import math
+import copy
 
 # calibration for one sensor to map to depth camera, at different distance (one distance gives one set of (R, T, S))
 
@@ -18,7 +19,7 @@ cursor11 = None
 cursor2 = None
 cursor21 = None
 im = None
-transform_image_ori = None
+#transform_image_ori = None
 R = None
 T = None
 s = 0
@@ -38,7 +39,7 @@ def load_yaml(filename):
 def transform_img(transform_image, R, T, scale):
     # Load the reference image
     # transform = np.load("color.npy")
-    
+    #transform_image = transform_image.astype(np.int16)
     # Define the padding size (top, bottom, left, right)
     print("image shape:", transform_image.shape)
     if (transform_image.shape[1]-transform_image.shape[0]>=0):
@@ -55,8 +56,9 @@ def transform_img(transform_image, R, T, scale):
         left = 0
         right = 0 #abs(transform_image.shape[1]-transform_image.shape[0])
     #Zero-pad the image using cv2.copyMakeBorder
-    transform_image = cv.copyMakeBorder(transform_image, top, bottom, left, right, cv.BORDER_CONSTANT, value=np.nan)
-
+    transform_image = cv.copyMakeBorder(transform_image, top, bottom, left, right, cv.BORDER_CONSTANT, value=-1)
+    #plt.imshow(transform_image)
+    #plt.show()
     # Get the shape of the reference image
     transform = transform_image
     height, width = transform.shape
@@ -166,7 +168,7 @@ def update(val):
     T = np.array([xshift, yshift])
     print(R, T, scale)
     # Update the displayed image
-    layer1 = transform_img(transform_image_ori, R, T, scale)
+    layer1 = transform_img(transform_image, R, T, scale)
     layer2 = reference_image
     im.set_data(layer1)
     fig.canvas.draw_idle()
@@ -226,12 +228,22 @@ def load_image(baseDir, transform_dir, transform_files, reference_dir, reference
     reference_image = cv.normalize(reference_image, None, 0, 255, cv.NORM_MINMAX)
     return transform_image, reference_image
 
+# add margin to an image, with a scale. margin is number of pixels before scaling
+def add_margin(reference_image, margin, scale):
+    rmargin = round(margin/scale)
+    new_h = reference_image.shape[0]+round(2*rmargin)
+    new_w = reference_image.shape[1]+round(2*rmargin)
+    padded_reference = np.full((new_h, new_w), 255, dtype=np.uint8)
+    padded_reference[rmargin:rmargin + reference_image.shape[0], rmargin:rmargin + reference_image.shape[1]] = reference_image
+    reference_image = padded_reference
+    return reference_image
+
 
 if __name__=="__main__":
     margin = 0
     # prepare arguments =====================================================================
-    src_distance = "7"
-    dest_distance = "8" #which distance we want to adjust our RTS to(e.g. we can read calib result at 7m, transform it to use at 6m)
+    src_distance = "1"
+    dest_distance = "1" #which distance we want to adjust our RTS to(e.g. we can read calib result at 7m, transform it to use at 6m)
     baseDir = "RawData/exp2"+dest_distance+"/"
     transform_dir = "realsense_depth/"
     reference_dir = "senxor_m08_1/"
@@ -250,24 +262,12 @@ if __name__=="__main__":
     transform_image, reference_image = load_image(baseDir,transform_dir,transform_files,reference_dir,reference_files)
 
     # 0. add margin for transform ==========================================================
-    rmargin = round(margin/scale)
-    new_h = reference_image.shape[0]+round(2*rmargin)
-    new_w = reference_image.shape[1]+round(2*rmargin)
-    padded_reference = np.full((new_h, new_w), 255, dtype=np.uint8)
-    padded_reference[rmargin:rmargin + reference_image.shape[0], rmargin:rmargin + reference_image.shape[1]] = reference_image
-    reference_image = padded_reference
-    # reference_image= cv.cvtColor(reference_image, cv.COLOR_BGR2GRAY)
-    # reference_image = cv.normalize(reference_image.astype('float'), None, 0.0, 1.0, cv.NORM_MINMAX)
-    # add margin for target=============================================================================
-    new_h = transform_image.shape[0]+2*margin
-    new_w = transform_image.shape[1]+2*margin
-    padded_transform = np.full((new_h, new_w), 255, dtype=np.uint8)
-    padded_transform[margin:margin + transform_image.shape[0], margin:margin + transform_image.shape[1]] = transform_image
-    transform_image = padded_transform
-    transform_image_ori = transform_image
+    reference_image = add_margin(reference_image, margin, scale)
+    transform_image = add_margin(transform_image, margin, 1)
+    transform_image_ori = copy.copy(transform_image)
 
     #1. transform the transform image ==============================================================================
-    transform_image = transform_img(transform_image_ori, R, T, scale)
+    transform_image = transform_img(transform_image, R, T, scale)
 
     #2. visualize the transformed image
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
@@ -318,11 +318,14 @@ if __name__=="__main__":
     plt.show()
     # cursor done=================================================
 
+    #cv.imshow("transformed:", transform_image_ori)
+    print(transform_image_ori.shape)
     #plt.clear()
     # show overlapping image
     transform_image = transform_img(transform_image_ori, R, T, scale)
+    print(transform_image.shape)
     plt.imshow(transform_image, cmap='gray', alpha=0.5)
-    plt.imshow(reference_image_ori, cmap='gray', alpha=0.5)
+    plt.imshow(reference_image, cmap='gray', alpha=0.5)
     plt.xlim(-10, 250)
     plt.ylim(200, -10)
     plt.show()
