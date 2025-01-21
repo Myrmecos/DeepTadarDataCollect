@@ -89,7 +89,7 @@ def transform_image_layered(base_dir, max_dist, depth_ori):
     print("starting multi-layer calib")
     Rd, Td, sd = read_yaml(base_dir + max_dist + ".yaml")
     background = transform_img(depth_ori, Rd, Td, sd)
-    background[(background<6.5) | (background>6.5)] = np.nan
+    #background[(background<6.5) | (background>6.5)] = np.nan
     # calib for each distance range
     for i in range(int(max_dist)):
     #for i in range(0):
@@ -397,7 +397,7 @@ if __name__=="__main__":
     baseDir = "RawData/exp2"+dest_distance+"/"
     transform_dir = "realsense_depth/"
     reference_dir = "seek_thermal/"
-    ind = 2 #index of the image we want to visualize. 1 means 2nd valid image
+    ind = 4 #index of the image we want to visualize. 1 means 2nd valid image
     mode = "adjust" # adjust previous R, T, S
     #mode = "pointcalib"
     mode = "mlc" #multilayercalib
