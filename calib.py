@@ -39,7 +39,7 @@ def load_yaml(filename):
 def transform_img(transform_image, R, T, scale):
     # Load the reference image
     # transform = np.load("color.npy")
-    transform_image = transform_image.astype(np.int16)
+    transform_image = transform_image.astype(np.float32)
     # Define the padding size (top, bottom, left, right)
     print("image shape:", transform_image.shape)
     if (transform_image.shape[1]-transform_image.shape[0]>=0):
@@ -83,6 +83,29 @@ def transform_img(transform_image, R, T, scale):
     transformed_reference = cv.resize(transformed_reference, (int(transform.shape[0]/scale), int(transform.shape[1]/scale)), interpolation=cv.INTER_AREA)
 
     return transformed_reference
+
+def transform_image_layered(base_dir, max_dist, depth_ori):
+    R7, T7, s7 = read_yaml(base_dir + max_dist + ".yaml")
+    background = transform_img(depth_ori, R7, T7, s7)
+
+    # calib for each distance range
+    for i in range(6):
+        print(i, "th")
+        ind = i+1
+        depth_ori1 = copy.copy(depth_ori)
+        #1.1. make all areas outside the range nan
+        depth_ori1[depth_ori<ind-0.5]=np.nan
+        depth_ori1[depth_ori>=ind+0.5]=np.nan
+        # 2. apply transformation (RTS) to the image
+        R2, T2, s2 = read_yaml(base_dir+f"{ind}.yaml")
+        transformed_image1 = transform_img(depth_ori1, R2, T2, s2)
+
+        mask = ~np.isnan(transformed_image1)
+        background[mask] = transformed_image1[mask]
+
+
+    #plt.imshow(transformed_image1, alpha=1)
+    return background
 
 # calculates rotation matrix R, transformation matrix T and Scaling factor s
 # caution: relative distance of reference points must already be scaled to same scale 
@@ -267,7 +290,16 @@ if __name__=="__main__":
     transform_image_ori = copy.copy(transform_image)
 
     #1. transform the transform image ==============================================================================
-    transform_image = transform_img(transform_image, R, T, scale)
+    basedir1 = "calibresults/senxor_m08_1/"
+    maxlen1 = "6"
+    depth_ori1 = np.load("recov.npy")
+    #transform_image = transform_img(transform_image, R, T, scale) #for debugging
+
+    transform_image = transform_image_layered(basedir1, maxlen1, depth_ori1)
+
+
+
+
 
     #2. visualize the transformed image
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))

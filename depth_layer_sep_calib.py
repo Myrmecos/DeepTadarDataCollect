@@ -4,6 +4,7 @@ import yaml
 import matplotlib.pyplot as plt
 import copy
 import calib
+import cv2 as cv
 
 # TODO: map a depth image to a thermal image, give the R, T, S at different distance
 # 0. output image: copy original image
@@ -55,13 +56,13 @@ def make_calib(base_dir, max_dist, depth_ori):
 
     # calib for each distance range
     for i in range(6):
+        print(i, "th")
         ind = i+1
         depth_ori1 = copy.copy(depth_ori)
-        
         #1.1. make all areas outside the range nan
         depth_ori1[depth_ori<ind-0.5]=np.nan
         depth_ori1[depth_ori>=ind+0.5]=np.nan
-        
+        print("shown image!")
         # 2. apply transformation (RTS) to the image
         R2, T2, s2 = read_yaml(base_dir+f"{ind}.yaml")
         transformed_image1 = calib.transform_img(depth_ori1, R2, T2, s2)
@@ -71,8 +72,7 @@ def make_calib(base_dir, max_dist, depth_ori):
 
 
     #plt.imshow(transformed_image1, alpha=1)
-    plt.imshow(background)
-    plt.show()
+    return background
 
     # 3. mask the image back to original image. Use valid values to cover up original values. Invalid values are ignored.
 
@@ -81,4 +81,6 @@ if __name__=="__main__":
     basedir = "calibresults/seek_thermal/"
     maxlen = "7"
     depth_ori = np.load("recov.npy")
-    make_calib(basedir, maxlen, depth_ori)
+    background = make_calib(basedir, maxlen, depth_ori)
+    plt.imshow(background)
+    plt.show()
