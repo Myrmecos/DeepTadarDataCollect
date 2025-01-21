@@ -244,32 +244,75 @@ def read_RTS(src_distance, reference_dir, mode):
 
 def load_image(baseDir, transform_dir, transform_files, reference_dir, reference_files):
     transform_image=np.load(baseDir+transform_dir+transform_files[ind])
-    transform_image = cv.normalize(transform_image, None, 0, 255, cv.NORM_MINMAX)
-    transform_image= cv.cvtColor(transform_image, cv.COLOR_BGR2GRAY)
+    #transform_image = cv.normalize(transform_image, None, 0, 255, cv.NORM_MINMAX)
+    #transform_image= cv.cvtColor(transform_image, cv.COLOR_BGR2GRAY)
     # transform_image = cv.normalize(transform_image.astype('float'), None, 0.0, 1.0, cv.NORM_MINMAX)
+    #for wrong color-mapped depth image only ================= use correct format next time
+    transform_image = map_color_bk(transform_image)
+
+    # plt.imshow(transform_image)
+    # plt.show()
+
     reference_image = np.load(baseDir+reference_dir+reference_files[ind])
     reference_image = reference_image.astype(np.float32)
     reference_image = cv.normalize(reference_image, None, 0, 255, cv.NORM_MINMAX)
+
     return transform_image, reference_image
+
+
+def map_color_bk(colored_depth_image):
+    colormap_jet = cv.applyColorMap(np.arange(256, dtype=np.uint8).reshape(1, 256), cv.COLORMAP_JET)
+    colormap_jet = colormap_jet.squeeze()  # Shape: (256, 3)
+
+    # Step 2: Create a reverse mapping from RGB to depth
+    # We'll use a dictionary for fast lookup
+    rgb_to_depth = {tuple(colormap_jet[i]): i for i in range(256)}
+
+    # Step 3: Load the colored depth image
+    #colored_depth_image = np.load("dep.npy")  # Replace with your image path
+
+    # Step 4: Recover the depth image
+    depth_image = np.zeros((colored_depth_image.shape[0], colored_depth_image.shape[1]), dtype=np.uint8)
+
+    for i in range(colored_depth_image.shape[0]):
+        for j in range(colored_depth_image.shape[1]):
+            pixel_color = tuple(colored_depth_image[i, j])
+            if pixel_color in rgb_to_depth:
+                depth_image[i, j] = rgb_to_depth[pixel_color]
+            else:
+                # Handle unknown colors (e.g., use nearest neighbor or default value)
+                depth_image[i, j] = 0  # Default to 0 (or handle differently)
+
+    # Step 5: Scale the depth image back to original depth range
+    # Assuming the depth was scaled by alpha=0.03 during the original mapping
+    original_depth_image = depth_image / 0.03/1000
+    return original_depth_image
+
 
 # add margin to an image, with a scale. margin is number of pixels before scaling
 def add_margin(reference_image, margin, scale):
     rmargin = round(margin/scale)
     new_h = reference_image.shape[0]+round(2*rmargin)
     new_w = reference_image.shape[1]+round(2*rmargin)
-    padded_reference = np.full((new_h, new_w), 255, dtype=np.uint8)
+    padded_reference = np.full((new_h, new_w), 255, dtype=np.float32)
     padded_reference[rmargin:rmargin + reference_image.shape[0], rmargin:rmargin + reference_image.shape[1]] = reference_image
     reference_image = padded_reference
     return reference_image
 
-def visualize_calib_result(transform_image, reference_image):
+def visualize_calib_result(transform_image, reference_image, mode, R, T, scale):
     global angle_slider, xshift_slider, yshift_slider, scale_slider, fig, ax1, ax2, cursor1, cursor2, cursor11, cursor21
     #visualize the transformed image
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
     
 
     transform_image_ori = copy.copy(transform_image)
-    transform_image = transform_image_layered(basedir1, maxlen1, depth_ori1)
+    # plt.imshow(transform_image_ori)
+    # plt.show()
+    if (mode == "mlc"): #multi-layer calib
+        transform_image = transform_image_layered(basedir1, maxlen1, depth_ori1)
+    else:
+        transform_image = transform_img(transform_image, R, T, scale)
+    
     im = ax1.imshow(transform_image, cmap='gray')
     ax1.set_title('transform Image')
 
@@ -339,6 +382,7 @@ if __name__=="__main__":
     ind = 1 #index of the image we want to visualize. 1 means 2nd valid image
     mode = "adjust" # adjust previous R, T, S
     #mode = "pointcalib"
+    #mode = "mlc"#multilayercalib
 
     # read data, get names of files =============================================================
     R, T, scale = read_RTS(src_distance, reference_dir, mode)
@@ -350,18 +394,24 @@ if __name__=="__main__":
     #0. load the to-be-conferted image and reference image================================================================
     transform_image, reference_image = load_image(baseDir,transform_dir,transform_files,reference_dir,reference_files)
 
+    # plt.imshow(transform_image)
+    # plt.show()
+
     # 0. add margin for transform ==========================================================
     reference_image = add_margin(reference_image, margin, scale)
     transform_image = add_margin(transform_image, margin, 1)
     transform_image_ori = copy.copy(transform_image)
 
+    # plt.imshow(transform_image)
+    # plt.show()
+
     #1. transform the transform image ==============================================================================
     basedir1 = "calibresults/senxor_m08_1/"
     maxlen1 = "6"
-    depth_ori1 = np.load("recov.npy")
+    depth_ori1 = transform_image
     #transform_image = transform_img(transform_image, R, T, scale) #for debugging
 
-    visualize_calib_result(transform_image, reference_image)
+    visualize_calib_result(transform_image, reference_image, mode, R, T, scale)
     to_save = input("save R, T and s? y/n")
     if to_save=="y":
         dump_yaml(R, T, scale, RTSfileDst)
