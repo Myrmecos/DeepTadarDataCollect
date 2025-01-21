@@ -160,6 +160,7 @@ def calc_scale(reference_points, transform_points):
 
 # callback function, for moving cursor at corresponding positions
 def on_mouse_move(event):
+    global ax1, ax2, cursor11, cursor21
     if event.inaxes == ax1:
         cursor11.set_data(event.xdata, event.ydata)
         cursor2.set_data(event.xdata, event.ydata)
@@ -261,55 +262,19 @@ def add_margin(reference_image, margin, scale):
     reference_image = padded_reference
     return reference_image
 
-
-if __name__=="__main__":
-    margin = 0
-    # prepare arguments =====================================================================
-    src_distance = "1"
-    dest_distance = "1" #which distance we want to adjust our RTS to(e.g. we can read calib result at 7m, transform it to use at 6m)
-    baseDir = "RawData/exp2"+dest_distance+"/"
-    transform_dir = "realsense_depth/"
-    reference_dir = "senxor_m08_1/"
-    ind = 1 #index of the image we want to visualize. 1 means 2nd valid image
-    mode = "adjust" # adjust previous R, T, S
-    #mode = "pointcalib"
-
-    # read data, get names of files =============================================================
-    R, T, scale = read_RTS(src_distance, reference_dir, mode)
-    RTSfileDst = "calibresults/"+reference_dir+dest_distance+".yaml"
-    transform_files = os.listdir(baseDir+transform_dir)
-    reference_files = os.listdir(baseDir+reference_dir)
-
-    # map the transform array to reference image
-    #0. load the to-be-conferted image and reference image================================================================
-    transform_image, reference_image = load_image(baseDir,transform_dir,transform_files,reference_dir,reference_files)
-
-    # 0. add margin for transform ==========================================================
-    reference_image = add_margin(reference_image, margin, scale)
-    transform_image = add_margin(transform_image, margin, 1)
-    transform_image_ori = copy.copy(transform_image)
-
-    #1. transform the transform image ==============================================================================
-    basedir1 = "calibresults/senxor_m08_1/"
-    maxlen1 = "6"
-    depth_ori1 = np.load("recov.npy")
-    #transform_image = transform_img(transform_image, R, T, scale) #for debugging
-
-    transform_image = transform_image_layered(basedir1, maxlen1, depth_ori1)
-
-
-
-
-
-    #2. visualize the transformed image
+def visualize_calib_result(transform_image, reference_image):
+    global angle_slider, xshift_slider, yshift_slider, scale_slider, fig, ax1, ax2, cursor1, cursor2, cursor11, cursor21
+    #visualize the transformed image
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
-
     
+
+    transform_image_ori = copy.copy(transform_image)
+    transform_image = transform_image_layered(basedir1, maxlen1, depth_ori1)
     im = ax1.imshow(transform_image, cmap='gray')
     ax1.set_title('transform Image')
 
     reference_image_ori = reference_image
-    reference_image = MLX_process(reference_image)
+    reference_image = reference_image #MLX_process(reference_image)
     ax2.imshow(reference_image)
     ax2.set_title('reference Image')
 
@@ -362,6 +327,41 @@ if __name__=="__main__":
     plt.ylim(200, -10)
     plt.show()
 
+
+if __name__=="__main__":
+    margin = 0
+    # prepare arguments =====================================================================
+    src_distance = "1"
+    dest_distance = "1" #which distance we want to adjust our RTS to(e.g. we can read calib result at 7m, transform it to use at 6m)
+    baseDir = "RawData/exp2"+dest_distance+"/"
+    transform_dir = "realsense_depth/"
+    reference_dir = "senxor_m08_1/"
+    ind = 1 #index of the image we want to visualize. 1 means 2nd valid image
+    mode = "adjust" # adjust previous R, T, S
+    #mode = "pointcalib"
+
+    # read data, get names of files =============================================================
+    R, T, scale = read_RTS(src_distance, reference_dir, mode)
+    RTSfileDst = "calibresults/"+reference_dir+dest_distance+".yaml"
+    transform_files = os.listdir(baseDir+transform_dir)
+    reference_files = os.listdir(baseDir+reference_dir)
+
+    # map the transform array to reference image
+    #0. load the to-be-conferted image and reference image================================================================
+    transform_image, reference_image = load_image(baseDir,transform_dir,transform_files,reference_dir,reference_files)
+
+    # 0. add margin for transform ==========================================================
+    reference_image = add_margin(reference_image, margin, scale)
+    transform_image = add_margin(transform_image, margin, 1)
+    transform_image_ori = copy.copy(transform_image)
+
+    #1. transform the transform image ==============================================================================
+    basedir1 = "calibresults/senxor_m08_1/"
+    maxlen1 = "6"
+    depth_ori1 = np.load("recov.npy")
+    #transform_image = transform_img(transform_image, R, T, scale) #for debugging
+
+    visualize_calib_result(transform_image, reference_image)
     to_save = input("save R, T and s? y/n")
     if to_save=="y":
         dump_yaml(R, T, scale, RTSfileDst)
