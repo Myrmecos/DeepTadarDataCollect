@@ -198,27 +198,11 @@ def read_yaml(filename):
         data = yaml.safe_load(file)
     return np.array(data["R"]), np.array(data["T"]), np.float64(data["s"])
 
-if __name__=="__main__":
-    margin = 0
-    # prepare arguments =====================================================================
-    src_distance = "7"
-    dest_distance = "7" #which distance we want to adjust our RTS to(e.g. we can read calib result at 7m, transform it to use at 6m)
-    baseDir = "RawData/exp2"+dest_distance+"/"
-    transform_dir = "realsense_depth/"
-    reference_dir = "senxor_m08_1/"
-    mode = "adjust" # adjust previous R, T, S
-    #mode = "pointcalib"
-
-    # read data, get names of files =============================================================
+def read_RTS(src_distance, reference_dir, mode):
     pointsfile = "calibpoints/"+reference_dir[:-1]+".yaml"
     RTSfileSrc = "calibresults/"+reference_dir+src_distance+".yaml"
-    RTSfileDst = "calibresults/"+reference_dir+dest_distance+".yaml"
-    #RTSfile = "seekRTS.yaml"
-    ind = 1
 
     transform_points, reference_points = load_yaml(pointsfile)
-    transform_files = os.listdir(baseDir+transform_dir)
-    reference_files = os.listdir(baseDir+reference_dir)
 
     if mode != "adjust":
         # calculate scale
@@ -234,6 +218,26 @@ if __name__=="__main__":
     else:
         R, T, scale = read_yaml(RTSfileSrc)
         print("read: ", R, T, scale)
+    return R, T, scale
+
+
+if __name__=="__main__":
+    margin = 0
+    # prepare arguments =====================================================================
+    src_distance = "7"
+    dest_distance = "8" #which distance we want to adjust our RTS to(e.g. we can read calib result at 7m, transform it to use at 6m)
+    baseDir = "RawData/exp2"+dest_distance+"/"
+    transform_dir = "realsense_depth/"
+    reference_dir = "senxor_m08_1/"
+    ind = 1 #index of the image we want to visualize. 1 means 2nd valid image
+    mode = "adjust" # adjust previous R, T, S
+    #mode = "pointcalib"
+
+    # read data, get names of files =============================================================
+    R, T, scale = read_RTS(src_distance, reference_dir, mode)
+    RTSfileDst = "calibresults/"+reference_dir+dest_distance+".yaml"
+    transform_files = os.listdir(baseDir+transform_dir)
+    reference_files = os.listdir(baseDir+reference_dir)
 
     # map the transform array to reference image
     #0. load the to-be-conferted image and reference image================================================================
