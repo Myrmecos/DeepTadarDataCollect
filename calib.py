@@ -210,11 +210,11 @@ def read_yaml(filename):
 if __name__=="__main__":
     margin = 0
     # load image
-    src_distance = "4"
-    dest_distance = "4" #which distance we want to adjust our RTS to(e.g. we can read calib result at 7m, transform it to use at 6m)
+    src_distance = "7"
+    dest_distance = "7" #which distance we want to adjust our RTS to(e.g. we can read calib result at 7m, transform it to use at 6m)
     baseDir = "RawData/exp2"+dest_distance+"/"
     transform_dir = "realsense_depth/"
-    reference_dir = "MLX/"
+    reference_dir = "senxor_m08/"
     mode = "adjust" # adjust previous R, T, S
     #mode = "pointcalib"
 
@@ -223,7 +223,7 @@ if __name__=="__main__":
     RTSfileSrc = "calibresults/"+reference_dir+src_distance+".yaml"
     RTSfileDst = "calibresults/"+reference_dir+dest_distance+".yaml"
     #RTSfile = "seekRTS.yaml"
-    ind = 1
+    ind = 6
 
     transform_points, reference_points = load_yaml(pointsfile)
     transform_files = os.listdir(baseDir+transform_dir)
