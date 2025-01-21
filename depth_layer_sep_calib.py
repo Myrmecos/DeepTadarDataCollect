@@ -2,6 +2,8 @@ import numpy as np
 import os
 import yaml
 import matplotlib.pyplot as plt
+import copy
+import calib
 
 # TODO: map a depth image to a thermal image, give the R, T, S at different distance
 # 0. output image: copy original image
@@ -38,17 +40,33 @@ import matplotlib.pyplot as plt
 
 # print(depth_ori)
 # 1. separate out values at 1.5m-2.5m, make other values invalid (such as nan?)
+def read_yaml(filename):
+    with open(filename) as file:
+        data = yaml.safe_load(file)
+    return np.array(data["R"]), np.array(data["T"]), np.float64(data["s"])
+
+R2, T2, s2 = read_yaml("calibresults/seek_thermal/2.yaml")
+R3, T3, s3 = read_yaml("calibresults/seek_thermal/3.yaml")
+
 depth_ori = np.load("recov.npy")
-depth_ori1 = depth_ori
-depth_ori1[depth_ori1<1.5]=np.nan
-depth_ori1[depth_ori1>2.5]=np.nan
+depth_ori1 = copy.copy(depth_ori)
+depth_ori2 = copy.copy(depth_ori)
 
-plt.imshow(depth_ori1)
-plt.show()
-
-
+#1.1. at 1.5-2.5m
+depth_ori1[depth_ori<1.5]=np.nan
+depth_ori1[depth_ori>2.5]=np.nan
+#2.2. at 2.5-3.5m
+depth_ori2[depth_ori<2.5]=np.nan
+depth_ori2[depth_ori>3.5]=np.nan
 
 # 2. apply transformation (RTS) to the image
+transformed_image1 = calib.transform_img(depth_ori1, R2, T2, s2)
+transformed_image2 = calib.transform_img(depth_ori2, R3, T3, s3)
+
+plt.imshow(transformed_image1, alpha=1)
+plt.imshow(transformed_image2, alpha=1)
+plt.show()
+
 # 3. mask the image back to original image. Use valid values to cover up original values. Invalid values are ignored.
 
 
