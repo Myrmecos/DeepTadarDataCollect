@@ -70,18 +70,15 @@ def transform_img(transform_image, R, T, scale):
 
     # Step 2: Apply rotation and translation
     coords_transformed = np.dot(R, coords_scaled) + T[:, np.newaxis]
-    print("after rotation: ", coords_transformed)
 
     # Reshape the transformed coordinates back to the image shape
     x_transformed = coords_transformed[0, :].reshape(height, width)
     y_transformed = coords_transformed[1, :].reshape(height, width)
-    print("transform ok")
 
     # Resize the distance image using interpolation
     #resized_distance = cv.resize(transformed_reference, (new_width, new_height), interpolation=cv.INTER_LINEAR)
     transformed_reference = map_coordinates(transform_image, [y_transformed, x_transformed], order=1, mode='constant', cval=np.nan)
     transformed_reference = cv.resize(transformed_reference, (int(transform.shape[0]/scale), int(transform.shape[1]/scale)), interpolation=cv.INTER_AREA)
-    print("resize ok")
 
     return transformed_reference
 
@@ -157,7 +154,7 @@ def draw_black_margin(image, margin_width):
 
 # update the transform image according to adjusted R, T and S
 def update(val):
-    global R, T
+    global R, T, scale
     # Get current slider values
     angle = angle_slider.val
     xshift = xshift_slider.val
@@ -167,7 +164,6 @@ def update(val):
     # Apply transformations
     R = np.array([[math.cos(angle), -math.sin(angle)],[math.sin(angle), math.cos(angle)]])
     T = np.array([xshift, yshift])
-    print(R.shape, T.shape, type(R))
     print(R, T, scale)
     # Update the displayed image
     layer1 = transform_img(transform_image_ori, R, T, scale)
@@ -208,7 +204,6 @@ def read_RTS(src_distance, reference_dir, mode):
     if mode != "adjust":
         # calculate scale
         scale = calc_scale(reference_points, transform_points)
-        #print("scaling factor (transform/reference) is:", scale)
 
         # rescale refernce points
         reference_points = np.array(reference_points)*scale
@@ -227,7 +222,6 @@ def load_image(baseDir, transform_dir, transform_files, reference_dir, reference
     transform_image= cv.cvtColor(transform_image, cv.COLOR_BGR2GRAY)
     # transform_image = cv.normalize(transform_image.astype('float'), None, 0.0, 1.0, cv.NORM_MINMAX)
     reference_image = np.load(baseDir+reference_dir+reference_files[ind])
-    #print(reference_image)
     reference_image = reference_image.astype(np.float32)
     reference_image = cv.normalize(reference_image, None, 0, 255, cv.NORM_MINMAX)
     return transform_image, reference_image
