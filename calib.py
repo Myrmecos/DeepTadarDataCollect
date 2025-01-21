@@ -39,7 +39,7 @@ def load_yaml(filename):
 def transform_img(transform_image, R, T, scale):
     # Load the reference image
     # transform = np.load("color.npy")
-    #transform_image = transform_image.astype(np.int16)
+    transform_image = transform_image.astype(np.int16)
     # Define the padding size (top, bottom, left, right)
     print("image shape:", transform_image.shape)
     if (transform_image.shape[1]-transform_image.shape[0]>=0):
