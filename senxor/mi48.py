@@ -461,7 +461,6 @@ class MI48:
         size_in_words = data_size
         if not self.capture_no_header:
             size_in_words += self.ncols_header
-
         # The spi device must provide read(number-of-bytes) function
         response = self.interfaces[1].read(size_in_words)
 
