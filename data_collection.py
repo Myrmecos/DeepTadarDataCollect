@@ -321,7 +321,7 @@ if __name__ == "__main__":
     senxor_sensor_m08 = senxor(sensor_port="/dev/ttyACM0")
     senxor_sensor_m08_1 = senxor(sensor_port="/dev/ttyACM1")
 
-    buffer_len = 10
+    buffer_len = 3
 
     seek_camera_buffer = image_buffer(buffer_len)
     realsense_color_buffer = image_buffer(buffer_len)
