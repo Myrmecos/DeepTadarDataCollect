@@ -11,6 +11,7 @@ import cv2 as cv
 from pprint import pprint
 import argparse
 import pyrealsense2 as rs
+import copy
 from seekcamera import (
     SeekCameraIOType,
     SeekCameraColorPalette,
@@ -268,20 +269,21 @@ class image_buffer():
         self.buffer_size = buffer_size
         self.read = 0
         self.write = 0
-        self.buffer = [[None, None, None, None]] * buffer_size
+        self.buffer = []
+        for i in range (buffer_size):
+            self.buffer.append(None)
+
     
     def add(self, image):
-        if self.write == self.buffer_size:
-            return
-        self.buffer[self.write]=image
+        #if self.buffer[self.write] is not None:
+        self.buffer[self.write] = image
         self.write += 1
-        
-        #self.write = self.write%self.buffer_size
+        self.write = self.write%self.buffer_size
 
     
     def get(self):
-        self.read+=1
-        self.read = self.read % self.buffer_size
+        self.read += 1
+        self.read %= self.buffer_size
         return self.buffer[self.read]
 
 if __name__ == "__main__":
@@ -321,10 +323,10 @@ if __name__ == "__main__":
 
     buffer_len = 10
 
+    seek_camera_buffer = image_buffer(buffer_len)
+    realsense_color_buffer = image_buffer(buffer_len)
     realsense_depth_buffer = image_buffer(buffer_len)
-    # realsense_color_buffer = image_buffer(buffer_len)
-    # mlx_buffer = image_buffer(1)
-    # seek_camera_buffer = image_buffer(10)
+    mlx_buffer = image_buffer(buffer_len)
 
     
     num_rows_m08, num_cols_m08 = senxor_sensor_m08.get_temperature_map_shape()
@@ -343,25 +345,21 @@ if __name__ == "__main__":
         senxor_temperature_map_m08_ori, header1 = senxor_sensor_m08.get_temperature_map()
         senxor_temperature_map_m08_1_ori, header2 = senxor_sensor_m08_1.get_temperature_map()
         realsense_depth_image_ori, realsense_color_image_ori = realsense_sensor.get_frame()
-        seek_camera_frame_original = seek_camera.get_frame()
+        seek_camera_frame_ori = copy.deepcopy(seek_camera.get_frame())
         MLX_temperature_map_ori = mlx_sensor.get_temperature_map()
+        
+        seek_camera_buffer.add(seek_camera_frame_ori)
+        realsense_color_buffer.add(realsense_color_image_ori)
+        realsense_depth_buffer.add(realsense_depth_image_ori)
+        mlx_buffer.add(MLX_temperature_map_ori)
 
-        realsense_depth_buffer.add([realsense_depth_image_ori, realsense_color_image_ori, seek_camera_frame_original, MLX_temperature_map_ori])
-        # realsense_color_buffer.add(realsense_color_image_ori)
-        # #seek_camera_buffer.add(seek_camera_frame)
-        # mlx_buffer.add(MLX_temperature_map_ori)
-
-        realsense_depth_image_ori, realsense_color_image_ori, seek_camera_frame_ori, MLX_temperature_map_ori = realsense_depth_buffer.get()
-        # realsense_color_image_ori = realsense_color_buffer.get()
-        # #seek_camera_frame_ori = seek_camera_buffer.get()
-        # MLX_temperature_map_ori = mlx_buffer.get()
+        seek_camera_frame_ori= seek_camera_buffer.get()
+        realsense_color_image_ori = realsense_color_buffer.get()
+        realsense_depth_image_ori = realsense_depth_buffer.get()
+        MLX_temperature_map_ori = mlx_buffer.get()
         # print("frame count:", framecnt, "buffer_cnt", mlx_buffer.read)
 
 
-        print("m08 max fps:", senxor_sensor_m08.mi48.maxfps)
-        print("m16 max fps:", senxor_sensor_m08_1.mi48.maxfps)
-        print("m08 fps:", senxor_sensor_m08.mi48.get_fps())
-        print("m16 fps:", senxor_sensor_m08_1.mi48.get_fps())
         # realsense_color_image_ori = cv2.resize(realsense_color_image_ori, (320, 240))
         # realsense_depth_image_ori = cv2.resize(realsense_depth_image_ori, (320, 240))   
         # save data part: 
@@ -376,7 +374,7 @@ if __name__ == "__main__":
             if realsense_depth_image_ori is None or realsense_color_image_ori is None or seek_camera_frame_ori is None or MLX_temperature_map_ori is None or senxor_temperature_map_m08_ori is None or senxor_temperature_map_m08_1_ori  is None:
                 continue
             else:
-                realsense_depth_image, realsense_color_image, seek_camera_frame, MLX_temperature_map, senxor_temperature_map_m08, senxor_temperature_map_m08_1 = realsense_depth_image_ori, realsense_color_image_ori, seek_camera_frame_ori, MLX_temperature_map_ori, senxor_temperature_map_m08_ori, senxor_temperature_map_m08_1_ori
+                realsense_depth_image, realsense_color_image, seek_camera_frame, MLX_temperature_map, senxor_temperature_map_m08, senxor_temperature_map_m08_1 = realsense_depth_image_ori, realsense_color_image_ori, seek_camera_frame_new, MLX_temperature_map_ori, senxor_temperature_map_m08_ori, senxor_temperature_map_m08_1_ori
                 # show all images
                 if seek_camera_frame is not None:
                     
