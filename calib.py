@@ -414,7 +414,7 @@ if __name__=="__main__":
     baseDir = "/media/zx/zx-data/RawData/exp06/"
     transform_dir = "realsense_depth/"
     reference_dir = "seek_thermal/"
-    ind = 10 #index of the image we want to visualize. 1 means 2nd valid image
+    ind = 300 #index of the image we want to visualize. 1 means 2nd valid image
     # mode = "adjust" # adjust previous R, T, S
     # mode = "pointcalib"
     mode = "mlc" #multi-layer calib
