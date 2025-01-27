@@ -300,7 +300,7 @@ if __name__ == "__main__":
     parser.add_argument("--save_data", type=int, default=0, help="0: not save, just visualize, 1: save to a pickle file without visualization")
     parser.add_argument("--save_path", type=str, default="data", help="path to save data")
     args = parser.parse_args()
-    
+    args.save_path = "/media/zx/zx-data/" + args.save_path
     if args.save_data:
         if not os.path.exists(args.save_path):
             os.makedirs(args.save_path)
@@ -336,7 +336,7 @@ if __name__ == "__main__":
     collection_counter = 0
     start_time = time.time()
     collection_duration = args.collection_duration
-    collect = 0
+    collect = args.save_data
     last_collect_time = time.time()
 
     while True:
@@ -365,16 +365,16 @@ if __name__ == "__main__":
         # save data part: 
         print("time elapsed: ", time.time() - last_collect_time)
         
-        if (time.time()-last_collect_time) > 2:
-            print("time to collect image!")
-            collect = 1
-            last_collect_time = time.time()
+        # if (time.time()-last_collect_time) > 2:
+        #     print("time to collect image!")
+        #     collect = 1
+        #     last_collect_time = time.time()
 
-        if args.save_data==1 and collect==1:
+        if args.save_data==1:
             if realsense_depth_image_ori is None or realsense_color_image_ori is None or seek_camera_frame_ori is None or MLX_temperature_map_ori is None or senxor_temperature_map_m08_ori is None or senxor_temperature_map_m08_1_ori  is None:
                 continue
             else:
-                realsense_depth_image, realsense_color_image, seek_camera_frame, MLX_temperature_map, senxor_temperature_map_m08, senxor_temperature_map_m08_1 = realsense_depth_image_ori, realsense_color_image_ori, seek_camera_frame_new, MLX_temperature_map_ori, senxor_temperature_map_m08_ori, senxor_temperature_map_m08_1_ori
+                realsense_depth_image, realsense_color_image, seek_camera_frame, MLX_temperature_map, senxor_temperature_map_m08, senxor_temperature_map_m08_1 = realsense_depth_image_ori, realsense_color_image_ori, seek_camera_frame_ori, MLX_temperature_map_ori, senxor_temperature_map_m08_ori, senxor_temperature_map_m08_1_ori
                 # show all images
                 if seek_camera_frame is not None:
                     
@@ -421,10 +421,10 @@ if __name__ == "__main__":
                 else:
                     senxor_temperature_map_m08_1 = np.zeros((240, 320, 3), dtype=np.uint8)
 
+                timestamp = time.time()
                 if collect == 1:
-                    collect = 0
                     print("collect!=========================")
-                    timestamp = time.time()
+                    print("saved at: ", timestamp)
                     np.save(f"{args.save_path}/realsense_depth/{timestamp}.npy", realsense_depth_image)
                     np.save(f"{args.save_path}/realsense_color/{timestamp}.npy", realsense_color_image)
                     np.save(f"{args.save_path}/seek_thermal/{timestamp}.npy", seek_camera_frame)
@@ -441,7 +441,7 @@ if __name__ == "__main__":
                     print(f"Senxor temperature map m08 collected at {timestamp}", senxor_temperature_map_m08.shape)
                     print(f"Senxor temperature map m08_1 collected at {timestamp}", senxor_temperature_map_m08_1.shape)
                     print("-------------------------------------------------------------")
-                if time_lasting > collection_duration:
+                if time_lasting > collection_duration*60:
                     print(f"Seek camera frame collected at {timestamp}", seek_camera_frame.shape)
                     print(f"Realsense depth and color image collected at {timestamp}", realsense_depth_image.shape, realsense_color_image.shape)
                     print(f"MLX temperature map collected at {timestamp}", MLX_temperature_map.shape)
@@ -459,12 +459,14 @@ if __name__ == "__main__":
                         f.write(f"Realsense depth and color image collected at {timestamp} {realsense_depth_image.shape} {realsense_color_image.shape}\n")
                         f.write(f"MLX temperature map collected at {timestamp} {MLX_temperature_map.shape}\n")
                         f.write(f"Senxor temperature map m08 collected at {timestamp} {senxor_temperature_map_m08.shape}\n")
-                    # break
+                    break
         # show all images
         realsense_depth_image, realsense_color_image, seek_camera_frame, MLX_temperature_map, senxor_temperature_map_m08, senxor_temperature_map_m08_1 = realsense_depth_image_ori, realsense_color_image_ori, seek_camera_frame_ori, MLX_temperature_map_ori, senxor_temperature_map_m08_ori, senxor_temperature_map_m08_1_ori
+        print(realsense_color_image)
+        # realsense_color_image = None #uncomment to see color image
         if realsense_depth_image is not None:
             realsense_depth_image = cv2.applyColorMap(cv2.convertScaleAbs(realsense_depth_image, alpha=0.03), cv2.COLORMAP_JET)
-            realsense_color_image = cv2.resize(realsense_color_image, (320, 240))
+            #realsense_color_image = cv2.resize(realsense_color_image, (320, 240))
             realsense_depth_image = cv2.resize(realsense_depth_image, (320, 240))  
         else:
             realsense_depth_image = np.zeros((240, 320, 3), dtype=np.uint8)
