@@ -15,6 +15,24 @@ import os
 def get_tansform_images_names(dirbase, transform_folder_name):
     transform_image_names = os.listdir(dirbase+transform_folder_name)
     return [dirbase+transform_folder_name+image_name for image_name in transform_image_names]
+
+# step 2: load R, T, scale
+def load_RTS(yaml_base_dir, sensor_name, max_dis):
+    # the return format: [[R1, T1, s1], [R2, T2, s2], ...]
+    RTS = []
+    for i in range(1, max_dis+1):
+        yaml_file_name = yaml_base_dir+sensor_name+str(i)+".yaml"
+        with open(yaml_file_name, 'r') as stream:
+            try:
+                data = yaml.safe_load(stream)
+                R = data['R']
+                T = data['T']
+                s = data['s']
+                RTS.append([R, T, s])
+            except yaml.YAMLError as exc:
+                print(exc)
+    return RTS
+
     
 
 
@@ -23,9 +41,16 @@ if __name__=="__main__":
     dirbase = "/media/zx/zx-data/RawData/exp06/"
     sensor_name = "senxor_m08/"
     transform_name = "realsense_depth/"
+    yaml_base_dir = "calibresults/"
+    max_dis = 6
 
-
-
+    # step 1: load image names
     transform_image_names = get_tansform_images_names(dirbase, transform_name)
-    cv.imshow("depth:", np.load(transform_image_names[-1]))
-    cv.waitKey(1000)
+    
+    # step 2: load R, T, scale
+    RTS = load_RTS(yaml_base_dir, sensor_name, max_dis)
+    # for i in range(len(RTS)):
+    #     print(f"This is the RTS of {i+1}m distance")
+    #     print(RTS[i])
+
+    
