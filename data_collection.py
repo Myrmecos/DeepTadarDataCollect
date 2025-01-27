@@ -318,8 +318,12 @@ if __name__ == "__main__":
     realsense_sensor = realsense()  
     seek_camera = seekthermal(data_format="others")
     mlx_sensor = MLXSensor("/dev/ttyUSB0")
-    senxor_sensor_m08 = senxor(sensor_port="/dev/ttyACM0")
+    senxor_sensor_m08 = senxor(sensor_port="/dev/ttyACM0") #beware! This may get flipped
     senxor_sensor_m08_1 = senxor(sensor_port="/dev/ttyACM1")
+
+    # to prevent flipping circumstances
+    if senxor_sensor_m08.get_temperature_map_shape()[0] > senxor_sensor_m08_1.get_temperature_map_shape()[0]:
+        senxor_sensor_m08, senxor_sensor_m08_1 = senxor_sensor_m08_1, senxor_sensor_m08
 
     buffer_len = 3
 

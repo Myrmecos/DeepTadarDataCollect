@@ -118,7 +118,8 @@ def transform_image_layered(RTS=[[],[],[]], max_dist=6, depth_ori=None, padding 
 
 if __name__=="__main__":
     dirbase = "/media/zx/zx-data/RawData/exp06/"
-    sensor_name = "MLX/"
+    dirbase = ""
+    sensor_name = "senxor_m08/"
     transform_name = "realsense_depth/"
     yaml_base_dir = "calibresults/"
     max_dis = 4
