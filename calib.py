@@ -340,7 +340,8 @@ def visualize_calib_result(transform_image, reference_image, mode, R, T, scale):
         print("normal calib!")
         transform_image = transform_img(transform_image, R, T, scale)
     
-    im = ax1.imshow(transform_image, cmap='gray')
+    trnasform_image = cv.applyColorMap(cv.convertScaleAbs(transform_image, alpha=0.03), cv.COLORMAP_JET)
+    im = ax1.imshow(transform_image)
     ax1.set_title('transform Image')
 
     reference_image_ori = reference_image
