@@ -1,11 +1,13 @@
 import numpy as np
 import yaml
+import matplotlib
 import matplotlib.pyplot as plt
 import cv2 as cv
 from scipy.interpolate import griddata
 from scipy.ndimage import map_coordinates
 from matplotlib.widgets import Slider
-import mplcursors
+matplotlib.use('TkAgg')
+# import mplcursors
 import os
 import math
 import copy
@@ -245,10 +247,10 @@ def read_yaml(filename):
 def read_RTS(src_distance, reference_dir, mode):
     pointsfile = "calibpoints/"+reference_dir[:-1]+".yaml"
     RTSfileSrc = "calibresults/"+reference_dir+src_distance+".yaml"
+    if mode != "mlc":
+        transform_points, reference_points = load_yaml(pointsfile)
 
-    transform_points, reference_points = load_yaml(pointsfile)
-
-    if mode != "adjust":
+    if mode == "pointcalib":
         # calculate scale
         scale = calc_scale(reference_points, transform_points)
 
@@ -258,19 +260,21 @@ def read_RTS(src_distance, reference_dir, mode):
         # calculate rotation and transformation
         R, T = calc_RT(reference_points, transform_points)
 
-    else:
+    if mode == "mlc":
         R, T, scale = read_yaml(RTSfileSrc)
         print("read: ", R, T, scale)
     return R, T, scale
 
 def load_image(baseDir, transform_dir, transform_files, reference_dir, reference_files):
     transform_image=np.load(baseDir+transform_dir+transform_files[ind])
+    print("maximum value of the image:", np.max(transform_image))
     #transform_image = cv.normalize(transform_image, None, 0, 255, cv.NORM_MINMAX)
     #transform_image= cv.cvtColor(transform_image, cv.COLOR_BGR2GRAY)
     # transform_image = cv.normalize(transform_image.astype('float'), None, 0.0, 1.0, cv.NORM_MINMAX)
     #for wrong color-mapped depth image only ================= use correct format next time
     #transform_image = map_color_bk(transform_image)
 
+    
     # plt.imshow(transform_image)
     # plt.show()
 
@@ -324,7 +328,7 @@ def visualize_calib_result(transform_image, reference_image, mode, R, T, scale):
     global angle_slider, xshift_slider, yshift_slider, scale_slider, fig, ax1, ax2, cursor1, cursor2, cursor11, cursor21
     #visualize the transformed image
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
-    
+    print("================init subplots done!=============================")
 
     transform_image_ori = copy.copy(transform_image)
     # plt.imshow(transform_image_ori)
@@ -344,6 +348,7 @@ def visualize_calib_result(transform_image, reference_image, mode, R, T, scale):
     ax2.imshow(reference_image)
     ax2.set_title('reference Image')
 
+    print("==========done initializing two axes=================")
 
     # Create axes for the sliders=====================
     ax_angle = plt.axes([0.25, 0.25, 0.65, 0.03])
@@ -404,11 +409,11 @@ if __name__=="__main__":
     # prepare arguments =====================================================================
     
     src_distance = "5" #the distance where R, T, scale come from
-    dest_distance = "2" #which distance we want to adjust our RTS to(e.g. we can read calib result at 7m, transform it to use at 1m)
-    baseDir = "RawData/exp4"+dest_distance+"/"
+    dest_distance = "6" #which distance we want to adjust our RTS to(e.g. we can read calib result at 7m, transform it to use at 1m)
+    baseDir = "/media/zx/zx-data/RawData/exp06/"
     transform_dir = "realsense_depth/"
     reference_dir = "seek_thermal/"
-    ind = 1 #index of the image we want to visualize. 1 means 2nd valid image
+    ind = 10 #index of the image we want to visualize. 1 means 2nd valid image
     # mode = "adjust" # adjust previous R, T, S
     # mode = "pointcalib"
     mode = "mlc" #multi-layer calib
@@ -419,10 +424,12 @@ if __name__=="__main__":
     transform_files = os.listdir(baseDir+transform_dir)
     reference_files = os.listdir(baseDir+reference_dir)
 
+    print("==========starting image transform===========")
     # map the transform array to reference image
     #0. load the to-be-conferted image and reference image================================================================
     transform_image, reference_image = load_image(baseDir,transform_dir,transform_files,reference_dir,reference_files)
-    
+    print("==========image transform done==========")
+    # print(transform_image)
     # plt.imshow(transform_image)
     # plt.show()
 
@@ -439,6 +446,12 @@ if __name__=="__main__":
     maxlen1 = "6"
     depth_ori1 = transform_image
     #transform_image = transform_img(transform_image, R, T, scale) #for debugging
+    print("==========prepare to show the transformed image===========")
+    print(transform_image)
+    # cv.imshow("transformed:", transform_image)
+    # cv.waitKey(1000)
+    # plt.imshow(transform_image)
+    # plt.show()
 
     visualize_calib_result(transform_image, reference_image, mode, R, T, scale)
     if mode != "mlc":
