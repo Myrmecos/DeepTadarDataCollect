@@ -394,7 +394,8 @@ def visualize_calib_result(transform_image, reference_image, mode, R, T, scale):
     if mode != "mlc":
         transform_image = transform_img(transform_image_ori, R, T, scale)
     else:
-        transform_image = transform_image_layered(basedir1, maxlen1, depth_ori1)
+        #transform_image = transform_image_layered(basedir1, maxlen1, depth_ori1)
+        pass
     print(transform_image.shape)
     plt.imshow(transform_image, cmap='gray', alpha=0.5)
     plt.imshow(reference_image, cmap='gray', alpha=0.5)
@@ -409,11 +410,11 @@ if __name__=="__main__":
     margin = 0
     # prepare arguments =====================================================================
     
-    src_distance = "5" #the distance where R, T, scale come from
-    dest_distance = "6" #which distance we want to adjust our RTS to(e.g. we can read calib result at 7m, transform it to use at 1m)
+    src_distance = "4" #the distance where R, T, scale come from
+    dest_distance = "4" #which distance we want to adjust our RTS to(e.g. we can read calib result at 7m, transform it to use at 1m)
     baseDir = "/media/zx/zx-data/RawData/exp06/"
     transform_dir = "realsense_depth/"
-    reference_dir = "seek_thermal/"
+    reference_dir = "MLX/"
     ind = 300 #index of the image we want to visualize. 1 means 2nd valid image
     # mode = "adjust" # adjust previous R, T, S
     # mode = "pointcalib"
@@ -444,7 +445,7 @@ if __name__=="__main__":
 
     #1. transform the transform image ==============================================================================
     basedir1 = "calibresults/"+reference_dir
-    maxlen1 = "6"
+    maxlen1 = "4"
     depth_ori1 = transform_image
     #transform_image = transform_img(transform_image, R, T, scale) #for debugging
     print("==========prepare to show the transformed image===========")

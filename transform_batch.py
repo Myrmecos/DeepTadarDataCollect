@@ -59,7 +59,7 @@ def transform_img(transform_image, R, T, scale):
         left = 0
         right = 0 #abs(transform_image.shape[1]-transform_image.shape[0])
     #Zero-pad the image using cv2.copyMakeBorder
-    transform_image = cv.copyMakeBorder(transform_image, top, bottom, left, right, cv.BORDER_CONSTANT, value=-1)
+    transform_image = cv.copyMakeBorder(transform_image, top, bottom, left, right, cv.BORDER_CONSTANT, value=np.nan)
     #plt.imshow(transform_image)
     #plt.show()
     # Get the shape of the reference image
@@ -118,10 +118,10 @@ def transform_image_layered(RTS=[[],[],[]], max_dist=6, depth_ori=None, padding 
 
 if __name__=="__main__":
     dirbase = "/media/zx/zx-data/RawData/exp06/"
-    sensor_name = "senxor_m08/"
+    sensor_name = "MLX/"
     transform_name = "realsense_depth/"
     yaml_base_dir = "calibresults/"
-    max_dis = 6
+    max_dis = 4
 
     # step 1: load image names
     transform_image_names = get_tansform_images_names(dirbase, transform_name)
