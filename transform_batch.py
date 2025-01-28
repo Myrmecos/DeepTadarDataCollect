@@ -13,6 +13,7 @@ import cv2 as cv
 import os
 from scipy.ndimage import map_coordinates
 import copy
+import argparse
 matplotlib.use('TkAgg')
 
 # Step1: obtain file names of all images in transform image folder (realsense depth)
@@ -124,13 +125,31 @@ def add_padding(image, top = 0, bottom = 0, left = 0, right = 0):
 
 
 if __name__=="__main__":
-    dirbase = "/media/zx/zx-data/RawData/exp06/"
-    #dirbase = ""
-    sensor_name = "MLX/"
-    transform_name = "realsense_depth/"
-    yaml_base_dir = "calibresults/"
-    max_dis = 4
-    save = 0
+    # dirbase = "/media/zx/zx-data/RawData/exp06/"
+    # sensor_name = "MLX/"
+    # transform_name = "realsense_depth/"
+    # yaml_base_dir = "calibresults/"
+    # max_dis = 4
+    # save = 0
+
+    #example usage, for saving: python3 transform_batch.py --dirbase /media/zx/zx-data/RawData/exp06/ --sensor_name MLX/ --transform_name realsense_depth/ --yaml_base_dir calibresults/ --max_dis 4 --save 1
+    #example usage, for not saving: python3 transform_batch.py --dirbase /media/zx/zx-data/RawData/exp06/ --sensor_name MLX/ --transform_name realsense_depth/ --yaml_base_dir calibresults/ --max_dis 4 --save 0
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--dirbase", type=str, help="the base directory of the dataset")
+    parser.add_argument("--sensor_name", type=str, help="the name of the sensor")
+    parser.add_argument("--transform_name", type=str, help="the name of the folder containing the images to be transformed")
+    parser.add_argument("--yaml_base_dir", type=str, help="the base directory of the yaml files")
+    parser.add_argument("--max_dis", type=int, help="the maximum distance at which the sensor has its R, T, s data stored in calibresiults folder") 
+    parser.add_argument("--save", type=int, help="whether to save the transformed images")
+    args = parser.parse_args()
+    dirbase = args.dirbase
+    sensor_name = args.sensor_name
+    transform_name = args.transform_name
+    yaml_base_dir = args.yaml_base_dir
+    max_dis = args.max_dis
+    save = args.save
+    
 
     # step 1: load image names
     transform_image_names = get_tansform_images_names(dirbase, transform_name)
