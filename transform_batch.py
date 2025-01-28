@@ -88,7 +88,7 @@ def transform_img(transform_image, R, T, scale):
     return transformed_reference
 
 def transform_image_layered(RTS=[[],[],[]], max_dist=6, depth_ori=None, padding = True):
-    print("starting multi-layer calib")
+    print("starting multi-layer calib. will include multiple normal calibs")
     background = transform_img(depth_ori, RTS[0][0], RTS[0][1], RTS[0][2])
     if not padding:
         background[(background<6.5) | (background>6.5)] = np.nan
@@ -118,11 +118,12 @@ def transform_image_layered(RTS=[[],[],[]], max_dist=6, depth_ori=None, padding 
 
 if __name__=="__main__":
     dirbase = "/media/zx/zx-data/RawData/exp06/"
-    dirbase = ""
-    sensor_name = "senxor_m08/"
+    #dirbase = ""
+    sensor_name = "seek_thermal/"
     transform_name = "realsense_depth/"
     yaml_base_dir = "calibresults/"
     max_dis = 4
+    save = 0
 
     # step 1: load image names
     transform_image_names = get_tansform_images_names(dirbase, transform_name)
@@ -134,6 +135,12 @@ if __name__=="__main__":
     #     print(RTS[i])
 
     # step 3: apply R, T, s to each image in realsense depth folder
+    if save:
+        if not os.path.exists(dirbase+"depth_map/"+sensor_name):
+            os.makedirs(dirbase+"depth_map/"+sensor_name)
+        else:
+            print("The folder already exists")
+            exit(1)
     for image_name in transform_image_names:
         print("name of the image:", image_name)
         image = np.load(image_name)
@@ -141,6 +148,10 @@ if __name__=="__main__":
         image = transform_image_layered(RTS, max_dis, image, padding=True)
         plt.imshow(image)
         plt.show()
+        # where to save: .../RawData/exp06/depth_map/senxor_m08/xxx.npy
+        if save:
+            image_individual_name = image_name.split("/")[-1]
+            np.save(f"{dirbase}depth_map/{sensor_name}{image_individual_name}", image)
         break
         # plt.imshow(image)
         # plt.show()

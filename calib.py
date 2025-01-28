@@ -413,9 +413,10 @@ if __name__=="__main__":
     src_distance = "4" #the distance where R, T, scale come from
     dest_distance = "4" #which distance we want to adjust our RTS to(e.g. we can read calib result at 7m, transform it to use at 1m)
     baseDir = "/media/zx/zx-data/RawData/exp06/"
+    baseDir = "RawData/exp42/"
     transform_dir = "realsense_depth/"
     reference_dir = "MLX/"
-    ind = 300 #index of the image we want to visualize. 1 means 2nd valid image
+    ind = 1 #index of the image we want to visualize. 1 means 2nd valid image
     # mode = "adjust" # adjust previous R, T, S
     # mode = "pointcalib"
     mode = "mlc" #multi-layer calib
