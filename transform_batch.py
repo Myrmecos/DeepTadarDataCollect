@@ -2,6 +2,7 @@
 # Step1: obtain file names of all images in transform image folder (realsense depth)
 # Step2: load R, T, s for the transformation from realsense depth to senxor_m08
 # step3: apply R, T, s to each image in realsense depth folder
+    # step 3.1: clip the transformed image according to the size of the reference image
 # step 4: save the transformed images in a new folder (depth_senxor_m08)
 
 import numpy as np
@@ -155,13 +156,15 @@ if __name__=="__main__":
         image = add_padding(image, right = 50, bottom = 50)
         
         image = transform_image_layered(RTS, max_dis, image, padding=True)
-        plt.imshow(image)
-        plt.show()
+        if save == 0:
+            plt.imshow(image)
+            plt.show()
         # where to save: .../RawData/exp06/depth_map/senxor_m08/xxx.npy
         if save:
             image_individual_name = image_name.split("/")[-1]
             np.save(f"{dirbase}depth_map/{sensor_name}{image_individual_name}", image)
-        break
+        if save == 0:
+            break   
         # plt.imshow(image)
         # plt.show()
         # step 4: save the transformed images in a new folder (depth_senxor_m08)
