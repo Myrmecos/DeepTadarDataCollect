@@ -88,7 +88,7 @@ def transform_img(transform_image, R, T, scale):
     return transformed_reference
 
 def transform_image_layered(RTS=[[],[],[]], max_dist=6, depth_ori=None, padding = True):
-    print("starting multi-layer calib. will include multiple normal calibs")
+    print("=============starting multi-layer calib. will include multiple normal calibs==============")
     background = transform_img(depth_ori, RTS[0][0], RTS[0][1], RTS[0][2])
     if not padding:
         background[(background<6.5) | (background>6.5)] = np.nan
@@ -113,13 +113,19 @@ def transform_image_layered(RTS=[[],[],[]], max_dist=6, depth_ori=None, padding 
         mask = ~np.isnan(transformed_image1)
         background[mask] = transformed_image1[mask]
     return background
+
+def add_padding(image, top = 0, bottom = 0, left = 0, right = 0):
+    # Define the padding size (top, bottom, left, right)
+    # print("image shape:", image.shape)
+    image = cv.copyMakeBorder(image, top, bottom, left, right, cv.BORDER_CONSTANT, value=np.nan)
+    return image
     
 
 
 if __name__=="__main__":
     dirbase = "/media/zx/zx-data/RawData/exp06/"
     #dirbase = ""
-    sensor_name = "seek_thermal/"
+    sensor_name = "MLX/"
     transform_name = "realsense_depth/"
     yaml_base_dir = "calibresults/"
     max_dis = 4
@@ -145,6 +151,9 @@ if __name__=="__main__":
         print("name of the image:", image_name)
         image = np.load(image_name)
         image = image.astype(np.float32)
+        # add side nan paddings to the image
+        image = add_padding(image, right = 50, bottom = 50)
+        
         image = transform_image_layered(RTS, max_dis, image, padding=True)
         plt.imshow(image)
         plt.show()
