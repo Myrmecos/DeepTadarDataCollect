@@ -17,6 +17,8 @@ image_index = 0 # the index (in the sequence of images collected in the collecti
 # sensor name can also be: MLX, seek_thermal, senxor_m08, senxor_m08_1
 
 
+
+
 #step1: load the transformed depth and thermal image==================================================================
 # we know the directory of transformed image is: /media/zx/zx-data/RawData/<exp06>/depth_map/<senxor_name>/
 # we know the directory of reference image is: /media/zx/zx-data/RawData/<exp06>/<sensor_name>/
