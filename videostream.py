@@ -3,12 +3,19 @@ import os
 import time
 import matplotlib.pyplot as plt
 import cv2
+import argparse
+
 
 
 dirbase = "/media/zx/zx-data/RawData/exp06/"
 sensors = ["MLX", "realsense_color", "realsense_depth", "seek_thermal", "senxor_m08", "senxor_m08_1"]
 
+parser = argparse.ArgumentParser()
+parser.add_argument("--dirbase", type=str, help="the base directory of the dataset") #dirbase
 
+args = parser.parse_args()
+
+dirbase = args.dirbase
 
 # load the dirnames of each sensor type
 mlx_dir = dirbase+sensors[0]
