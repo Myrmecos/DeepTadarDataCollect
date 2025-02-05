@@ -29,6 +29,9 @@ from threading import Condition
 from senxor.utils import connect_senxor, data_to_frame, remap
 from senxor.utils import cv_filter, cv_render, RollingAverageFilter
 
+def put_temp(image, temp1, temp2, sensor_name):
+    cv2.putText(image, f"{sensor_name}: {temp1:.1f}~{temp2:.1f}", (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+    cv2.putText(image, f"{sensor_name}: {temp1:.1f}~{temp2:.1f}", (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
 
 class MLXSensor:
     def __init__(self, sensor_port):
@@ -351,6 +354,7 @@ if __name__ == "__main__":
         realsense_depth_image_ori, realsense_color_image_ori = realsense_sensor.get_frame()
         seek_camera_frame_ori = copy.deepcopy(seek_camera.get_frame())
         MLX_temperature_map_ori = mlx_sensor.get_temperature_map()
+        #print("MLX min temp:", np.min(MLX_temperature_map_ori))
         
         seek_camera_buffer.add(seek_camera_frame_ori)
         realsense_color_buffer.add(realsense_color_image_ori)
@@ -466,7 +470,6 @@ if __name__ == "__main__":
                     break
         # show all images
         realsense_depth_image, realsense_color_image, seek_camera_frame, MLX_temperature_map, senxor_temperature_map_m08, senxor_temperature_map_m16 = realsense_depth_image_ori, realsense_color_image_ori, seek_camera_frame_ori, MLX_temperature_map_ori, senxor_temperature_map_m08_ori, senxor_temperature_map_m16_ori
-        print(realsense_color_image)
         # realsense_color_image = None #uncomment to see color image
         if realsense_depth_image is not None:
             realsense_depth_image = cv2.applyColorMap(cv2.convertScaleAbs(realsense_depth_image, alpha=0.03), cv2.COLORMAP_JET)
@@ -480,7 +483,11 @@ if __name__ == "__main__":
         else:
             realsense_color_image = np.zeros((240, 320, 3), dtype=np.uint8)
 
+        seek_min = -1024
+        seek_max = -1024
         if seek_camera_frame is not None:
+            seek_min = np.min(seek_camera_frame)
+            seek_max = np.max(seek_camera_frame)
             # if seek_camera_frame.shape[0] > 201:
             #     seek_camera_frame = cv2.resize(argb2bgr(seek_camera_fqrame), (320, 240))
             # else:
@@ -494,7 +501,12 @@ if __name__ == "__main__":
         else:
             seek_camera_frame = np.zeros((240, 320, 3), dtype=np.uint8)
             
+        mlx_min = -1024
+        mlx_max = -1024
         if MLX_temperature_map is not None:
+            mlx_min = np.min(MLX_temperature_map)
+            mlx_max = np.max(MLX_temperature_map)
+
             MLX_temperature_map = MLX_temperature_map.reshape(24, 32)
             #MLX_temperature_map = np.flip(MLX_temperature_map, 0)
             MLX_temperature_map = np.flip(MLX_temperature_map, 1)
@@ -507,7 +519,12 @@ if __name__ == "__main__":
         else:
             MLX_temperature_map = np.zeros((240, 320, 3), dtype=np.uint8)
             
+        m08_min = -1024
+        m08_max = -1024
         if senxor_temperature_map_m08 is not None:
+            m08_min = np.min(senxor_temperature_map_m08)
+            m08_max = np.max(senxor_temperature_map_m08)
+
             senxor_temperature_map_m08 = senxor_temperature_map_m08.reshape(num_cols_m08, num_rows_m08)
             senxor_temperature_map_m08 = np.flip(senxor_temperature_map_m08, 0)
             senxor_temperature_map_m08 = senxor_temperature_map_m08.astype(np.uint8)
@@ -517,7 +534,12 @@ if __name__ == "__main__":
         else:
             senxor_temperature_map_m08 = np.zeros((240, 320, 3), dtype=np.uint8)
 
+        m16_min = -1024
+        m16_max = -1024
         if senxor_temperature_map_m16 is not None:
+            m16_min = np.min(senxor_temperature_map_m16)
+            m16_max = np.max(senxor_temperature_map_m16)
+
             senxor_temperature_map_m16 = senxor_temperature_map_m16.reshape(num_cols_m16, num_rows_m16)
             senxor_temperature_map_m16 = np.flip(senxor_temperature_map_m16, 0)
             senxor_temperature_map_m16 = senxor_temperature_map_m16.astype(np.uint8)
@@ -527,7 +549,12 @@ if __name__ == "__main__":
         else:
             senxor_temperature_map_m16 = np.zeros((240, 320, 3), dtype=np.uint8)
             
-        print(realsense_depth_image.shape, realsense_color_image.shape, seek_camera_frame.shape,  senxor_temperature_map_m08.shape, MLX_temperature_map.shape,)
+        put_temp(seek_camera_frame, seek_min, seek_max, "seek")
+        put_temp(MLX_temperature_map, mlx_min, mlx_max, "MLX")
+        put_temp(senxor_temperature_map_m08, m08_min, m08_max, "m08")
+        put_temp(senxor_temperature_map_m16, m16_min, m08_max, "m16")
+
+        #print(realsense_depth_image.shape, realsense_color_image.shape, seek_camera_frame.shape,  senxor_temperature_map_m08.shape, MLX_temperature_map.shape,)
         interm1 = np.concatenate((realsense_depth_image, realsense_color_image, seek_camera_frame), axis=1)
         interm2 = np.concatenate((senxor_temperature_map_m08, MLX_temperature_map, senxor_temperature_map_m16), axis=1)
         final_image = np.concatenate((interm1, interm2), axis=0)

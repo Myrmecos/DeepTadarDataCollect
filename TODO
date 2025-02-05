@@ -20,4 +20,5 @@
     5. inspect: take an image from the corresponding sensor and a depth, align depth to sensor, check if they correspond well.
 
 
+1. why MLX min is 0?
 
