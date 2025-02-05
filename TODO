@@ -14,8 +14,8 @@
     
 3. transforming images from depth to thermal (thermal-depth alignment)
     1. make a class (Aligner) for doing all these
-    2. init: type of sensor (don't need to specify where R, T, scale are saved because by default we save it at: MSC/2calibParams/sensor_type.yaml. each entry in yaml file should take the form <distance>: [R, T, scale])
-    3. _align: take one image and align (multi-layer) according to the loaded R, T, scale
+    2. init: type of sensor (don't need to specify where R, T, scale are saved because by default we save it at: MSC/2calibParams/sensor_type.yaml. each entry in yaml file should take the form <distance>: [R, T, scale]) /done
+    3. _align: take one image and align (multi-layer) according to the loaded R, T, scale /done
     4. align: take a list of images and align them
     5. inspect: take an image from the corresponding sensor and a depth, align depth to sensor, check if they correspond well.
 

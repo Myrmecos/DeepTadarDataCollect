@@ -9,6 +9,8 @@ import matplotlib.pyplot as plt
 import matplotlib
 matplotlib.use('TkAgg')
 
+
+
 class Aligner:
 
     #TODO: align a depth image to a thermal image give the R,T,scale
@@ -105,7 +107,7 @@ class Aligner:
         R, T, scale = self.RTS_dic[self.dist_list[0]]
         background = self.transform_img(depth_ori, R, T, scale)
         if not padding:
-            background[(background<6.5) | (background>6.5)] = np.nan
+            background[background==background] = np.nan
         # calib for each distance range
         for i in range(len(self.dist_list)):
             ind = self.dist_list[i]
@@ -126,10 +128,9 @@ class Aligner:
 
             mask = ~np.isnan(transformed_image1)
             background[mask] = transformed_image1[mask]
-        return background      
-    
-            
+        return background
 
+# add padding to the image. avoid clipping during transformation
 def add_padding(image, top = 0, bottom = 0, left = 0, right = 0):
     # Define the padding size (top, bottom, left, right)
     # print("image shape:", image.shape)
@@ -140,7 +141,8 @@ def add_padding(image, top = 0, bottom = 0, left = 0, right = 0):
 if __name__ == "__main__":
     #1. load image
     transform_image = np.load("/media/zx/zx-data/RawData/exp06/realsense_depth/1737684595.6384075.npy")
-    transform_image = transform_image.astype(np.float32)
+    transform_image = transform_image.astype(np.float32) #make sure image is of np.float32 type
+    # add padding to right and bottom to avoid clipping
     transform_image = add_padding(transform_image, right=50, bottom=50)
     print(transform_image.shape)
     #2. initialize aligner
@@ -148,7 +150,7 @@ if __name__ == "__main__":
 
     #3. transform image
     #transform_image = a.transform_img(transform_image, a.RTS_dic[1][0], a.RTS_dic[1][1], a.RTS_dic[1][2])
-    transform_image = a.transform_image_layered(transform_image)
+    transform_image = a.transform_image_layered(transform_image, padding=False)
     #4. visualize image
     plt.imshow(transform_image)
     plt.show()
