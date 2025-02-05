@@ -18,11 +18,10 @@
     note: read images from the base path: MSC/calibImages/ \
     example:\
         `python MSC1_corresponding_points.py --transform realsense_depth/ --target seek_thermal/ --distance 1`\
-    note:\
-        information about which images to use is stored in the yaml file calibresults/image.yaml
 
 4. calibrate the thermal array and depth camera, obtain rotation and translation matrix and scaling factor\
     example: \
+    point calib mode: use points 
         `python3 calib.py --src_distance 4 --dest_distance 4 --baseDir /media/zx/zx-data/RawData/exp06/ --transform_dir realsense_depth/ --reference_dir seek_thermal/ --ind 1 --mode pointcalib`
 
 5. transform depth images to match thermal images. Example:\

@@ -246,12 +246,11 @@ def read_yaml(filename):
     return np.array(data["R"]), np.array(data["T"]), np.float64(data["s"])
 
 def read_RTS(src_distance, reference_dir, mode):
-    pointsfile = "calibpoints/"+reference_dir[:-1]+".yaml"
-    RTSfileSrc = "calibresults/"+reference_dir+src_distance+".yaml"
-    if mode != "mlc":
+    pointsfile = "MSC/2calibPoints/"+reference_dir+src_distance+".yaml"
+    RTSfileSrc = "MSC/3calibParams/"+reference_dir+src_distance+".yaml"
+    if mode == "pointcalib":
         transform_points, reference_points = load_yaml(pointsfile)
 
-    if mode == "pointcalib":
         # calculate scale
         scale = calc_scale(reference_points, transform_points)
 
@@ -261,7 +260,7 @@ def read_RTS(src_distance, reference_dir, mode):
         # calculate rotation and transformation
         R, T = calc_RT(reference_points, transform_points)
 
-    if mode == "mlc":
+    if mode == "adjust":
         R, T, scale = read_yaml(RTSfileSrc)
         print("read: ", R, T, scale)
     return R, T, scale
@@ -436,7 +435,7 @@ if __name__=="__main__":
 
     # read data, get names of files =============================================================
     R, T, scale = read_RTS(src_distance, reference_dir, mode)
-    RTSfileDst = "calibresults/"+reference_dir+dest_distance+".yaml"
+    RTSfileDst = "MSC/3calibParams/"+reference_dir+dest_distance+".yaml"
     transform_files = os.listdir(baseDir+transform_dir)
     reference_files = os.listdir(baseDir+reference_dir)
 
@@ -464,9 +463,9 @@ if __name__=="__main__":
     # plt.show()
 
     visualize_calib_result(transform_image, reference_image, mode, R, T, scale)
-    if mode != "mlc":
-        to_save = input("save R, T and s? y/n")
-        if to_save=="y":
-            dump_yaml(R, T, scale, RTSfileDst)
+
+    to_save = input("save R, T and s? y/n")
+    if to_save=="y":
+        dump_yaml(R, T, scale, RTSfileDst)
 
     
