@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import matplotlib
 matplotlib.use('TkAgg')
 
-
+sensor_size_dic = {"seek_thermal":(150, 200), "senxor_m16":(120, 160), "senxor_m08":(62, 80), "MLX":(24, 32)}
 
 class Aligner:
 
@@ -19,6 +19,7 @@ class Aligner:
     def __init__(self, sensor_name):
         self.sensor_name = sensor_name
         self.load_RTS()
+        self.image_shape = sensor_size_dic[sensor_name]
         
     #load R, T, scale in the form: 1:[R1, T1, s1], 2:[R2, T2, s2], ...
     def load_RTS(self):
@@ -128,7 +129,7 @@ class Aligner:
 
             mask = ~np.isnan(transformed_image1)
             background[mask] = transformed_image1[mask]
-        return background
+        return background[0:self.image_shape[0], 0:self.image_shape[1]]
 
 # add padding to the image. avoid clipping during transformation
 def add_padding(image, top = 0, bottom = 0, left = 0, right = 0):
@@ -137,10 +138,12 @@ def add_padding(image, top = 0, bottom = 0, left = 0, right = 0):
     image = cv.copyMakeBorder(image, top, bottom, left, right, cv.BORDER_CONSTANT, value=np.nan)
     return image
 
+sensor_size_dic = {"seek_thermal":(150, 200), "senxor_m16":(120, 160), "senxor_m08":(62, 80), "MLX":(24, 32)}
 
 if __name__ == "__main__":
     #1. load image
     transform_image = np.load("/media/zx/zx-data/RawData/exp06/realsense_depth/1737684595.6384075.npy")
+    print(transform_image.shape)
     transform_image = transform_image.astype(np.float32) #make sure image is of np.float32 type
     # add padding to right and bottom to avoid clipping
     transform_image = add_padding(transform_image, right=50, bottom=50)
