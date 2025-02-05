@@ -4,7 +4,9 @@
     a. Visualization only:\
         `python data_collection.py --save_data 0`\
     b. Collecting data:\
-        `python data_collection.py --collection_duration 600 --save_data 1 --save_path RawData/exp01`
+        `python data_collection.py --collection_duration 600 --save_data 1 --save_path RawData/exp01`\
+    c. When collecting for calibration, save images in below destination: 
+        MSC/calibImages/<distance in meters>/
 
 2. visualize raw data \
     a. visualize raw data as a video:\

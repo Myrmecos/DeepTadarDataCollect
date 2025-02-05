@@ -1,7 +1,7 @@
 1. data collect
-    1. add text to indicate max and min temp for data collect
-    2. allow specification of frame rates
-    3. when collecting for calibration, should save files under the dir: MSC/calibImages/distance/sensor_type
+    1. add text to indicate max and min temp for data collect \done
+    2. allow specification of frame rates 
+    3. when collecting for calibration, should save files under the dir: MSC/calibImages/distance/sensor_type \done
 
 2. Multi-sensor calibration
     1. rename to MSC
@@ -21,4 +21,6 @@
 
 
 1. why MLX min is 0?
+2. for images collected for calibration, need an efficient method to filter out unfit (blurred, without human, postures inconsistent) images
+
 

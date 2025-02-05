@@ -504,8 +504,9 @@ if __name__ == "__main__":
         mlx_min = -1024
         mlx_max = -1024
         if MLX_temperature_map is not None:
-            mlx_min = np.min(MLX_temperature_map)
-            mlx_max = np.max(MLX_temperature_map)
+            MLX_temperature_map_1 = mlx_sensor.SubpageInterpolating(MLX_temperature_map)
+            mlx_min = np.min(MLX_temperature_map_1)
+            mlx_max = np.max(MLX_temperature_map_1)
 
             MLX_temperature_map = MLX_temperature_map.reshape(24, 32)
             #MLX_temperature_map = np.flip(MLX_temperature_map, 0)
