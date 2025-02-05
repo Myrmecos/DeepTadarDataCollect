@@ -14,7 +14,7 @@ def normalize_thermal_array(array, lower = 20, upper = 25):
         
 
 dirbase = "/media/zx/zx-data/RawData/exp06/"
-sensors = ["MLX", "realsense_color", "realsense_depth", "seek_thermal", "senxor_m08", "senxor_m08_1"]
+sensors = ["MLX", "realsense_color", "realsense_depth", "seek_thermal", "senxor_m08", "senxor_m16"]
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--dirbase", type=str, help="the base directory of the dataset") #dirbase
@@ -29,7 +29,7 @@ realsense_color_dir = dirbase+sensors[1]
 realsense_depth_dir = dirbase+sensors[2]
 seek_thermal_dir = dirbase+sensors[3]
 senxor_m08_dir = dirbase+sensors[4]
-senxor_m08_1_dir = dirbase+sensors[5]
+senxor_m16_dir = dirbase+sensors[5]
 
 num_of_frames = len(os.listdir(mlx_dir))
 
@@ -39,7 +39,7 @@ realsense_color_images = os.listdir(realsense_color_dir)
 realsense_depth_images = os.listdir(realsense_depth_dir)
 seek_thermal_images = os.listdir(seek_thermal_dir)
 senxor_m08_images = os.listdir(senxor_m08_dir)
-senxor_m08_1_images = os.listdir(senxor_m08_1_dir)
+senxor_m16_images = os.listdir(senxor_m16_dir)
 
 for i in range(0, num_of_frames):
     MLX_temperature_map = np.load(mlx_dir+"/"+mlx_images[i])
@@ -47,7 +47,7 @@ for i in range(0, num_of_frames):
     realsense_depth_image = np.load(realsense_depth_dir+"/"+realsense_depth_images[i])
     seek_camera_frame = np.load(seek_thermal_dir+"/"+seek_thermal_images[i])
     senxor_temperature_map_m08 = np.load(senxor_m08_dir+"/"+senxor_m08_images[i])
-    senxor_temperature_map_m08_1 = np.load(senxor_m08_1_dir+"/"+senxor_m08_1_images[i])
+    senxor_temperature_map_m16 = np.load(senxor_m16_dir+"/"+senxor_m16_images[i])
 
 
     
@@ -105,20 +105,20 @@ for i in range(0, num_of_frames):
     else:
         senxor_temperature_map_m08 = np.zeros((240, 320, 3), dtype=np.uint8)
 
-    if senxor_temperature_map_m08_1 is not None:
-        print(f"senxor_m16 min: {np.min(senxor_temperature_map_m08_1)}; max: {np.max(senxor_temperature_map_m08_1)}")
+    if senxor_temperature_map_m16 is not None:
+        print(f"senxor_m16 min: {np.min(senxor_temperature_map_m16)}; max: {np.max(senxor_temperature_map_m16)}")
 
-        #senxor_temperature_map_m08_1 = senxor_temperature_map_m08_1.reshape(num_cols_m08_1, num_rows_m08_1)
-        # senxor_temperature_map_m08_1 = np.flip(senxor_temperature_map_m08_1, 0)
-        #senxor_temperature_map_m08_1 = senxor_temperature_map_m08_1.astype(np.uint8)
-        #senxor_temperature_map_m08_1 = cv2.normalize(senxor_temperature_map_m08_1, None, 0, 255, cv2.NORM_MINMAX)
-        senxor_temperature_map_m08_1 = normalize_thermal_array(senxor_temperature_map_m08_1, 15, 29)
-        senxor_temperature_map_m08_1 = cv2.resize(senxor_temperature_map_m08_1, (320, 240), interpolation=cv2.INTER_NEAREST)
-        senxor_temperature_map_m08_1 = cv2.applyColorMap(senxor_temperature_map_m08_1, cv2.COLORMAP_JET)
+        #senxor_temperature_map_m16 = senxor_temperature_map_m16.reshape(num_cols_m16, num_rows_m16)
+        # senxor_temperature_map_m16 = np.flip(senxor_temperature_map_m16, 0)
+        #senxor_temperature_map_m16 = senxor_temperature_map_m16.astype(np.uint8)
+        #senxor_temperature_map_m16 = cv2.normalize(senxor_temperature_map_m16, None, 0, 255, cv2.NORM_MINMAX)
+        senxor_temperature_map_m16 = normalize_thermal_array(senxor_temperature_map_m16, 15, 29)
+        senxor_temperature_map_m16 = cv2.resize(senxor_temperature_map_m16, (320, 240), interpolation=cv2.INTER_NEAREST)
+        senxor_temperature_map_m16 = cv2.applyColorMap(senxor_temperature_map_m16, cv2.COLORMAP_JET)
     else:
-        senxor_temperature_map_m08_1 = np.zeros((240, 320, 3), dtype=np.uint8)
+        senxor_temperature_map_m16 = np.zeros((240, 320, 3), dtype=np.uint8)
         
-    #print(realsense_depth_image.shape, realsense_color_image.shape, seek_camera_frame.shape,  senxor_temperature_map_m08.shape, senxor_temperature_map_m08_1.shape, MLX_temperature_map.shape)
+    #print(realsense_depth_image.shape, realsense_color_image.shape, seek_camera_frame.shape,  senxor_temperature_map_m08.shape, senxor_temperature_map_m16.shape, MLX_temperature_map.shape)
     print("=============================================================")
     interm1 = np.concatenate((realsense_depth_image, realsense_color_image, seek_camera_frame), axis=1)
     interm2 = np.concatenate((senxor_temperature_map_m08, MLX_temperature_map, senxor_temperature_map_m16), axis=1)

@@ -15,7 +15,7 @@ matplotlib.use('TkAgg')
 data_folder = "/media/zx/zx-data/RawData/exp06" # the folder where all data from one collection event is stored
 sensor_name = "senxor_m08" # the sensor name of the thermal camera
 image_index = 0 # the index (in the sequence of images collected in the collection event) of the image to visualize
-# sensor name can also be: MLX, seek_thermal, senxor_m08, senxor_m08_1
+# sensor name can also be: MLX, seek_thermal, senxor_m08, senxor_m16
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--dirbase", type=str, help="the base directory of the dataset") #dirbase
