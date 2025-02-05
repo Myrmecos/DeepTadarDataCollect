@@ -41,6 +41,7 @@ seek_thermal_images = os.listdir(seek_thermal_dir)
 senxor_m08_images = os.listdir(senxor_m08_dir)
 senxor_m16_images = os.listdir(senxor_m16_dir)
 
+# loop through each frame
 for i in range(0, num_of_frames):
     MLX_temperature_map = np.load(mlx_dir+"/"+mlx_images[i])
     realsense_color_image = np.load(realsense_color_dir+"/"+realsense_color_images[i])
@@ -48,8 +49,6 @@ for i in range(0, num_of_frames):
     seek_camera_frame = np.load(seek_thermal_dir+"/"+seek_thermal_images[i])
     senxor_temperature_map_m08 = np.load(senxor_m08_dir+"/"+senxor_m08_images[i])
     senxor_temperature_map_m16 = np.load(senxor_m16_dir+"/"+senxor_m16_images[i])
-
-
     
     if realsense_depth_image is not None:
         realsense_depth_image = cv2.applyColorMap(cv2.convertScaleAbs(realsense_depth_image, alpha=0.03), cv2.COLORMAP_JET)

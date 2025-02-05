@@ -61,6 +61,7 @@ fig.canvas.mpl_connect(
     )
 )
 
+# show image
 plt.tight_layout()
 plt.title("Transformed vs Reference Image")
 plt.show()

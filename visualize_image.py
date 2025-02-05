@@ -27,11 +27,5 @@ for dir in os.listdir(dirbase):
     plt.imshow(image)
     plt.title(dir)
     plt.show()
-    # image = np.load("RawData/exp01/"+dir+"/"+os.listdir(dirname)[1])
-    # print(image.shape)
-    # plt.imshow(image)
-    # plt.title(dir)
-    # plt.show()
-   
     print(dirname)
     print("=============================================================")

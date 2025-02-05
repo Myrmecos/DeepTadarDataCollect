@@ -39,7 +39,7 @@ def load_RTS(yaml_base_dir, sensor_name, max_dis):
                 print(exc)
     return RTS
 
-# step 4. apply R, T, s to each image in realsense depth folder
+# step 3. apply R, T, s to each image in realsense depth folder
 # transform image give the rotation matrix R, translation matrix T and scale s
 def transform_img(transform_image, R, T, scale):
     print("starting normal calib")
@@ -162,6 +162,7 @@ if __name__=="__main__":
         else:
             print("The folder already exists")
             exit(1)
+
     for image_name in transform_image_names:
         print("name of the image:", image_name)
         image = np.load(image_name)
@@ -173,6 +174,7 @@ if __name__=="__main__":
         if save == 0:
             plt.imshow(image)
             plt.show()
+        # step 4: save the transformed images in a new folder (depth_senxor_m08)
         # where to save: .../RawData/exp06/depth_map/senxor_m08/xxx.npy
         if save:
             image_individual_name = image_name.split("/")[-1]
@@ -181,6 +183,3 @@ if __name__=="__main__":
             break   
         # plt.imshow(image)
         # plt.show()
-        # step 4: save the transformed images in a new folder (depth_senxor_m08)
-
-

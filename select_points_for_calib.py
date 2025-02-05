@@ -16,11 +16,7 @@ reference_points = []
 with open('calibresults/image.yaml', 'r') as file:
     data = yaml.safe_load(file)
 
-# baseDir = "RawData/"
-# transform = "realsense_depth/"
-# target = "MLX/"
-# distance = "1"
-
+# load arguments
 parser = argparse.ArgumentParser()
 parser.add_argument("--baseDir", type=str, help="the base directory of the dataset")
 parser.add_argument("--transform", type=str, help="the name of the folder containing the images to be transformed")
@@ -34,6 +30,7 @@ transform = args.transform
 target = args.target
 distance = args.distance
 
+# Class to select points on two images
 class PointSelector:
     ax1 = None
     ax2 = None
@@ -66,7 +63,7 @@ class PointSelector:
             
         plt.draw()
 
-
+    # show two images
     def showImagePanels(self, transform_image, reference_image):
         # Lists to store clicked points
         global ax1, ax2
@@ -86,9 +83,11 @@ class PointSelector:
         plt.show()
         return self.return_list()
 
+    # return the two lists of corresponding points
     def return_list(self):
         return self.transform_points, self.reference_points
 
+    # print the two lists of corresponding points
     def print_list(self):
         print("transform_points: ")
         for p in self.transform_points:
@@ -97,6 +96,7 @@ class PointSelector:
         for p in self.reference_points:
             print(" - [",p[0], ", ", p[1], "]", sep = "")
 
+    # clear the two lists
     def clear_list(self):
         transform_points = []
         reference_points = []
@@ -109,7 +109,9 @@ class PointSelector:
             self.cursor2.set_data(event.xdata, event.ydata)
         plt.draw()
 
-# calibration for a specific distance
+# first obtain the filenames of images
+# then asks users to select corresponding points for a specific distance, return two lists of points (points on transform image and points on reference image)
+# transform image: depth (to be mapped onto thermal), reference image: thermal
 def calib_for_distance_m(ps, transform_dir, target_dir, distance_str):
     dirinds = [distance_str, "1"+distance_str, "2"+distance_str] #1, 11, 21
     transform_image_names = []
@@ -125,7 +127,6 @@ def calib_for_distance_m(ps, transform_dir, target_dir, distance_str):
         for i in validInd:
             transform_image_names.append(baseDir+dirname+transform_dir+imageNamesTrans[i])
             target_image_names.append(baseDir+dirname+target_dir+imageNamesTarget[i])
-        
 
     print(len(transform_image_names))
 
@@ -141,14 +142,11 @@ def calib_for_distance_m(ps, transform_dir, target_dir, distance_str):
 
 if __name__=="__main__":
     # indices of images that are used for selecting points for calibration are stored in calibresults/image.yaml
+    
     ps = PointSelector()
 
     transform_points, reference_points = calib_for_distance_m(ps, transform, target, distance)
     ps.print_list()
-
-    # Print the selected points
-    # print("Selected transform Points:", transform_points) #transform refers to those points to be transformed and mapped (should be depth)
-    # print("Selected reference Points:", reference_points)
 
     data = {
         "transform_points": transform_points,
