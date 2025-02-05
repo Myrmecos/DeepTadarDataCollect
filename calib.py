@@ -11,6 +11,7 @@ matplotlib.use('TkAgg')
 import os
 import math
 import copy
+import argparse
 
 # calibration for one sensor to map to depth camera, at different distance (one distance gives one set of (R, T, S))
 
@@ -325,7 +326,7 @@ def add_margin(reference_image, margin, scale):
     return reference_image
 
 def visualize_calib_result(transform_image, reference_image, mode, R, T, scale):
-    global angle_slider, xshift_slider, yshift_slider, scale_slider, fig, ax1, ax2, cursor1, cursor2, cursor11, cursor21
+    global angle_slider, xshift_slider, yshift_slider, scale_slider, fig, ax1, ax2, cursor1, cursor2, cursor11, cursor21, im
     #visualize the transformed image
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
     print("================init subplots done!=============================")
@@ -409,17 +410,39 @@ if __name__=="__main__":
     global mode
     margin = 90
     # prepare arguments =====================================================================
-    
-    src_distance = "4" #the distance where R, T, scale come from
-    dest_distance = "4" #which distance we want to adjust our RTS to(e.g. we can read calib result at 7m, transform it to use at 1m)
-    baseDir = "/media/zx/zx-data/RawData/exp06/"
-    baseDir = "RawData/exp42/"
-    transform_dir = "realsense_depth/"
-    reference_dir = "MLX/"
-    ind = 1 #index of the image we want to visualize. 1 means 2nd valid image
-    # mode = "adjust" # adjust previous R, T, S
-    # mode = "pointcalib"
-    mode = "mlc" #multi-layer calib
+    # src_distance = "4" #the distance where R, T, scale come from
+    # dest_distance = "4" #which distance we want to adjust our RTS to(e.g. we can read calib result at 7m, transform it to use at 1m)
+    # baseDir = "/media/zx/zx-data/RawData/exp06/"
+    # baseDir = "RawData/exp42/"
+    # transform_dir = "realsense_depth/"
+    # reference_dir = "MLX/"
+    # ind = 1 #index of the image we want to visualize. 1 means 2nd valid image
+    # # mode = "adjust" # adjust previous R, T, S
+    # # mode = "pointcalib"
+    # mode = "mlc" #multi-layer calib
+
+    #example usage: python3 calib.py --src_distance 4 --dest_distance 1 --baseDir /media/zx/zx-data/RawData/exp06/ --transform_dir realsense_depth/ --reference_dir MLX/ --ind 1 --mode mlc
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--src_distance", type=int, default=10, help="distance where R, T, scale come from")
+    parser.add_argument("--dest_distance", type=int, default=0, help="distance we want to adjust our RTS to")
+    parser.add_argument("--baseDir", type=str, default="data", help="path containing the dataset")
+    parser.add_argument("--transform_dir", type=str, default="realsense_depth/", help="folder containing the images to be transformed")
+    parser.add_argument("--reference_dir", type=str, default="MLX/", help="folder containing the reference images")
+    parser.add_argument("--ind", type=int, default=0, help="index of the image we want to visualize")
+    parser.add_argument("--mode", type=str, default="mlc", help="mode of calibration: pointcalib, mlc")
+
+    args = parser.parse_args()
+    #args.save_path = "/media/zx/zx-data/" + args.save_path
+    src_distance = str(args.src_distance)
+    dest_distance = str(args.dest_distance)
+    baseDir = args.baseDir
+    transform_dir = args.transform_dir
+    reference_dir = args.reference_dir
+    ind = args.ind
+    mode = args.mode
+
+
 
     # read data, get names of files =============================================================
     R, T, scale = read_RTS(src_distance, reference_dir, mode)

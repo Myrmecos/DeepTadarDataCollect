@@ -1,4 +1,8 @@
 # instructions
+0. select corresponding points in thermal array and depth image. points will be recorded in a yaml file. 
+    python3 select_points_for_calib.py
+0. calibrate the camera, obtain rotation and translation matrix
+    python3 calib.py --src_distance 4 --dest_distance 1 --baseDir /media/zx/zx-data/RawData/exp06/ --transform_dir realsense_depth/ --reference_dir MLX/ --ind 1 --mode mlc
 
 1. obtain images
     a. Visualization only:
