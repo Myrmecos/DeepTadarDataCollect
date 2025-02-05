@@ -319,7 +319,7 @@ def add_margin(reference_image, margin, scale):
     rmargin = round(margin/scale)
     new_h = reference_image.shape[0]+round(2*rmargin)
     new_w = reference_image.shape[1]+round(2*rmargin)
-    padded_reference = np.full((new_h, new_w), 255, dtype=np.float32)
+    padded_reference = np.full((new_h, new_w), np.nan, dtype=np.float32)
     padded_reference[rmargin:rmargin + reference_image.shape[0], rmargin:rmargin + reference_image.shape[1]] = reference_image
     reference_image = padded_reference
     return reference_image
@@ -407,7 +407,7 @@ def visualize_calib_result(transform_image, reference_image, mode, R, T, scale):
 
 if __name__=="__main__":
     global mode
-    margin = 0
+    margin = 90
     # prepare arguments =====================================================================
     
     src_distance = "4" #the distance where R, T, scale come from
