@@ -104,6 +104,8 @@ class Aligner:
     
     # takes a depth image and transform it in multiple layers
     def transform_image_layered(self, depth_ori=None, padding = True):
+        depth_ori = depth_ori.astype(np.float32)
+        add_padding(depth_ori, right=50, bottom=50)
         print("=============starting multi-layer calib. will include multiple normal calibs==============")
         R, T, scale = self.RTS_dic[self.dist_list[0]]
         background = self.transform_img(depth_ori, R, T, scale)
@@ -131,6 +133,12 @@ class Aligner:
             background[mask] = transformed_image1[mask]
         return background[0:self.image_shape[0], 0:self.image_shape[1]]
 
+    def transform_images_batch(self, depth_ori_list):
+        transformed_images = []
+        for depth_ori in depth_ori_list:
+            transformed_images.append(self.transform_image_layered(depth_ori))
+        return transformed_images
+
 # add padding to the image. avoid clipping during transformation
 def add_padding(image, top = 0, bottom = 0, left = 0, right = 0):
     # Define the padding size (top, bottom, left, right)
@@ -141,21 +149,31 @@ def add_padding(image, top = 0, bottom = 0, left = 0, right = 0):
 sensor_size_dic = {"seek_thermal":(150, 200), "senxor_m16":(120, 160), "senxor_m08":(62, 80), "MLX":(24, 32)}
 
 if __name__ == "__main__":
+
     #1. load image
     transform_image = np.load("/media/zx/zx-data/RawData/exp06/realsense_depth/1737684595.6384075.npy")
+    transform_image1 = np.load("/media/zx/zx-data/RawData/exp06/realsense_depth/1737684596.0393853.npy")
     print(transform_image.shape)
-    transform_image = transform_image.astype(np.float32) #make sure image is of np.float32 type
-    # add padding to right and bottom to avoid clipping
-    transform_image = add_padding(transform_image, right=50, bottom=50)
+    # transform_image = transform_image.astype(np.float32) #make sure image is of np.float32 type
+    # transform_image1 = transform_image1.astype(np.float32) #make sure image is of np.float32 type
+
+    # TODO: add padding to right and bottom to avoid clipping
+    # transform_image = add_padding(transform_image, right=50, bottom=50)
+    # transform_image1 = add_padding(transform_image1, right=50, bottom=50)
     print(transform_image.shape)
-    #2. initialize aligner
+
+    # TODO: initialize an Aligner
     a = Aligner("senxor_m16")
 
-    #3. transform image
-    #transform_image = a.transform_img(transform_image, a.RTS_dic[1][0], a.RTS_dic[1][1], a.RTS_dic[1][2])
-    transform_image = a.transform_image_layered(transform_image, padding=False)
+    # TODO: transform one image
+    # padding: use the transform parameters at furthest calibrated distance to fill empty space
+    #transform_image = a.transform_image_layered(transform_image, padding=True)
+    transform_images = a.transform_images_batch([transform_image, transform_image1, transform_image, transform_image1])
+
     #4. visualize image
-    plt.imshow(transform_image)
+    plt.imshow(transform_images[0])
+    plt.show()
+    plt.imshow(transform_images[1])
     plt.show()
     
     

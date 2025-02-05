@@ -36,10 +36,14 @@
 
 
 5. transform depth images to match thermal images. Example:\
-    a. do not save, only visualize: \
-        `python3 thermal_images_depth_align.py --dirbase /media/zx/zx-data/RawData/exp06/ --sensor_name MLX/ --transform_name realsense_depth/ --yaml_base_dir calibresults/ --max_dis 4 --save 0`\
-    b. save:\
-        `python3 thermal_images_depth_align.py --dirbase /media/zx/zx-data/RawData/exp06/ --sensor_name MLX/ --transform_name realsense_depth/ --yaml_base_dir calibresults/ --max_dis 4 --save 1`
+    using thermal_images_depth_align.py:
+        a. do not save, only visualize: \
+            `python3 thermal_images_depth_align.py --dirbase /media/zx/zx-data/RawData/exp06/ --sensor_name MLX/ --transform_name realsense_depth/ --yaml_base_dir calibresults/ --max_dis 4 --save 0`\
+        b. save:\
+            `python3 thermal_images_depth_align.py --dirbase /media/zx/zx-data/RawData/exp06/ --sensor_name MLX/ --transform_name realsense_depth/ --yaml_base_dir calibresults/ --max_dis 4 --save 1`
+
+    using Aligner.py:
+        a. see comments and use case in Aligner.py
 
 6. visualize transformed depth images, with comparison to thermal images.\
     Example:\
