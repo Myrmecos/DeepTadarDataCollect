@@ -121,41 +121,8 @@ for i in range(0, num_of_frames):
     #print(realsense_depth_image.shape, realsense_color_image.shape, seek_camera_frame.shape,  senxor_temperature_map_m08.shape, senxor_temperature_map_m08_1.shape, MLX_temperature_map.shape)
     print("=============================================================")
     interm1 = np.concatenate((realsense_depth_image, realsense_color_image, seek_camera_frame), axis=1)
-    interm2 = np.concatenate((senxor_temperature_map_m08, MLX_temperature_map, senxor_temperature_map_m08_1), axis=1)
+    interm2 = np.concatenate((senxor_temperature_map_m08, MLX_temperature_map, senxor_temperature_map_m16), axis=1)
     final_image = np.concatenate((interm1, interm2), axis=0)
     #print(final_image)
     cv2.imshow("Final Image", final_image)
     cv2.waitKey(100)
-
-    #cv2.imshow("Realsense Color Image", realsense_color_image)
-    # key = cv.waitKey(1)
-    # if key in [ord("q"), ord('Q'), 27]:
-    #     break
-    # if key in [ord("c"), ord('C')]:
-    #     collect = 1
-    #     print("ready to collect!")
-
-
-
-
-
-
-
-
-# for dir in os.listdir(dirbase):
-#     if ("meta.log" == dir):
-#         continue
-#     dirname = dirbase+dir
-#     #print(dirname)
-#     print(len(os.listdir(dirname)))
-#     image = np.load(dirbase+dir+"/"+os.listdir(dirname)[299])
-#     plt.imshow(image)
-#     plt.title(dir)
-#     plt.show()
-#     # image = np.load("RawData/exp01/"+dir+"/"+os.listdir(dirname)[1])
-#     # print(image.shape)
-#     # plt.imshow(image)
-#     # plt.title(dir)
-#     # plt.show()
-#     print("=============================================================")
-#     print(dirname)
