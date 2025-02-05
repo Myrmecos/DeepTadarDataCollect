@@ -8,7 +8,7 @@ import argparse
 #example usage: 
 # python select_points_for_calib.py --baseDir RawData/ --transform realsense_depth/ --target MLX/ --distance 1
 
-#goal: select points on both corresponding images
+#goal: select points on both corresponding images__
 transform_points = []
 reference_points = []
 
