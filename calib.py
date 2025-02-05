@@ -201,7 +201,7 @@ def draw_black_margin(image, margin_width):
 
 # update the transform image according to adjusted R, T and S
 def update(val):
-    global R, T, scale, transform_dir, max_dir, depth_ori
+    global R, T, scale, transform_dir, max_dir, depth_ori, im, fig
     # Get current slider values
     angle = angle_slider.val
     xshift = xshift_slider.val
@@ -397,7 +397,12 @@ def visualize_calib_result(transform_image, reference_image, mode, R, T, scale):
     else:
         #transform_image = transform_image_layered(basedir1, maxlen1, depth_ori1)
         pass
-    print(transform_image.shape)
+    showOverlap(transform_image, reference_image)
+
+#show two overlapping images
+def showOverlap(transform_image, reference_image):
+    global R, T, scale
+    transform_image = transform_img(transform_image_ori, R, T, scale)
     plt.imshow(transform_image, cmap='gray', alpha=0.5)
     plt.imshow(reference_image, cmap='gray', alpha=0.5)
     plt.xlim(-10, 250)
@@ -405,24 +410,11 @@ def visualize_calib_result(transform_image, reference_image, mode, R, T, scale):
     plt.show()
 
 
-
 if __name__=="__main__":
     global mode
     margin = 90
-    # prepare arguments =====================================================================
-    # src_distance = "4" #the distance where R, T, scale come from
-    # dest_distance = "4" #which distance we want to adjust our RTS to(e.g. we can read calib result at 7m, transform it to use at 1m)
-    # baseDir = "/media/zx/zx-data/RawData/exp06/"
-    # baseDir = "RawData/exp42/"
-    # transform_dir = "realsense_depth/"
-    # reference_dir = "MLX/"
-    # ind = 1 #index of the image we want to visualize. 1 means 2nd valid image
-    # # mode = "adjust" # adjust previous R, T, S
-    # # mode = "pointcalib"
-    # mode = "mlc" #multi-layer calib
-
+    # prepare arguments ====================================================================
     #example usage: python3 calib.py --src_distance 4 --dest_distance 1 --baseDir /media/zx/zx-data/RawData/exp06/ --transform_dir realsense_depth/ --reference_dir MLX/ --ind 1 --mode mlc
-
     parser = argparse.ArgumentParser()
     parser.add_argument("--src_distance", type=int, default=10, help="distance where R, T, scale come from")
     parser.add_argument("--dest_distance", type=int, default=0, help="distance we want to adjust our RTS to")
@@ -433,7 +425,7 @@ if __name__=="__main__":
     parser.add_argument("--mode", type=str, default="mlc", help="mode of calibration: pointcalib, mlc")
 
     args = parser.parse_args()
-    #args.save_path = "/media/zx/zx-data/" + args.save_path
+
     src_distance = str(args.src_distance)
     dest_distance = str(args.dest_distance)
     baseDir = args.baseDir
@@ -441,8 +433,6 @@ if __name__=="__main__":
     reference_dir = args.reference_dir
     ind = args.ind
     mode = args.mode
-
-
 
     # read data, get names of files =============================================================
     R, T, scale = read_RTS(src_distance, reference_dir, mode)
@@ -455,17 +445,11 @@ if __name__=="__main__":
     #0. load the to-be-conferted image and reference image================================================================
     transform_image, reference_image = load_image(baseDir,transform_dir,transform_files,reference_dir,reference_files)
     print("==========image transform done==========")
-    # print(transform_image)
-    # plt.imshow(transform_image)
-    # plt.show()
 
     # 0. add margin for transform ==========================================================
     reference_image = add_margin(reference_image, margin, scale)
     transform_image = add_margin(transform_image, margin, 1)
     transform_image_ori = copy.copy(transform_image)
-
-    # plt.imshow(transform_image)
-    # plt.show()
 
     #1. transform the transform image ==============================================================================
     basedir1 = "calibresults/"+reference_dir

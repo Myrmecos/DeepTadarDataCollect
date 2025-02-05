@@ -8,9 +8,9 @@
 
 2. visualize raw data 
     a. visualize raw data as a video:
-        python3 videostream.py --dirbase /media/zx/zx-data/RawData/exp06/
+        python3 visualize_videostream.py --dirbase /media/zx/zx-data/RawData/exp06/
     b. visualize raw data as images:
-        python3 visualization.py --dirbase /media/zx/zx-data/RawData/exp06/
+        python3 visualize_image.py --dirbase /media/zx/zx-data/RawData/exp06/
 
 3. select corresponding points in thermal array and depth image. points will be recorded in a yaml file. 
     example:
@@ -20,7 +20,7 @@
 
 4. calibrate the thermal array and depth camera, obtain rotation and translation matrix and scaling factor
     example: 
-        python3 calib.py --src_distance 4 --dest_distance 1 --baseDir /media/zx/zx-data/RawData/exp06/ --transform_dir realsense_depth/ --reference_dir MLX/ --ind 1 --mode mlc
+        python3 calib.py --src_distance 4 --dest_distance 4 --baseDir /media/zx/zx-data/RawData/exp06/ --transform_dir realsense_depth/ --reference_dir seek_thermal/ --ind 1 --mode pointcalib
 
 5. transform depth images to match thermal images. Example:
     a. do not save, only visualize: 
@@ -33,6 +33,6 @@
         python3 visualize_transformed_image.py --dirbase /media/zx/zx-data/RawData/exp06 --sensor_name senxor_m08 --image_index 0
 
 # check; 
-    1. near-neighbor vs bilinear
-    2. grayscale for thermal image (or normalize at a global range, clip off out-of-range pixels)
+    1. near-neighbor vs bilinear effect (near-neighbor is better)
+    2. grayscale for thermal image (or normalize at a global range, clip off out-of-range pixels) (clipped off for visualize as videostream)
     3. m16 and m08 sense temperature differently. difference at upper bound stays around 7 degrees
