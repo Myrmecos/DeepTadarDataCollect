@@ -302,6 +302,7 @@ if __name__ == "__main__":
     parser.add_argument("--collection_duration", type=int, default=10, help="Duration to collect data, seconds")
     parser.add_argument("--save_data", type=int, default=0, help="0: not save, just visualize, 1: save to a pickle file without visualization")
     parser.add_argument("--save_path", type=str, default="data", help="path to save data")
+    parser.add_argument("--sleep_time", type=float, default=0, help="sleep time between each frame")
     args = parser.parse_args()
     args.save_path = "/media/zx/zx-data/" + args.save_path
     if args.save_data:
@@ -323,6 +324,7 @@ if __name__ == "__main__":
     mlx_sensor = MLXSensor("/dev/ttyUSB0")
     senxor_sensor_m08 = senxor(sensor_port="/dev/ttyACM0") #beware! This may get flipped
     senxor_sensor_m16 = senxor(sensor_port="/dev/ttyACM1")
+    
 
     # to prevent flipping circumstances
     if senxor_sensor_m08.get_temperature_map_shape()[0] > senxor_sensor_m16.get_temperature_map_shape()[0]:
@@ -344,6 +346,7 @@ if __name__ == "__main__":
     start_time = time.time()
     collection_duration = args.collection_duration
     collect = args.save_data
+    sleep_time = args.sleep_time
     last_collect_time = time.time()
 
     while True:
@@ -442,6 +445,12 @@ if __name__ == "__main__":
                 
                 collection_counter += 1
                 time_lasting = time.time() - start_time
+                if time_lasting > sleep_time:
+                    collect = 1
+                    start_time = time.time()
+                else:
+                    collect = 0
+
                 if collection_counter % 50 == 0:
                     print(f"Seek camera frame collected at {timestamp}", seek_camera_frame.shape)
                     print(f"Realsense depth and color image collected at {timestamp}", realsense_depth_image.shape, realsense_color_image.shape)

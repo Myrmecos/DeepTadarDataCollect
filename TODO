@@ -1,6 +1,6 @@
 1. data collect
     1. add text to indicate max and min temp for data collect \done
-    2. allow specification of frame rates 
+    2. allow specification of frame rates \done
     3. when collecting for calibration, should save files under the dir: MSC/calibImages/distance/sensor_type \done
 
 2. Multi-sensor calibration
