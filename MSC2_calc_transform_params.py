@@ -432,6 +432,8 @@ if __name__=="__main__":
     reference_dir = args.reference_dir
     ind = args.ind
     mode = args.mode
+    if mode == "pointcalib":
+        src_distance = dest_distance
 
     # read data, get names of files =============================================================
     R, T, scale = read_RTS(src_distance, reference_dir, mode)

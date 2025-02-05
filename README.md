@@ -21,8 +21,19 @@
 
 4. calibrate the thermal array and depth camera, obtain rotation and translation matrix and scaling factor\
     example: \
-    point calib mode: use points 
-        `python3 calib.py --src_distance 4 --dest_distance 4 --baseDir /media/zx/zx-data/RawData/exp06/ --transform_dir realsense_depth/ --reference_dir seek_thermal/ --ind 1 --mode pointcalib`
+    point calib mode: use points obtained from step 3 to obtain R, T and scale \
+        `python3 MSC2_calc_transform_params.py --dest_distance 4 --baseDir /media/zx/zx-data/RawData/exp06/ --transform_dir realsense_depth/ --reference_dir seek_thermal/ --ind 1 --mode pointcalib`\
+        dest_distance: distance from array to object from which point data came from (usually human body)\
+        dir_base: base directory where the visualized images come frome\
+        transform_dir: directory where the depth images are stored\
+        reference_dir: directory where the thermal images are stored\
+        ind: index of the image (to be visualized) in the sensor's directory
+
+    adjust mode: adjust R, T, scale collected earlier \
+        `python3 MSC2_calc_transform_params.py --src_distance 5 --dest_distance 4 --baseDir /media/zx/zx-data/RawData/exp06/ --transform_dir realsense_depth/ --reference_dir seek_thermal/ --ind 1 --mode adjust`\
+        src_distance: distance from array to object, from which R, T, scale was previously calculated\
+        dest_distance: distance from array to object that we want to adjust our R, T, scale to adapt to
+
 
 5. transform depth images to match thermal images. Example:\
     a. do not save, only visualize: \
