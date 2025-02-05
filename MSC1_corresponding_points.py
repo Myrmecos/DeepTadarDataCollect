@@ -1,12 +1,15 @@
 import yaml
 import cv2
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import os
 import argparse
 
+matplotlib.use('TkAgg')
+
 #example usage: 
-# python select_points_for_calib.py --baseDir RawData/ --transform realsense_depth/ --target MLX/ --distance 1
+# python select_points_for_calib.py --transform realsense_depth/ --target MLX/ --distance 1
 
 #goal: select points on both corresponding images__
 transform_points = []
@@ -18,14 +21,12 @@ with open('calibresults/image.yaml', 'r') as file:
 
 # load arguments
 parser = argparse.ArgumentParser()
-parser.add_argument("--baseDir", type=str, help="the base directory of the dataset")
 parser.add_argument("--transform", type=str, help="the name of the folder containing the images to be transformed")
 parser.add_argument("--target", type=str, help="the name of the folder containing the reference images")
 parser.add_argument("--distance", type=str, help="the distance of the images")
 
 args = parser.parse_args()
 
-baseDir = args.baseDir
 transform = args.transform
 target = args.target
 distance = args.distance
@@ -38,7 +39,6 @@ class PointSelector:
     cursor2 = None
     transform_points = []
     reference_points = []
-    baseDir = None
 
     def __init__(self):
         pass
@@ -113,20 +113,19 @@ class PointSelector:
 # then asks users to select corresponding points for a specific distance, return two lists of points (points on transform image and points on reference image)
 # transform image: depth (to be mapped onto thermal), reference image: thermal
 def calib_for_distance_m(ps, transform_dir, target_dir, distance_str):
-    dirinds = [distance_str, "1"+distance_str, "2"+distance_str] #1, 11, 21
+    #dirinds = [distance_str, "1"+distance_str, "2"+distance_str] #1, 11, 21
+    
     transform_image_names = []
     target_image_names = []
-    for dirind in dirinds:
-        dirname = "exp"+dirind+"/"
-        validInd = data[dirind]
-        #list all files under exp**, and select the names corresponding to validInd
-        imageNamesTrans=os.listdir(baseDir+dirname+transform_dir)
-        imageNamesTarget=os.listdir(baseDir+dirname+target_dir)
-        # add the names to image_names
+    
+    dirname = f"MSC/calibImages/{distance}/"
+    imageNamesTrans=os.listdir(dirname+transform_dir)
+    imageNamesTarget=os.listdir(dirname+target_dir)
+    # add the names to image_names
         
-        for i in validInd:
-            transform_image_names.append(baseDir+dirname+transform_dir+imageNamesTrans[i])
-            target_image_names.append(baseDir+dirname+target_dir+imageNamesTarget[i])
+    for i in range(len(imageNamesTrans)):
+        transform_image_names.append(f"MSC/calibImages/{distance}/{transform_dir}{imageNamesTrans[i]}")
+        target_image_names.append(f"MSC/calibImages/{distance}/{target_dir}{imageNamesTarget[i]}")
 
     print(len(transform_image_names))
 
@@ -142,7 +141,6 @@ def calib_for_distance_m(ps, transform_dir, target_dir, distance_str):
 
 if __name__=="__main__":
     # indices of images that are used for selecting points for calibration are stored in calibresults/image.yaml
-    
     ps = PointSelector()
 
     transform_points, reference_points = calib_for_distance_m(ps, transform, target, distance)
@@ -153,10 +151,10 @@ if __name__=="__main__":
         "reference_points": reference_points
     }
 
-    with open('config.yaml', 'w') as file:
-        to_write = input("Write to yaml file? y/n")
-        if (to_write=="y"):
-            print("write stuffs back!")
+    to_write = input("Write to yaml file? y/n")
+    if (to_write=="y"):
+        print("write stuffs back!")
+        with open(f'MSC/calib1points/{target}{distance}.yaml', 'w') as file:
             yaml.dump(data, file, default_flow_style=True)
-        
+            
         

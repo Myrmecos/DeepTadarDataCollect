@@ -15,8 +15,9 @@
         `python3 visualize_image.py --dirbase /media/zx/zx-data/RawData/exp06/`
 
 3. select corresponding points in thermal array and depth image. points will be recorded in a yaml file. \
+    note: read images from the base path: MSC/calibImages/ \
     example:\
-        `python select_points_for_calib.py --baseDir RawData/ --transform realsense_depth/ --target MLX/ --distance 1`\
+        `python MSC1_corresponding_points.py --transform realsense_depth/ --target seek_thermal/ --distance 1`\
     note:\
         information about which images to use is stored in the yaml file calibresults/image.yaml
 

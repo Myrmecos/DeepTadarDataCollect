@@ -4,10 +4,10 @@
     3. when collecting for calibration, should save files under the dir: MSC/calibImages/distance/sensor_type \done
 
 2. Multi-sensor calibration
-    1. rename to MSC
-        MSC1_corresponding_points.py
-        MSC2_calc_transform_param.py
-    2. MSC1_corresponding_points.py should save the point in file: MSC/1calibPoints/distance/sensor_type
+    1. rename to MSC \done
+        MSC1_corresponding_points.py \done
+        MSC2_calc_transform_param.py \done
+    2. MSC1_corresponding_points.py should save the point in file: MSC/1calibPoints/<distance>/<sensor_type>
         a. it should have: python3 MSC1_corresponding_points.py --calib_base_dir <path> --dist <distance at which selection is done> --sensor_type <sensor_type>
     3. MSC2_calc_transform_param.py should save R, T, scale in position: MSC/2calibParams/sensor_type.yaml (careful: repetition of same sensors. Need to check before calculation and manual adjustment)
         a. it should have: python3 MSC2_calc_transform_param.py --dist <distance> --sensor_type <sensor name> 
