@@ -56,17 +56,16 @@ class ImageLidarAligner:
     return: points_2d: indices of valid points converted to 2d
     '''
     def _project_points_to_image(self, points_3d):
-        #MODIFIED============ Use inverse of extrinsic matrix
-        extrinsic_inv = np.linalg.inv(self.extrinsicMatrix)
-        R = extrinsic_inv[:3, :3]
-        t = extrinsic_inv[:3, 3]
-
-        points_cam = (R @ points_3d.T + t[:, np.newaxis]).T
-        valid = points_cam[:, 2] > 0
-        points_2d = np.zeros((len(points_3d), 2))
-        points_2d[valid] = points_cam[valid, :2] / points_cam[valid, 2:3]
-        
-        return points_2d, valid
+        points_3d_homog = np.hstack([points_3d, np.ones((points_3d.shape[0], 1))])
+        points_camera = points_3d_homog @ self.extrinsicMatrix.T
+        valid_mask = points_camera[:, 2] > 0
+        valid_indices = np.where(valid_mask)[0]
+        points_camera_valid = points_camera[valid_mask]
+        f, cx, cy = 1.0, 0.0, 0.0  # Assume defaults
+        points_2d = np.zeros((len(valid_indices), 2))
+        points_2d[:, 0] = f * (points_camera_valid[:, 0] / points_camera_valid[:, 2]) + cx
+        points_2d[:, 1] = f * (points_camera_valid[:, 1] / points_camera_valid[:, 2]) + cy
+        return points_2d, valid_indices
 
     def _find_closest_point(self, image_coord, points_2d, points_3d, valid):
         # Filter valid projected points
