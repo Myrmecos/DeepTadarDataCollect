@@ -72,21 +72,19 @@ class ImageLidarAligner:
         # Convert inputs
         image_coord = np.array(image_coord, dtype=float)  # e.g., [u, v]
         image_coord = self._normalize_image_coord(image_coord[0], image_coord[1])
-        print("normalized image coord: ", image_coord)
+
         points_3d = np.asarray(points_3d.points, dtype=float)
 
         # Project points to image
         points_2d, points_3d = self._project_points_to_image(points_3d)
 
-        visualize_points_by_distance(points_2d, points_3d)
-        print(max(points_2d[:, 0]))
-        # image coordinate normalization
-        print("shape of points_2d:", points_2d.shape)
+        #visualize_points_by_distance(points_2d, points_3d)
+        
         # Find closest point
-        closest_points, distance = self._find_closest_point(image_coord, points_2d, points_3d)
+        closest_points, _ = self._find_closest_point(image_coord, points_2d, points_3d)
         
         closest_points = self.clearOutliers(closest_points)
-        print("number of points after filter:", closest_points.shape[0])
+        distance = self._average_distance_from_origin(closest_points)
         return closest_points, points_3d, distance
 
     '''
@@ -128,9 +126,7 @@ class ImageLidarAligner:
     return the points in pointcloud that are nearest to the pixel
     '''
     def _find_closest_point(self, image_coord, valid_points_2d, valid_points_3d, num_of_pts=500):
-        print("coordinate in image: ", image_coord)
         # Compute Euclidean distances in image plane
-        print("valid points shape: ", valid_points_2d.shape)
         distances = np.linalg.norm(valid_points_2d - image_coord, axis=1)
 
         # Find indices of the 5000 closest points
@@ -164,31 +160,57 @@ class ImageLidarAligner:
         filtered_points = points[mask]
         
         return filtered_points
+    
+    def _average_distance_from_origin(self, pts):
+        """
+        Calculate the average Euclidean distance of points from the origin (0,0,0).
+        
+        Parameters:
+        - pts: numpy array of shape (n, 3) containing 3D points
+        
+        Returns:
+        - average distance as a float
+        """
+        if len(pts) == 0:
+            return 0.0
+        
+        # Calculate Euclidean distances from origin for each point
+        distances = np.sqrt(np.sum(pts**2, axis=1))
+        
+        # Return the average distance
+        return np.mean(distances)
         
 
 
 if __name__=="__main__":
+    # read extrinsic param
     extrinsic = readExtrinsic("/home/astar/dart_ws/calib/extrinsic.txt")
 
+    # read image
     image = cv2.imread("/home/astar/dart_ws/single_scene_calibration/0.png")
-    print(image.shape)
-    plt.imshow(image)
-    
-    plt.show()
+    # print(image.shape)
+    # plt.imshow(image)
+    # plt.show()
 
+    # read point cloud
     pcd = readPcd("/home/astar/dart_ws/single_scene_calibration/0.pcd")
     #o3d.visualization.draw_geometries([pcd], window_name="Point Cloud Visualization", width=800, height=600)
+
+    # get coordinates
     coord = [645.952, 677.306]
 
     cameraMatrix = np.array(camera_matrix).reshape(3, 3)
-
     ila = ImageLidarAligner(extrinsic, cameraMatrix)
-    closest_pts, valid_pts, dist = ila.reportPoints(coord, pcd)
 
+    # transform
+    closest_pts, valid_pts, dist = ila.reportPoints(coord, pcd)
+    print("average distance from origin is:", dist)
+    print(closest_pts[0, :])
+
+    # visualize result
     closest_pts = array_to_pointcloud(closest_pts)
     valid_pts = array_to_pointcloud(valid_pts)
-    #o3d.visualization.draw_geometries([pointcloud], window_name="Point Cloud Visualization", width=800, height=600)
 
-    visualize_point_clouds(valid_pts, closest_pts)
+    #visualize_point_clouds(valid_pts, closest_pts)
 
     print(closest_pts, dist)
