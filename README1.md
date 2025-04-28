@@ -34,6 +34,8 @@ For example, `rosrun pcl_ros bag_to_pcd /home/astar/dart_ws/calib/calibpointclou
 2. then, merge all pcd files into one: `pcl_concatenate_points_pcd /home/astar/dart_ws/calib/calibpointcloud/calibscene/* && mv output.pcd /home/astar/dart_ws/calib/calibpointcloud/calibscene.pcd `
 3. visualize the final pcd file: `pcl_viewer /home/astar/dart_ws/calib/calibpointcloud/calibscene.pcd`
 
+
+#-------------------------------------------------------------------------------
 ### side note
 if you installed Hikrobot camera SDK on this machine, you may encounter a problem when running bag_to_pcd:`undefined symbol: libusb_set_option`
 solution: add this line at the end of ~/.bashrc: `export LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH`. This ensures we can use the system's library.
@@ -45,3 +47,4 @@ solution: add this line at the end of ~/.bashrc: `export LD_LIBRARY_PATH=/usr/li
 modify contents in livox_camera_calib/config/calib.yaml
 run `roslaunch livox_camera_calib calib.launch`
 
+$_{L}^{C}T = (_{L}^{C}R, _{L}^{C}t)\in SE$
