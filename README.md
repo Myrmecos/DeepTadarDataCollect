@@ -6,6 +6,9 @@ To run calibration, do: `rosrun camera_calibration cameracalibrator.py --size 11
 ## save camera image
 To save image, run: `roslaunch hikrobot_camera hikrobot_camera_save.launch`
 
+## all 0 output situation
+change from: `camera::frame = cv::Mat(stImageInfo.nHeight, stImageInfo.nWidth, CV_8UC3, m_pBufForSaveImage).clone(); //tmp.clone();`
+to `camera::frame = cv::Mat(stImageInfo.nHeight, stImageInfo.nWidth, CV_8UC3, m_pBufForDriver).clone();`
 #========================================================================================================================
 
 # lidar 
