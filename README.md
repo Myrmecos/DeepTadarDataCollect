@@ -55,3 +55,4 @@ $_{L}^{C}T = (_{L}^{C}R, _{L}^{C}t)\in SE$
 #=======================================================================================================================
 # Working together
 
+`pcl_concatenate_points_pcd /home/astar/dart_ws/image_lidar_align/test/* && mv output.pcd /home/astar/dart_ws/image_lidar_align/cropped_point_cloud.pcd`

@@ -1,14 +1,17 @@
 #!/usr/bin/env python
-
 import rospy
+import message_filters
 from cv_bridge import CvBridge
-from sensor_msgs.msg import Image
+from sensor_msgs.msg import Image, PointCloud2
 import cv2
+import numpy as np
+import sensor_msgs.point_cloud2 as pc2
 
 class Listener:
     def __init__(self):
         self.bridge = CvBridge()
-        rospy.Subscriber('/hikrobot_camera/rgb', Image, self.callback)
+        image_sub = message_filters.Subscriber('/hikrobot_camera/rgb', Image, self.callback)
+        pc_sub = message_filters.Subscriber('/livox/lidar', PointCloud2)
 
     def callback(self, msg):
         try:
