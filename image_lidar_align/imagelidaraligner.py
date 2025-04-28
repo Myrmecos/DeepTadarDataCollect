@@ -44,6 +44,22 @@ def visualize_points_by_distance(points_2d, points_3d):
     
     plt.show()
 
+def normalize_image_coord(x, y, camera_matrix):
+    camera_matrix = np.array(camera_matrix).reshape(3, 3)
+    fx, fy = camera_matrix[0, 0], camera_matrix[1, 1]  # 1364.45, 1366.46
+    cx, cy = camera_matrix[0, 2], camera_matrix[1, 2]  # 958.327, 535.074
+    
+    # Remove principal point offset and normalize by focal length
+    x_norm = (x - cx) / fx
+    y_norm = (y - cy) / fy
+    
+    return np.array([x_norm, y_norm])
+
+camera_matrix = [1364.45, 0.0,      958.327,
+                0.0,     1366.46,  535.074,
+                0.0,     0.0,      1.0     ]
+dist_coeffs = [0.0958277, -0.198233, -0.000147133, -0.000430056, 0.000000]
+
 class ImageLidarAligner:
     def __init__(self, extrinsicMatrix, image_shape):
         self.extrinsicMatrix = extrinsicMatrix
@@ -56,13 +72,15 @@ class ImageLidarAligner:
     def reportPoints(self, image_coord, points_3d):
         # Convert inputs
         image_coord = np.array(image_coord, dtype=float)  # e.g., [u, v]
+        image_coord = normalize_image_coord(image_coord[0], image_coord[1], camera_matrix)
+        print("normalized image coord: ", image_coord)
         points_3d = np.asarray(points_3d.points, dtype=float)
 
         # Project points to image
         points_2d, points_3d = self._project_points_to_image(points_3d)
 
         visualize_points_by_distance(points_2d, points_3d)
-        #print(min(points_2d[:, 0]))
+        print(max(points_2d[:, 0]))
         # image coordinate normalization
         print("shape of points_2d:", points_2d.shape)
         #image_coord = (image_coord-(self.image_shape/2))/(self.image_shape/2)
@@ -133,7 +151,7 @@ if __name__=="__main__":
 
     pcd = readPcd("/home/astar/dart_ws/single_scene_calibration/0.pcd")
     #o3d.visualization.draw_geometries([pcd], window_name="Point Cloud Visualization", width=800, height=600)
-    coord = [0.1849, -0.0506]
+    coord = [645.952, 677.306]
 
     ila = ImageLidarAligner(extrinsic, image_shape=image.shape)
     closest_pts, valid_pts, dist = ila.reportPoints(coord, pcd)
