@@ -44,16 +44,14 @@ def visualize_points_by_distance(points_2d, points_3d):
     
     plt.show()
 
-def normalize_image_coord(x, y, camera_matrix):
-    camera_matrix = np.array(camera_matrix).reshape(3, 3)
-    fx, fy = camera_matrix[0, 0], camera_matrix[1, 1]  # 1364.45, 1366.46
-    cx, cy = camera_matrix[0, 2], camera_matrix[1, 2]  # 958.327, 535.074
+def visualize_point_clouds(closest_pts, pointcloud):
+    # Set colors: red for closest_pts, blue for pointcloud
+    closest_pts.paint_uniform_color([1, 0, 0])  # Red
+    pointcloud.paint_uniform_color([0, 0, 1])   # Blue
     
-    # Remove principal point offset and normalize by focal length
-    x_norm = (x - cx) / fx
-    y_norm = (y - cy) / fy
-    
-    return np.array([x_norm, y_norm])
+    # Visualize both point clouds
+    o3d.visualization.draw_geometries([closest_pts, pointcloud])
+
 
 camera_matrix = [1364.45, 0.0,      958.327,
                 0.0,     1366.46,  535.074,
@@ -61,9 +59,10 @@ camera_matrix = [1364.45, 0.0,      958.327,
 dist_coeffs = [0.0958277, -0.198233, -0.000147133, -0.000430056, 0.000000]
 
 class ImageLidarAligner:
-    def __init__(self, extrinsicMatrix, image_shape):
+    def __init__(self, extrinsicMatrix, cameraMatrix):
         self.extrinsicMatrix = extrinsicMatrix
-        self.image_shape = np.array(image_shape)[:2]
+        self.cameraMatrix = cameraMatrix
+        
 
     '''
     @param position: the (x, y) pixel coordinate in the image
@@ -72,7 +71,7 @@ class ImageLidarAligner:
     def reportPoints(self, image_coord, points_3d):
         # Convert inputs
         image_coord = np.array(image_coord, dtype=float)  # e.g., [u, v]
-        image_coord = normalize_image_coord(image_coord[0], image_coord[1], camera_matrix)
+        image_coord = self._normalize_image_coord(image_coord[0], image_coord[1])
         print("normalized image coord: ", image_coord)
         points_3d = np.asarray(points_3d.points, dtype=float)
 
@@ -83,11 +82,26 @@ class ImageLidarAligner:
         print(max(points_2d[:, 0]))
         # image coordinate normalization
         print("shape of points_2d:", points_2d.shape)
-        #image_coord = (image_coord-(self.image_shape/2))/(self.image_shape/2)
         # Find closest point
-        closest_point, distance = self._find_closest_point(image_coord, points_2d, points_3d)
+        closest_points, distance = self._find_closest_point(image_coord, points_2d, points_3d)
         
-        return closest_point, points_3d, distance
+        closest_points = self.clearOutliers(closest_points)
+        print("number of points after filter:", closest_points.shape[0])
+        return closest_points, points_3d, distance
+
+    '''
+    Given image pixel coordinate, return its normalized coordinate
+    '''
+    def _normalize_image_coord(self, x, y):
+
+        fx, fy = self.cameraMatrix[0, 0], self.cameraMatrix[1, 1]  # 1364.45, 1366.46
+        cx, cy = self.cameraMatrix[0, 2], self.cameraMatrix[1, 2]  # 958.327, 535.074
+        
+        # Remove principal point offset and normalize by focal length
+        x_norm = (x - cx) / fx
+        y_norm = (y - cy) / fy
+        
+        return np.array([x_norm, y_norm])
 
     '''
     projects points to 2d
@@ -109,16 +123,18 @@ class ImageLidarAligner:
 
         return points_2d_valid, points_3d_valid
 
-    def _find_closest_point(self, image_coord, valid_points_2d, valid_points_3d):
-        
+    '''
+    Given image coordinate (normalized), pointcloud projected to image and pointcloud,
+    return the points in pointcloud that are nearest to the pixel
+    '''
+    def _find_closest_point(self, image_coord, valid_points_2d, valid_points_3d, num_of_pts=500):
         print("coordinate in image: ", image_coord)
-        print("image shape: ", self.image_shape)
         # Compute Euclidean distances in image plane
         print("valid points shape: ", valid_points_2d.shape)
         distances = np.linalg.norm(valid_points_2d - image_coord, axis=1)
 
         # Find indices of the 5000 closest points
-        num_points = min(500, len(distances))  # Handle cases with fewer than 5000 points
+        num_points = min(num_of_pts, len(distances))  # Handle cases with fewer than 5000 points
         closest_indices = np.argsort(distances)[:num_points]
         
         return valid_points_3d[closest_indices], distances
@@ -128,17 +144,28 @@ class ImageLidarAligner:
     @param percentile: the upper and lower percentiles to filter out. for example, percentile=0.25 indicates we select 25% to 75% points and clear other outliers.
     @return clearedPts: a list of points that had outliers removed
     '''
-    def clearOutliers(pts, percentile):
-        pass
+    def clearOutliers(self, points, percentile=25,k=1.5):
+        if points.shape[0] == 0:
+            return points, np.array([], dtype=bool)
+        
+        # Calculate quartiles and IQR for each dimension
+        q1 = np.percentile(points, percentile, axis=0)
+        q3 = np.percentile(points, 100-percentile, axis=0)
+        iqr = q3 - q1
+        
+        # Define lower and upper bounds for each dimension
+        lower_bound = q1 - k * iqr
+        upper_bound = q3 + k * iqr
+        
+        # Create a mask for points within bounds in all dimensions
+        mask = np.all((points >= lower_bound) & (points <= upper_bound), axis=1)
+        
+        # Apply the mask to filter points
+        filtered_points = points[mask]
+        
+        return filtered_points
+        
 
-
-def visualize_point_clouds(closest_pts, pointcloud):
-    # Set colors: red for closest_pts, blue for pointcloud
-    closest_pts.paint_uniform_color([1, 0, 0])  # Red
-    pointcloud.paint_uniform_color([0, 0, 1])   # Blue
-    
-    # Visualize both point clouds
-    o3d.visualization.draw_geometries([closest_pts, pointcloud])
 
 if __name__=="__main__":
     extrinsic = readExtrinsic("/home/astar/dart_ws/calib/extrinsic.txt")
@@ -153,7 +180,9 @@ if __name__=="__main__":
     #o3d.visualization.draw_geometries([pcd], window_name="Point Cloud Visualization", width=800, height=600)
     coord = [645.952, 677.306]
 
-    ila = ImageLidarAligner(extrinsic, image_shape=image.shape)
+    cameraMatrix = np.array(camera_matrix).reshape(3, 3)
+
+    ila = ImageLidarAligner(extrinsic, cameraMatrix)
     closest_pts, valid_pts, dist = ila.reportPoints(coord, pcd)
 
     closest_pts = array_to_pointcloud(closest_pts)
