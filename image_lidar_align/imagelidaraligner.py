@@ -211,6 +211,6 @@ if __name__=="__main__":
     closest_pts = array_to_pointcloud(closest_pts)
     valid_pts = array_to_pointcloud(valid_pts)
 
-    #visualize_point_clouds(valid_pts, closest_pts)
+    visualize_point_clouds(valid_pts, closest_pts)
 
     print(closest_pts, dist)

@@ -1,0 +1,6 @@
+0. create a python file that can run in ROS
+1. receive point cloud data
+2. receive image data
+3. integrate the functions to detect green light
+4. integrate the functions to transform pixel coordinate to points
+5. calibrate camera and lidar
