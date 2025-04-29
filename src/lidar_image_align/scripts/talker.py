@@ -1,16 +1,19 @@
 #!/usr/bin/env python
 
 import rospy
-from std_msgs.msg import String
+from sensor_msgs.msg import Image
+from cv_bridge import CvBridge
+import cv2
 
 def talker():
-    pub = rospy.Publisher('chatter', String, queue_size=10)
+    pub = rospy.Publisher('/hikrobot_camera/rgb', Image, queue_size=10)
     rospy.init_node('talker', anonymous=True)
     rate = rospy.Rate(10) # 10hz
+    image = cv2.imread("/home/astar/dart_ws/calib/calibimage/0.jpg")
+    bridge = CvBridge()
     while not rospy.is_shutdown():
-        hello_str = "hello world %s" % rospy.get_time()
-        rospy.loginfo(hello_str)
-        pub.publish(hello_str)
+        cv_msg = bridge.cv2_to_imgmsg(image, "bgr8")
+        pub.publish(cv_msg)
         rate.sleep()
 
 if __name__ == '__main__':
