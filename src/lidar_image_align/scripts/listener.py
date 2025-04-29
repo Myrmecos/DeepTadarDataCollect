@@ -15,10 +15,12 @@ class Listener:
         self.bridge = CvBridge()
         image_sub = rospy.Subscriber('/hikrobot_camera/rgb', Image, self.image_callback)
         pc_sub = rospy.Subscriber('/livox/lidar', PointCloud2, self.pc_callback)
+        self.image = None
+        self.image_lock = threading.Lock()
 
         self.pcd = o3d.geometry.PointCloud()
-        self.pcd_lock = threading.Lock()
         self.point_queue = []
+        self.pcd_lock = threading.Lock()
 
         #for visualization
         self.vis = o3d.visualization.Visualizer()
@@ -32,9 +34,17 @@ class Listener:
         try:
             # Convert ROS Image to OpenCV (BGR8 format)
             cv_image = self.bridge.imgmsg_to_cv2(image_msg, "bgr8")
-            cv2.imshow("Hikrobot Camera", cv_image)
-            cv2.waitKey(1)
-            rospy.loginfo("Image received and displayed")
+
+            # store the image
+            if not self.image_lock.acquire(blocking=False):
+                rospy.loginfo("image locked in image_callback, skipping")
+                return
+            try:
+                self.image = copy.deepcopy(cv_image)
+            finally:
+                self.image_lock.release()
+            
+            #rospy.loginfo("Image received and displayed")
         except Exception as e:
             rospy.logerr(f"Error processing image: {e}")
 
@@ -50,13 +60,13 @@ class Listener:
             if (len(self.point_queue) > 10):
                 self.point_queue.pop(0)
             
+            points_in_last_half_second = np.concatenate(self.point_queue, axis=0)
             # lock it 
             if not self.pcd_lock.acquire(blocking=False):
                 rospy.loginfo("pcd locked in pc_callback, skipping")
                 return
             # Update Open3D point cloud
             try:
-                points_in_last_half_second = np.concatenate(self.point_queue, axis=0)
                 self.pcd.points = o3d.utility.Vector3dVector(points_in_last_half_second)
             # unlock it
             finally:
@@ -68,16 +78,23 @@ class Listener:
     def periodic_callback(self, event):
         try:
             mypts = None
-
+            myimg = None
             # Wait to acquire lock and obtain pts
             with self.pcd_lock:
                 rospy.loginfo("Periodic callback accessed pcd")
                 # Example: Access pcd points (modify as needed)
                 if len(self.pcd.points) > 0:
                     mypts = copy.deepcopy(self.pcd)
+            with self.image_lock:
+                myimg = copy.deepcopy(self.image)
             
-            if mypts != None:
-                #rospy.loginfo(f"Point cloud size: {mypts.shape[0]}")
+            #print("point cloud is none: ", mypts is None)
+            if mypts != None and myimg is not None:
+                # show image
+                cv2.imshow("Hikrobot Camera", myimg)
+                cv2.waitKey(1)
+
+                # show point cloud
                 if self.first_frame:
                     self.vis.add_geometry(mypts)
                     self.first_frame = False
