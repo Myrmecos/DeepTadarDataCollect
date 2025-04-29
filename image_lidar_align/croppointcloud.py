@@ -6,7 +6,7 @@ from pyntcloud import PyntCloud
 from pypcd import pypcd
 import pandas as pd
 
-pcd_path = "/home/astar/dart_ws/single_scene_calibration/0.pcd"
+pcd_path = "/home/astar/dart_ws/calib/calibpointcloud/calibscene_ascii.pcd"
 
 def readPcd(path):
     pcd = o3d.io.read_point_cloud(path)
@@ -51,8 +51,9 @@ filtered_intensity = colors[mask]
 # Combine XYZ and intensity
 data = np.column_stack((filtered_points, filtered_intensity))  # Shape: (N, 4)
 
+filename = "/home/astar/dart_ws/calib/calibpointcloud/calibscene_cropped.pcd"
 # Write PCD file
-with open("cropped_point_cloud.pcd", "w") as f:
+with open(filename, "w") as f:
     f.write("# .PCD v0.7 - Point Cloud Data file format\n")
     f.write("VERSION 0.7\n")
     f.write("FIELDS x y z intensity\n")

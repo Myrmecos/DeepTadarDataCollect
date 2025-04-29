@@ -10,6 +10,8 @@ import open3d as o3d
 import threading
 import copy
 
+MAX_PCD_MESSAGES = 6
+
 class Listener:
     def __init__(self):
         self.bridge = CvBridge()
@@ -26,8 +28,10 @@ class Listener:
         self.vis = o3d.visualization.Visualizer()
         self.vis.create_window("Point Cloud", width=800, height=600)
         self.first_frame = True
+
+        self.vis_pcd = o3d.geometry.PointCloud()
         
-        rospy.Timer(rospy.Duration(0.5), self.periodic_callback)
+        rospy.Timer(rospy.Duration(0.2), self.periodic_callback)
         
 
     def image_callback(self, image_msg):
@@ -48,6 +52,7 @@ class Listener:
         except Exception as e:
             rospy.logerr(f"Error processing image: {e}")
 
+    # task: read point cloud message and store data from last MAX_PCD_MESSAGES messages into self.pcd
     def pc_callback(self, pc_msg):
         try:
             # Extract points from PointCloud2
@@ -57,49 +62,54 @@ class Listener:
             points = np.array(points, dtype=np.float64)
             # add to point queue
             self.point_queue.append(points)
-            if (len(self.point_queue) > 10):
-                self.point_queue.pop(0)
-            
+            if (len(self.point_queue) > MAX_PCD_MESSAGES):
+                self.point_queue=self.point_queue[1:]
+            # prepare the point cloud that contains all recent points in queue
             points_in_last_half_second = np.concatenate(self.point_queue, axis=0)
-            # lock it 
+
+            # lock and try to access pcd (since pcd will be accessed in another thread) 
             if not self.pcd_lock.acquire(blocking=False):
                 rospy.loginfo("pcd locked in pc_callback, skipping")
                 return
-            # Update Open3D point cloud
             try:
                 self.pcd.points = o3d.utility.Vector3dVector(points_in_last_half_second)
-            # unlock it
             finally:
                 self.pcd_lock.release()
 
         except Exception as e:
             rospy.logerr(f"Error processing point cloud: {e}")
         
+    # task: retrieve the most recent images (self.image) and point cloud (self.pcd)
+    # do some operations on them
     def periodic_callback(self, event):
         try:
             mypts = None
             myimg = None
+
             # Wait to acquire lock and obtain pts
             with self.pcd_lock:
                 rospy.loginfo("Periodic callback accessed pcd")
                 # Example: Access pcd points (modify as needed)
                 if len(self.pcd.points) > 0:
                     mypts = copy.deepcopy(self.pcd)
+            # wait to acquire lock and obtain images
             with self.image_lock:
                 myimg = copy.deepcopy(self.image)
             
-            #print("point cloud is none: ", mypts is None)
+            # Start processing if both mypts and myimg are not empty
             if mypts != None and myimg is not None:
+                # example: show both image and point cloud
                 # show image
                 cv2.imshow("Hikrobot Camera", myimg)
                 cv2.waitKey(1)
 
                 # show point cloud
+                self.vis_pcd.points = mypts.points
                 if self.first_frame:
-                    self.vis.add_geometry(mypts)
+                    self.vis.add_geometry(self.vis_pcd)
                     self.first_frame = False
                 else:
-                    self.vis.update_geometry(mypts)
+                    self.vis.update_geometry(self.vis_pcd)
                 self.vis.poll_events()
                 self.vis.update_renderer()
 
