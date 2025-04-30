@@ -48,7 +48,7 @@ def talker():
         cv_msg = bridge.cv2_to_imgmsg(image, "bgr8")
         pub_img.publish(cv_msg)
         pt_msg = numpy_to_pointcloud2(points, frame_id="camera")
-        pub_pts.publish(pt_msg)
+        #pub_pts.publish(pt_msg)
         rate.sleep()
 
 if __name__ == '__main__':

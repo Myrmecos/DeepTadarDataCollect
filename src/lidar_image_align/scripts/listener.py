@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 import rospy
 import message_filters
+import cv2
 from cv_bridge import CvBridge
 from sensor_msgs.msg import Image, PointCloud2
-import cv2
 import numpy as np
 import sensor_msgs.point_cloud2 as pc2
 import open3d as o3d
@@ -117,17 +117,19 @@ class Listener:
 
             # Wait to acquire lock and obtain pts
             with self.pcd_lock:
-                rospy.loginfo("Periodic callback accessed pcd")
+                rospy.loginfo("=====Periodic callback accessed pcd======")
                 # Example: Access pcd points (modify as needed)
                 if len(self.pcd.points) > 0:
                     mypts = copy.deepcopy(self.pcd)
             # wait to acquire lock and obtain images
             with self.image_lock:
+                rospy.loginfo("=====Periodic callback accessed image======")
                 myimg = copy.deepcopy(self.image)
                 myimg = cv2.cvtColor(myimg, cv2.COLOR_BGR2RGB)
             
             # Start processing if both mypts and myimg are not empty
             if mypts != None and myimg is not None:
+                print("\n\n=====================================")
                 # # example: show both image and point cloud
                 # # show image
                 # cv2.imshow("Hikrobot Camera", myimg)
