@@ -9,26 +9,55 @@ import sensor_msgs.point_cloud2 as pc2
 import open3d as o3d
 import threading
 import copy
+import yaml
+from dart_lidar_image_utils import imagelidaraligner, imageprocessor
+import traceback
+import matplotlib.pyplot as plt
+
+def get_camera_intrinsic_distortion_extrinsic(yaml_file_name):
+        with open(yaml_file_name, 'r') as file:
+            contents = yaml.safe_load(file)
+    
+        IM = np.matrix(contents['camera']["camera_matrix"]).reshape((3, 3))
+        distort = np.matrix(contents['camera']["dist_coeffs"])
+        EM = np.matrix(contents['camera']['ex_matrix']).reshape((4, 4))
+
+        return IM, distort, EM
+        
 
 MAX_PCD_MESSAGES = 6
+CAMERA_PARAM_PATH = "/home/astar/dart_ws/src/livox_camera_calib/config/calib.yaml"
+
+im, distort, em = get_camera_intrinsic_distortion_extrinsic(CAMERA_PARAM_PATH)
+# print(im)
+# print(distort)
+# print(em)
 
 class Listener:
     def __init__(self):
+        # for image
+        ##  obtaining images
         self.bridge = CvBridge()
         image_sub = rospy.Subscriber('/hikrobot_camera/rgb', Image, self.image_callback)
         pc_sub = rospy.Subscriber('/livox/lidar', PointCloud2, self.pc_callback)
         self.image = None
         self.image_lock = threading.Lock()
+        ##  processing images
+        self.glp = imageprocessor.GLPosition(camera_param_path = CAMERA_PARAM_PATH)
+        # print("debug: ", glp.IM, glp.distort, glp.upper_color, glp.lower_color)
 
+        # for point cloud
+        ##  obtainging point cloud
         self.pcd = o3d.geometry.PointCloud()
         self.point_queue = []
         self.pcd_lock = threading.Lock()
+        ## processing point cloud
+        self.ila = imagelidaraligner.ImageLidarAligner(em, im)
 
         #for visualization
         self.vis = o3d.visualization.Visualizer()
         self.vis.create_window("Point Cloud", width=800, height=600)
         self.first_frame = True
-
         self.vis_pcd = o3d.geometry.PointCloud()
         
         rospy.Timer(rospy.Duration(0.2), self.periodic_callback)
@@ -95,26 +124,31 @@ class Listener:
             # wait to acquire lock and obtain images
             with self.image_lock:
                 myimg = copy.deepcopy(self.image)
+                myimg = cv2.cvtColor(myimg, cv2.COLOR_BGR2RGB)
             
             # Start processing if both mypts and myimg are not empty
             if mypts != None and myimg is not None:
-                # example: show both image and point cloud
-                # show image
-                cv2.imshow("Hikrobot Camera", myimg)
-                cv2.waitKey(1)
+                # # example: show both image and point cloud
+                # # show image
+                # cv2.imshow("Hikrobot Camera", myimg)
+                # cv2.waitKey(1)
 
-                # show point cloud
-                self.vis_pcd.points = mypts.points
-                if self.first_frame:
-                    self.vis.add_geometry(self.vis_pcd)
-                    self.first_frame = False
-                else:
-                    self.vis.update_geometry(self.vis_pcd)
-                self.vis.poll_events()
-                self.vis.update_renderer()
+                # # show point cloud
+                # self.vis_pcd.points = mypts.points
+                # if self.first_frame:
+                #     self.vis.add_geometry(self.vis_pcd)
+                #     self.first_frame = False
+                # else:
+                #     self.vis.update_geometry(self.vis_pcd)
+                # self.vis.poll_events()
+                # self.vis.update_renderer()
+                lightpos = self.glp.find_green_light(myimg)
+                
+                print("green light position in image: ", lightpos)
 
         except Exception as e:
             rospy.logerr(f"Error in periodic callback: {e}")
+            traceback.print_exc()
 
 if __name__ == '__main__':
     rospy.init_node('listener', anonymous=True)

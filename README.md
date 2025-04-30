@@ -64,7 +64,7 @@ $_{L}^{C}T = (_{L}^{C}R, _{L}^{C}t)\in SE$
 
 
 ## Mock test (with fake data)
-point cloud: `/home/astar/dart_ws/calib/calibpointcloud/calibscene.bag`
+point cloud: `rosbag play /home/astar/dart_ws/calib/calibpointcloud/calibscene.bag`
 image: `rosrun lidar_image_align talker.py`
 run main program: `rosrun lidar_image_align listener.py`
 
