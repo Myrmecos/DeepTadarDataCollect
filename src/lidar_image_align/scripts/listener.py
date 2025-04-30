@@ -26,7 +26,7 @@ def get_camera_intrinsic_distortion_extrinsic(yaml_file_name):
         
 
 MAX_PCD_MESSAGES = 6
-CAMERA_PARAM_PATH = "/home/astar/dart_ws/src/livox_camera_calib/config/calib.yaml"
+CAMERA_PARAM_PATH = "/home/astar/dart_ws/src/livox_camera_calib/config/calib_ori.yaml"
 
 im, distort, em = get_camera_intrinsic_distortion_extrinsic(CAMERA_PARAM_PATH)
 # print(im)
@@ -55,9 +55,9 @@ class Listener:
         self.ila = imagelidaraligner.ImageLidarAligner(em, im)
 
         #for visualization
-        self.vis = o3d.visualization.Visualizer()
-        self.vis.create_window("Point Cloud", width=800, height=600)
-        self.first_frame = True
+        # self.vis = o3d.visualization.Visualizer()
+        # self.vis.create_window("Point Cloud", width=800, height=600)
+        # self.first_frame = True
         self.vis_pcd = o3d.geometry.PointCloud()
         
         rospy.Timer(rospy.Duration(0.2), self.periodic_callback)
@@ -143,8 +143,11 @@ class Listener:
                 # self.vis.poll_events()
                 # self.vis.update_renderer()
                 lightpos = self.glp.find_green_light(myimg)
-                
                 print("green light position in image: ", lightpos)
+                
+                closest_pts,valid_pts,dist = self.ila.reportPoints(lightpos, mypts)
+                print("average distance from origin is: ", dist)
+
 
         except Exception as e:
             rospy.logerr(f"Error in periodic callback: {e}")

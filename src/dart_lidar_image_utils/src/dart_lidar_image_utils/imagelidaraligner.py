@@ -75,6 +75,8 @@ class ImageLidarAligner:
 
         points_3d = np.asarray(points_3d.points, dtype=float)
 
+        print(points_3d.shape)
+        
         # Project points to image
         points_2d, points_3d = self._project_points_to_image(points_3d)
 
@@ -109,10 +111,13 @@ class ImageLidarAligner:
     def _project_points_to_image(self, points_3d):
         points_3d_homog = np.hstack([points_3d, np.ones((points_3d.shape[0], 1))])
         points_camera = self.extrinsicMatrix @ points_3d_homog.T
+        
         points_camera = points_camera[:3, :].T
-
-        valid_mask = points_camera[:, 2] > 0
-
+        points_camera = np.asarray(points_camera)
+        valid_mask = (points_camera[:, 2] > 0).flatten()
+        valid_mask = valid_mask.flatten()
+        print("DEBUG: ", points_camera.shape, valid_mask.shape)
+    
         points_2d_valid = points_camera[valid_mask]
 
         points_3d_valid = points_3d[valid_mask]
