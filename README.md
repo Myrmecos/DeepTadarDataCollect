@@ -88,7 +88,7 @@ To test and modify the two classes for identifying object's pixel coordinate (GL
 2. set how many frames of point cloud we want to aggregate together for resolving target distance by: `MAX_PCD_MESSAGES = 6` (we collect 6 frames, pool all points together, and find the points corresponding to target object among these points)
 
 ## Step 2: Mock test (with fake data)
-1. point cloud: `rosbag play /home/astar/dart_ws/calib/calibpointcloud/calibscene.bag`
+1. point cloud: `rosbag play /home/astar/dart_ws/calib/calibpointcloud/calibscene_test.bag`
 
 2. image: `rosrun lidar_image_align talker.py`
 

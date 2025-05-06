@@ -39,15 +39,19 @@ def talker():
     rospy.init_node('talker', anonymous=True)
     rate = rospy.Rate(10) # 10hz
 
-    image = np.asarray(cv2.imread("/home/astar/Desktop/testing/test0_dot.jpg"))
-    pointcloud = imagelidaraligner.readPcd("/home/astar/dart_ws/single_scene_calibration/0.pcd")
-    points = np.asarray(pointcloud.points)
+    # image = np.asarray(cv2.imread("/home/astar/Desktop/testing/test0_dot.jpg"))
+    # pointcloud = imagelidaraligner.readPcd("/home/astar/dart_ws/single_scene_calibration/0.pcd")
+
+    image = np.asarray(cv2.imread("/home/astar/Desktop/testing/test1_dot.jpg"))
+    #pointcloud = imagelidaraligner.readPcd("/home/astar/dart_ws/single_scene_calibration/0.pcd")
+
+    #points = np.asarray(pointcloud.points)
 
     bridge = CvBridge()
     while not rospy.is_shutdown():
         cv_msg = bridge.cv2_to_imgmsg(image, "bgr8")
         pub_img.publish(cv_msg)
-        pt_msg = numpy_to_pointcloud2(points, frame_id="camera")
+        #pt_msg = numpy_to_pointcloud2(points, frame_id="camera")
         #pub_pts.publish(pt_msg)
         rate.sleep()
 

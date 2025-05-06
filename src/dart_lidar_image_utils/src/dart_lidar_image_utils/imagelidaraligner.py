@@ -59,9 +59,10 @@ camera_matrix = [1364.45, 0.0,      958.327,
 dist_coeffs = [0.0958277, -0.198233, -0.000147133, -0.000430056, 0.000000]
 
 class ImageLidarAligner:
-    def __init__(self, extrinsicMatrix, cameraMatrix):
+    def __init__(self, extrinsicMatrix, cameraMatrix, num_of_points = 30):
         self.extrinsicMatrix = extrinsicMatrix
         self.cameraMatrix = cameraMatrix
+        self.num_of_points = num_of_points
         
 
     '''
@@ -83,7 +84,7 @@ class ImageLidarAligner:
         #visualize_points_by_distance(points_2d, points_3d)
         
         # Find closest point
-        closest_points, _ = self._find_closest_point(image_coord, points_2d, points_3d)
+        closest_points, _ = self._find_closest_point(image_coord, points_2d, points_3d, num_of_pts=self.num_of_points)
         
         closest_points = self.clearOutliers(closest_points)
         distance = self._average_distance_from_origin(closest_points)
@@ -131,7 +132,7 @@ class ImageLidarAligner:
     Given image coordinate (normalized), pointcloud projected to image and pointcloud,
     return the points in pointcloud that are nearest to the pixel
     '''
-    def _find_closest_point(self, image_coord, valid_points_2d, valid_points_3d, num_of_pts=100):
+    def _find_closest_point(self, image_coord, valid_points_2d, valid_points_3d, num_of_pts=50):
         # Compute Euclidean distances in image plane
         distances = np.linalg.norm(valid_points_2d - image_coord, axis=1)
 

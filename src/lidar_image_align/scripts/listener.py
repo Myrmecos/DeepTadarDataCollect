@@ -25,7 +25,8 @@ def get_camera_intrinsic_distortion_extrinsic(yaml_file_name):
         return IM, distort, EM
         
 
-MAX_PCD_MESSAGES = 6
+MAX_PCD_MESSAGES = 6 # how many pcd messages we want to pool for processing
+NUM_OF_POINTS = 30 #how many number of points we want to cluster for the target
 CAMERA_PARAM_PATH = "/home/astar/dart_ws/src/livox_camera_calib/config/calib.yaml"
 
 im, distort, em = get_camera_intrinsic_distortion_extrinsic(CAMERA_PARAM_PATH)
@@ -52,7 +53,7 @@ class Listener:
         self.point_queue = []
         self.pcd_lock = threading.Lock()
         ## processing point cloud
-        self.ila = imagelidaraligner.ImageLidarAligner(em, im)
+        self.ila = imagelidaraligner.ImageLidarAligner(em, im, num_of_points = NUM_OF_POINTS)
 
         #for visualization
         # self.vis = o3d.visualization.Visualizer()
@@ -157,7 +158,7 @@ class Listener:
                     # visualize result
                     closest_pts = imagelidaraligner.array_to_pointcloud(closest_pts)
                     valid_pts = imagelidaraligner.array_to_pointcloud(valid_pts)
-                    imagelidaraligner.visualize_point_clouds(valid_pts, closest_pts)
+                    # imagelidaraligner.visualize_point_clouds(valid_pts, closest_pts)
 
         except Exception as e:
             rospy.logerr(f"Error in periodic callback: {e}")
