@@ -84,7 +84,7 @@ To test and modify the two classes for identifying object's pixel coordinate (GL
 
 ## Step 1: general setup
 1. set camera param path in lidar_image_align's listener.py: `CAMERA_PARAM_PATH = "/home/astar/dart_ws/src/livox_camera_calib/config/calib_ori.yaml"` 
-
+roslaunch hikrobot_camera hikrobot_camera_save.launch
 2. set how many frames of point cloud we want to aggregate together for resolving target distance by: `MAX_PCD_MESSAGES = 6` (we collect 6 frames, pool all points together, and find the points corresponding to target object among these points)
 
 ## Step 2: Mock test (with fake data)
@@ -103,3 +103,11 @@ To test and modify the two classes for identifying object's pixel coordinate (GL
 
 
 caution: when livox_camera_calib reports empty point cloud, check your camera's distortion coefficient
+
+#===============================================================================================================
+# Test 
+## collecting test data
+first, start publishing images: `roslaunch hikrobot_camera hikrobot_camera_rviz.launch`
+and start publishing point cloud: `roslaunch livox_ros_driver livox_lidar_rviz.launch`
+then, record: `rosbag record -a -O testing_data/test0.bag`
+
