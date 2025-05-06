@@ -87,6 +87,7 @@ class ImageLidarAligner:
         
         closest_points = self.clearOutliers(closest_points)
         distance = self._average_distance_from_origin(closest_points)
+
         return closest_points, points_3d, distance
 
     '''
@@ -130,7 +131,7 @@ class ImageLidarAligner:
     Given image coordinate (normalized), pointcloud projected to image and pointcloud,
     return the points in pointcloud that are nearest to the pixel
     '''
-    def _find_closest_point(self, image_coord, valid_points_2d, valid_points_3d, num_of_pts=500):
+    def _find_closest_point(self, image_coord, valid_points_2d, valid_points_3d, num_of_pts=100):
         # Compute Euclidean distances in image plane
         distances = np.linalg.norm(valid_points_2d - image_coord, axis=1)
 

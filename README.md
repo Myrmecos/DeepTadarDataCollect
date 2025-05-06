@@ -24,7 +24,7 @@ to `camera::frame = cv::Mat(stImageInfo.nHeight, stImageInfo.nWidth, CV_8UC3, m_
 
 2. terminal two: `roslaunch livox_ros_driver livox_lidar_rviz.launch`
 
-3. terminal three: `rosbag record -a` or: `rosbag record -O calib/calibpointcloud/calibscene.bag`
+3. terminal three: `rosbag record -a` or: `rosbag record -a -O calib/calibpointcloud/calibscene_test.bag`
 
 4. control + C to stop recording
 
@@ -40,9 +40,11 @@ In top left, Global Options' "fixed frame" field, change contents to "livox_fram
 
 ## change .bag file to .pcd file:
 1. first, transform topic in /livox_points to pcd into a directory`rosrun pcl_ros bag_to_pcd xxx.bag /livox_points pcd`. 
-For example, `rosrun pcl_ros bag_to_pcd /home/astar/dart_ws/calib/calibpointcloud/calibscene.bag /livox/lidar /home/astar/dart_ws/calib/calibpointcloud/calibscene`
+For example, `rosrun pcl_ros bag_to_pcd calib/calibpointcloud/calibscene_test.bag /livox/lidar /home/astar/dart_ws/calib/calibpointcloud/calibscene_test`
 
-2. then, merge all pcd files into one: `pcl_concatenate_points_pcd /home/astar/dart_ws/calib/calibpointcloud/calibscene/* && mv output.pcd /home/astar/dart_ws/calib/calibpointcloud/calibscene.pcd `
+2. then, merge all pcd files into one: `pcl_concatenate_points_pcd /home/astar/dart_ws/calib/calibpointcloud/calibscene_test/* && mv output.pcd /home/astar/dart_ws/calib/calibpointcloud/calibscene_test.pcd `
+
+convert to ascii: `pcl_convert_pcd_ascii_binary /home/astar/dart_ws/calib/calibpointcloud/calibscene_test.pcd /home/astar/dart_ws/calib/calibpointcloud/calibscene_test_ascii.pcd 0`
 
 3. visualize the final pcd file: `pcl_viewer /home/astar/dart_ws/calib/calibpointcloud/calibscene.pcd`
 
@@ -98,3 +100,6 @@ To test and modify the two classes for identifying object's pixel coordinate (GL
 2. image: `roslaunch hikrobot_camera hikrobot_camera.launch`
 
 3. run main program: `rosrun lidar_image_align listener.py`
+
+
+caution: when livox_camera_calib reports empty point cloud, check your camera's distortion coefficient

@@ -6,7 +6,7 @@ from pyntcloud import PyntCloud
 from pypcd import pypcd
 import pandas as pd
 
-pcd_path = "/home/astar/dart_ws/calib/calibpointcloud/calibscene_ascii.pcd"
+pcd_path = "/home/astar/dart_ws/calib/calibpointcloud/calibscene_test_ascii.pcd"
 
 def readPcd(path):
     pcd = o3d.io.read_point_cloud(path)
@@ -26,8 +26,8 @@ colors = np.asarray(cloud.points["intensity"]).T
 print(f"Shape of points: {points.shape}; shape of colors: {colors.shape}")
 
 # Define HFOV and VFOV in degrees
-hfov_deg = 30  # Horizontal field of view
-vfov_deg = 20  # Vertical field of view
+hfov_deg = np.array([-15, 15])  # Horizontal field of view
+vfov_deg = np.array([-10, 10])  # Vertical field of view
 
 # Convert to radians for calculations
 hfov_rad = np.deg2rad(hfov_deg / 2)  # ±15 degrees
@@ -42,16 +42,24 @@ theta = np.arctan2(y, x)  # Azimuthal angle (horizontal)
 phi = np.arccos(z / rho)  # Elevation angle from xy-plane
 
 # Filter points within HFOV and VFOV
-mask = (np.abs(theta) <= hfov_rad) & (np.abs(phi - np.pi/2) <= vfov_rad)
+mask = ((theta <= hfov_rad[1]) & (theta >= hfov_rad[0])) & ((phi-np.pi/2 <= vfov_rad[1]) & (phi-np.pi/2 >=vfov_rad[0]))
 filtered_points = points[mask]
 filtered_intensity = colors[mask]
+
+# Compute distances from origin (0,0,0)
+distances = np.linalg.norm(filtered_points, axis=1)  # shape: (N,)
+# Create mask (True if distance <= 10m)
+mask = distances <= 16.0
+
+filtered_points = filtered_points[mask]
+filtered_intensity = filtered_intensity[mask]
 
 
 # # Save the cropped point cloud
 # Combine XYZ and intensity
 data = np.column_stack((filtered_points, filtered_intensity))  # Shape: (N, 4)
 
-filename = "/home/astar/dart_ws/calib/calibpointcloud/calibscene_cropped.pcd"
+filename = "/home/astar/dart_ws/calib/calibpointcloud/calibscene_test_cropped.pcd"
 # Write PCD file
 with open(filename, "w") as f:
     f.write("# .PCD v0.7 - Point Cloud Data file format\n")

@@ -26,7 +26,7 @@ def get_camera_intrinsic_distortion_extrinsic(yaml_file_name):
         
 
 MAX_PCD_MESSAGES = 6
-CAMERA_PARAM_PATH = "/home/astar/dart_ws/src/livox_camera_calib/config/calib_ori.yaml"
+CAMERA_PARAM_PATH = "/home/astar/dart_ws/src/livox_camera_calib/config/calib.yaml"
 
 im, distort, em = get_camera_intrinsic_distortion_extrinsic(CAMERA_PARAM_PATH)
 # print(im)
@@ -130,10 +130,13 @@ class Listener:
             # Start processing if both mypts and myimg are not empty
             if mypts != None and myimg is not None:
                 print("\n\n=====================================")
+                # plt.imshow(myimg)
+                # plt.show()
                 # # example: show both image and point cloud
                 # # show image
-                # cv2.imshow("Hikrobot Camera", myimg)
-                # cv2.waitKey(1)
+                print(myimg.shape)
+                cv2.imshow("Hikrobot Camera", myimg)
+                cv2.waitKey(1)
 
                 # # show point cloud
                 # self.vis_pcd.points = mypts.points
@@ -146,10 +149,15 @@ class Listener:
                 # self.vis.update_renderer()
                 lightpos = self.glp.find_green_light(myimg)
                 print("green light position in image: ", lightpos)
-                
-                closest_pts,valid_pts,dist = self.ila.reportPoints(lightpos, mypts)
-                print("average distance from origin is: ", dist)
+                if lightpos is not None:
+                    closest_pts,valid_pts,dist = self.ila.reportPoints(lightpos, mypts)
+                    print("average distance from origin is: ", dist)
 
+                    ## DEBUG ONLY
+                    # visualize result
+                    closest_pts = imagelidaraligner.array_to_pointcloud(closest_pts)
+                    valid_pts = imagelidaraligner.array_to_pointcloud(valid_pts)
+                    imagelidaraligner.visualize_point_clouds(valid_pts, closest_pts)
 
         except Exception as e:
             rospy.logerr(f"Error in periodic callback: {e}")

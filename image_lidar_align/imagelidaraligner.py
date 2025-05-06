@@ -6,6 +6,7 @@ import open3d as o3d
 import numpy as np 
 import matplotlib.pyplot as plt
 import cv2
+import yaml
 
 def readPcd(path):
     pcd = o3d.io.read_point_cloud(path)
@@ -52,17 +53,10 @@ def visualize_point_clouds(closest_pts, pointcloud):
     # Visualize both point clouds
     o3d.visualization.draw_geometries([closest_pts, pointcloud])
 
-
-camera_matrix = [1364.45, 0.0,      958.327,
-                0.0,     1366.46,  535.074,
-                0.0,     0.0,      1.0     ]
-dist_coeffs = [0.0958277, -0.198233, -0.000147133, -0.000430056, 0.000000]
-
 class ImageLidarAligner:
     def __init__(self, extrinsicMatrix, cameraMatrix):
         self.extrinsicMatrix = extrinsicMatrix
         self.cameraMatrix = cameraMatrix
-        
 
     '''
     @param position: the (x, y) pixel coordinate in the image
@@ -180,37 +174,64 @@ class ImageLidarAligner:
         # Return the average distance
         return np.mean(distances)
         
-
+# def undistortImage(image):
+#     with open('/home/astar/dart_ws/src/livox_camera_calib/config/calib.yaml', 'r') as file:
+#         data = yaml.safe_load(file)['camera']
+#         camera_matrix = np.array(data['camera_matrix']).reshape(3, 3)
+#         dist_coeffs = np.array(data['dist_coeffs'])
+#     print(camera_matrix, dist_coeffs)
+#     undistorted_image = cv2.undistort(
+#         image, 
+#         camera_matrix, 
+#         dist_coeffs
+#     )
+#     return undistorted_image
 
 if __name__=="__main__":
+    # read intrinsic param and dist coeffs
+    with open('/home/astar/dart_ws/src/livox_camera_calib/config/calib.yaml', 'r') as file:
+        data = yaml.safe_load(file)['camera']
+        camera_matrix = np.array(data['camera_matrix']).reshape(3, 3)
+        dist_coeffs = np.array(data['dist_coeffs'])
+
     # read extrinsic param
-    extrinsic = readExtrinsic("/home/astar/dart_ws/calib/extrinsic.txt")
+    #extrinsic = readExtrinsic("/home/astar/dart_ws/calib/extrinsic.txt")
+    extrinsic = readExtrinsic("/home/astar/dart_ws/calib/extrinsic_test.txt")
 
     # read image
-    image = cv2.imread("/home/astar/dart_ws/single_scene_calibration/0.png")
+    #image = cv2.imread("/home/astar/dart_ws/single_scene_calibration/0.png")
+    image = cv2.imread("/home/astar/dart_ws/calib/calibimage/test0.jpg")
+    
+    # undistort image
+    # image = undistortImage(image)
+
     # print(image.shape)
-    # plt.imshow(image)
-    # plt.show()
+    plt.imshow(image)
+    plt.show()
 
     # read point cloud
-    pcd = readPcd("/home/astar/dart_ws/single_scene_calibration/0.pcd")
+    #pcd = readPcd("/home/astar/dart_ws/single_scene_calibration/0.pcd")
+    pcd = readPcd("/home/astar/dart_ws/calib/calibpointcloud/calibscene_test_cropped.pcd")
     #o3d.visualization.draw_geometries([pcd], window_name="Point Cloud Visualization", width=800, height=600)
 
     # get coordinates
-    coord = [645.952, 677.306]
+    # coord = [645.952, 677.306]
+    coord = [1315, 1202]
+    for i in range(1):
+        
+        cameraMatrix = np.array(camera_matrix).reshape(3, 3)
+        ila = ImageLidarAligner(extrinsic, cameraMatrix)
 
-    cameraMatrix = np.array(camera_matrix).reshape(3, 3)
-    ila = ImageLidarAligner(extrinsic, cameraMatrix)
+        # transform
+        closest_pts, valid_pts, dist = ila.reportPoints(coord, pcd)
+        print("average distance from origin is:", dist)
+        print(closest_pts[0, :])
 
-    # transform
-    closest_pts, valid_pts, dist = ila.reportPoints(coord, pcd)
-    print("average distance from origin is:", dist)
-    print(closest_pts[0, :])
+        # visualize result
+        closest_pts = array_to_pointcloud(closest_pts)
+        valid_pts = array_to_pointcloud(valid_pts)
 
-    # visualize result
-    closest_pts = array_to_pointcloud(closest_pts)
-    valid_pts = array_to_pointcloud(valid_pts)
+        visualize_point_clouds(valid_pts, closest_pts)
 
-    visualize_point_clouds(valid_pts, closest_pts)
-
-    print(closest_pts, dist)
+        print(closest_pts, dist)
+        coord[0] -= 200

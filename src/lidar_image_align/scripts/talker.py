@@ -39,7 +39,7 @@ def talker():
     rospy.init_node('talker', anonymous=True)
     rate = rospy.Rate(10) # 10hz
 
-    image = np.asarray(cv2.imread("/home/astar/Desktop/testing/output_with_dot.jpg"))
+    image = np.asarray(cv2.imread("/home/astar/Desktop/testing/test0_dot.jpg"))
     pointcloud = imagelidaraligner.readPcd("/home/astar/dart_ws/single_scene_calibration/0.pcd")
     points = np.asarray(pointcloud.points)
 

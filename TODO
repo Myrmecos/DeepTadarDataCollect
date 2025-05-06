@@ -4,3 +4,22 @@
 3. integrate the functions to detect green light
 4. integrate the functions to transform pixel coordinate to points
 5. calibrate camera and lidar
+
+#setup
+sudo ip addr add 192.168.1.100/24 dev enp100s0
+source devel/setup.sh
+
+# collect image
+roslaunch hikrobot_camera hikrobot_camera_save.launch
+
+# collect pcd
+roslaunch livox_ros_driver livox_lidar_rviz.launch
+rosbag record -a -O calib/calibpointcloud/calibscene_test.bag
+
+# process pcd
+./cleanpointcloud.sh
+python3 /home/astar/dart_ws/image_lidar_align/croppointcloud.py
+pcl_viewer /home/astar/dart_ws/calib/calibpointcloud/calibscene_test_cropped.pcd
+
+#test
+roslaunch livox_camera_calib calib.launch

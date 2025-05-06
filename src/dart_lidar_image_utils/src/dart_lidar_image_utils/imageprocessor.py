@@ -14,7 +14,7 @@ class GLPosition():
     The width and height will be used to determine the relative angle between camera and green light.
     camera_param_path is the path to yaml file containing camera intrinsic matrix and distortion coefficient
     '''
-    def __init__(self, image_width=1280, image_height=1024, camera_param_path = "camparam.yaml"):
+    def __init__(self, image_width=2448, image_height=2048, camera_param_path = "camparam.yaml"):
         
         
         self.image_width = image_width
@@ -42,7 +42,7 @@ class GLPosition():
     '''
     def find_green_light(self, image):
         mask = cv.inRange(image, self.lower_color, self.upper_color)
-        plt.imshow(mask)
+        #plt.imshow(mask)
         #plt.show()
         #return
         contours, _ = cv.findContours(mask, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
