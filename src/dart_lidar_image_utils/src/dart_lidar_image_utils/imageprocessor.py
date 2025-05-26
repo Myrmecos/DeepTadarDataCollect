@@ -22,16 +22,17 @@ class GLPosition():
         cv.imshow(title, resized_image)
         cv.waitKey(0)
     
+    '''Debug only'''
     def _compare_images(self, image1, image2):
-        fig, axes = plt.subplots(2, 2, figsize=(8, 8))  # 2x2 grid
+        fig, axes = plt.subplots(1, 2, figsize=(8, 8))  # 2x2 grid
 
-        axes[0, 0].imshow(image1)
-        axes[0, 0].set_title("Image 1")
-        axes[0, 0].axis('off')
+        axes[0].imshow(image1)
+        axes[0].set_title("Image 1")
+        axes[0].axis('off')
 
-        axes[0, 1].imshow(image2)
-        axes[0, 1].set_title("Image 2")
-        axes[0, 1].axis('off')
+        axes[1].imshow(image2)
+        axes[1].set_title("Image 2")
+        axes[1].axis('off')
         plt.tight_layout()
         plt.show()
 
@@ -62,6 +63,12 @@ class GLPosition():
         self.lower_color = np.asarray(contents['colors']["lower_color"])
         self.upper_color = np.asarray(contents['colors']["upper_color"])
 
+    '''
+    given a list of contours
+    find the contour that is roundest
+    circularity: 4\pi area divided by perimeter squared
+    for circle, circularity is exactly 1.
+    '''
     def find_roundest_contour(self, contours):
         # Calculate circularity for each contour
         roundest_contour = None
@@ -91,9 +98,6 @@ class GLPosition():
     def find_green_light(self, image):
         print(image)
         mask = cv.inRange(image, self.lower_color, self.upper_color)
-        #plt.imshow(mask)
-        #plt.show()
-        #return
         self._compare_images(image, mask)
         contours, _ = cv.findContours(mask, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
         if contours: 
@@ -109,6 +113,7 @@ class GLPosition():
             print("found none")
             center=None
         return center
+    
     '''
     Task: given a position in the image
     return its position (coordinate) relative to center
@@ -156,6 +161,8 @@ if __name__=="__main__":
     #rel_pos = glp.pos_relative_to_center(pos)
     print("pixel coord: ", pos)
     #glp.get_camera_intrinsic_distortion()
-    print("distortion coefficient: \n", glp.distort)
-    print("intrinsic matrix: \n", glp.IM)
+    # print("distortion coefficient: \n", glp.distort)
+    # print("intrinsic matrix: \n", glp.IM)
     #print("angle relative to camera center: ", glp.get_GL_angle_relative(rel_pos))
+    print(glp.get_GL_angle_relative([0, 0]))
+
