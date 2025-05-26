@@ -7,6 +7,34 @@ Green Light Position Determination
 A class to determine the relative position between camera and green light
 '''
 class GLPosition():
+    
+    '''Debug only'''
+    def _show_image(self, image, title="image"):
+        height, width = image.shape[:2]
+
+        # Resize to half size
+        resized_image = cv.resize(
+            image, 
+            (width // 2, height // 2),  # New dimensions (half of original)
+            interpolation=cv.INTER_LINEAR  # Or INTER_AREA for downscaling
+        )
+
+        cv.imshow(title, resized_image)
+        cv.waitKey(0)
+    
+    def _compare_images(self, image1, image2):
+        fig, axes = plt.subplots(2, 2, figsize=(8, 8))  # 2x2 grid
+
+        axes[0, 0].imshow(image1)
+        axes[0, 0].set_title("Image 1")
+        axes[0, 0].axis('off')
+
+        axes[0, 1].imshow(image2)
+        axes[0, 1].set_title("Image 2")
+        axes[0, 1].axis('off')
+        plt.tight_layout()
+        plt.show()
+
 
     '''
     image_widht and image_height is the width and height of images
@@ -34,6 +62,26 @@ class GLPosition():
         self.lower_color = np.asarray(contents['colors']["lower_color"])
         self.upper_color = np.asarray(contents['colors']["upper_color"])
 
+    def find_roundest_contour(self, contours):
+        # Calculate circularity for each contour
+        roundest_contour = None
+        max_circularity = 0  # Circularity ranges from 0 (not round) to 1 (perfect circle)
+
+        for contour in contours:
+            area = cv.contourArea(contour)
+            perimeter = cv.arcLength(contour, closed=True)
+            
+            # Avoid division by zero for tiny contours
+            if perimeter == 0:
+                continue
+            
+            circularity = (4 * np.pi * area) / (perimeter ** 2)
+            
+            # Update roundest contour if current one is more circular
+            if circularity > max_circularity:
+                max_circularity = circularity
+                roundest_contour = contour
+        return roundest_contour
     '''
     Task: given the image that contains a green dot
     report its center coordinate in the image
@@ -41,14 +89,16 @@ class GLPosition():
     output, tuple (x, y). x and y can be float
     '''
     def find_green_light(self, image):
+        print(image)
         mask = cv.inRange(image, self.lower_color, self.upper_color)
         #plt.imshow(mask)
         #plt.show()
         #return
+        self._compare_images(image, mask)
         contours, _ = cv.findContours(mask, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
         if contours: 
-            largest_contour = max(contours, key=cv.contourArea)
-            M = cv.moments(largest_contour)
+            roundest_contour = self.find_roundest_contour(contours)
+            M = cv.moments(roundest_contour)
             if M["m00"] !=0:
                 cx = M["m10"]/M["m00"]
                 cy = M["m01"]/M["m00"]
@@ -95,14 +145,17 @@ class GLPosition():
 
 
 
+if __name__=="__main__":
+    #image = cv.imread("testImg/frame0000.jpg")
+    image = cv.imread("/home/astar/Desktop/testing/test1_dotdot_rec.jpg")
 
-# image = cv.imread("img_dir/0.png")
-# glp = GLPosition()
-# pos = glp.find_green_light(image)
-# #rel_pos = glp.pos_relative_to_center(pos)
-# pos = (1024, 1280)
-# print("relative position to center: ", pos)
-# glp.get_camera_intrinsic_distortion("camparam.yaml")
-# print("distortion coefficient: \n", glp.distort)
-# print("intrinsic matrix: \n", glp.IM)
-# print("angle relative to camera center: ", glp.get_GL_angle_relative(rel_pos))
+    glp = GLPosition(camera_param_path="/home/astar/dart_ws/src/livox_camera_calib/config/calib.yaml")
+    glp.lower_color = np.array([245, 245, 20])
+    glp.upper_color = np.array([255, 255, 90])
+    pos = glp.find_green_light(image)
+    #rel_pos = glp.pos_relative_to_center(pos)
+    print("pixel coord: ", pos)
+    #glp.get_camera_intrinsic_distortion()
+    print("distortion coefficient: \n", glp.distort)
+    print("intrinsic matrix: \n", glp.IM)
+    #print("angle relative to camera center: ", glp.get_GL_angle_relative(rel_pos))
