@@ -13,6 +13,7 @@ import yaml
 from dart_lidar_image_utils import imagelidaraligner, imageprocessor
 import traceback
 import matplotlib.pyplot as plt
+import time
 
 def get_camera_intrinsic_distortion_extrinsic(yaml_file_name):
         with open(yaml_file_name, 'r') as file:
@@ -25,7 +26,7 @@ def get_camera_intrinsic_distortion_extrinsic(yaml_file_name):
         return IM, distort, EM
         
 
-MAX_PCD_MESSAGES = 30 # how many pcd messages we want to pool for processing
+MAX_PCD_MESSAGES = 35 # how many pcd messages we want to pool for processing
 NUM_OF_POINTS = 15 #how many number of points we want to cluster for the target
 CAMERA_PARAM_PATH = "/home/astar/dart_ws/src/livox_camera_calib/config/calib.yaml"
 
@@ -61,7 +62,7 @@ class Listener:
         # self.vis.create_window("Point Cloud", width=800, height=600)
         # self.first_frame = True
         self.vis_pcd = o3d.geometry.PointCloud()
-
+        time.sleep(3)
         #self.periodic_callback(None)
         rospy.Timer(rospy.Duration(0.2), self.periodic_callback)
         
@@ -177,18 +178,17 @@ class Listener:
                 lightpos = self.glp.find_green_light(myimg)
                 print("green light position in image: ", lightpos)
                 if lightpos is not None:
-                    closest_pts,pts_2d, valid_pts,dist = self.ila.reportPoints1(lightpos, mypts)
-                    print("average distance from origin is: ", dist)
-                    
+                    closest_pts,pts_2d, valid_pts,_ = self.ila.reportPoints1(lightpos, mypts)
+                    #print("average distance from origin is: ", dist)
+                    closest_pts_rotor = self.ila.to_rotor_coord(closest_pts, cam_rotor_em)
                     #target_pts, _ = self.ila._project_points_to_image(closest_pts)
                     #imagelidaraligner.visualize_points_by_distance1(pts_2d, valid_pts, im, myimg, target_pts)
-                    
-                    print("debug: closest pts: ", closest_pts)
-                    # get angle
-                    angle = self.ila.calc_yaw(closest_pts, cam_rotor_em)
-                    #angle = self.ila.to_rotor_coord(closest_pts, cam_rotor_em)
 
-                    self.show_img(myimg, lightpos, angle, dist)
+                    # get angle
+                    angle = self.ila.to_degree(closest_pts_rotor)
+                    hori_dist = self.ila.calc_horizontal_dist(closest_pts_rotor)
+
+                    self.show_img(myimg, lightpos, angle, hori_dist)
                     
                     #save_im_pcd(image=myimg, point_cloud=mypts)
                     # closest_pts = imagelidaraligner.array_to_pointcloud(closest_pts)
@@ -210,7 +210,7 @@ class Listener:
         myimg = cv2.cvtColor(myimg, cv2.COLOR_BGR2RGB)
         myimg = cv2.putText(myimg, f"yaw: {angle}", (lightpos[0]+30, lightpos[1]-40), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
         myimg = cv2.putText(myimg, f"dist: {dist}", (lightpos[0]+30, lightpos[1]-20), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 0), 2) # for center
-        cv2.line(myimg, (int(im[0,2]), 0), (int(im[0,2]), height-1), (255, 255, 255), 3)
+        cv2.line(myimg, (int(im[0,2]), 0), (int(im[0,2]), height-1), (255, 255, 0), 3)
         myimg = cv2.resize(
             myimg, 
             None, 

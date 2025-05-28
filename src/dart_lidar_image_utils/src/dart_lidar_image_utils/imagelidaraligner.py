@@ -315,6 +315,10 @@ class ImageLidarAligner:
     def calc_yaw(self, pts, rotor_cam_em):
         rotor_coords = self.to_rotor_coord(pts, rotor_cam_em)
         return self.to_degree(rotor_coords)
+    
+    def calc_horizontal_dist(self, pts):
+        centerR = np.mean(pts, axis = 0)
+        return math.sqrt(centerR[0,0]**2+centerR[0,2]**2)
 
 
 
