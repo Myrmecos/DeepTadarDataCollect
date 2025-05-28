@@ -7,6 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import cv2
 import yaml
+import math
 
 def readPcd(path):
     pcd = o3d.io.read_point_cloud(path)
@@ -38,6 +39,11 @@ def get_camera_intrinsic_distortion_extrinsic(yaml_file_name):
 
         return IM, distort, EM
 
+def get_cam_rotor_matrix(yaml_file_name):
+    with open(yaml_file_name, 'r') as file:
+        contents = yaml.safe_load(file)
+    return np.asarray(contents["cam_rotor"]).reshape((4, 4))
+        
 def visualize_points_by_distance(points_2d, points_3d, target_pts=[]):
     points_2d=points_2d[:600000,]
     points_3d = points_3d[:600000,]
@@ -289,7 +295,25 @@ class ImageLidarAligner:
         
         # Return the average distance
         return np.mean(distances)
-        
+    
+    '''transform points from lidar coord to rotor coord'''
+    def to_rotor_coord(self, pts, rotor_cam_em):
+        points_3d_homog = np.hstack([pts, np.ones((pts.shape[0], 1))])
+        pts_camera = self.extrinsicMatrix @ points_3d_homog.T
+        pts_rotor = rotor_cam_em @ pts_camera
+        print("camera: ", pts_camera[0, :])
+        return pts_rotor
+    
+    '''transform points at rotor coord to yaw (pos direction: clockwise)'''
+    def to_degree(self, rotor_coords):
+        centerR = np.mean(rotor_coords, axis = 0)
+        arctanval = centerR[0,0]/centerR[0,2]
+        return math.atan(arctanval)/(math.pi)*180
+
+    def calc_yaw(self, pts, rotor_cam_em):
+        rotor_coords = self.to_rotor_coord(pts, rotor_cam_em)
+        return self.to_degree(rotor_coords)
+
 
 
 if __name__=="__main__":
@@ -297,7 +321,7 @@ if __name__=="__main__":
     #extrinsic = readExtrinsic("/home/astar/dart_ws/calib/extrinsic.txt")
     CAMERA_PARAM_PATH = "/home/astar/dart_ws/src/livox_camera_calib/config/calib.yaml"
     im, distort, em = get_camera_intrinsic_distortion_extrinsic(CAMERA_PARAM_PATH)
-
+    cam_rotor_em = get_cam_rotor_matrix(CAMERA_PARAM_PATH)
     # read image
     #image = cv2.imread("/home/astar/dart_ws/single_scene_calibration/0.png")
     #image = cv2.imread("/home/astar/dart_ws/calib/calibimage/test4.jpg")
@@ -317,12 +341,13 @@ if __name__=="__main__":
 
     # get coordinates
     #coord = [1334, 1187]
-    coord=[2191, 1631]
+    # coord=[2191, 1631]
+    coord = [100, 1631]
 
     #inp = input("input coordinate of green light: ")
     inp = ""
     if len(inp)==0:
-        coord = [2191, 1631]
+        coord = [2000, 2000]
     else:
         inp = inp.split(" ")
         coord = [int(inp[0]), int(inp[1])]
@@ -330,6 +355,7 @@ if __name__=="__main__":
     cameraMatrix = np.array(camera_matrix).reshape(3, 3)
     # ila = ImageLidarAligner(extrinsic, cameraMatrix)
     ila = ImageLidarAligner(em, im)
+    
 
     # transform
     closest_pts, pts_2d, pts_3d, dist = ila.reportPoints1(coord, pcd)
@@ -338,9 +364,27 @@ if __name__=="__main__":
     print(closest_pts[0, :])
 
     # visualize result
-    closest_pts = array_to_pointcloud(closest_pts)
+    closest_pts_pcd = array_to_pointcloud(closest_pts)
     valid_pts = array_to_pointcloud(pts_3d)
-    visualize_points_by_distance1(pts_2d, pts_3d, im, image, target_pts)
-    visualize_point_clouds(valid_pts, closest_pts)
+    #visualize_points_by_distance1(pts_2d, pts_3d, im, image, target_pts)
+    #visualize_point_clouds(valid_pts, closest_pts_pcd)
 
-    print(closest_pts, dist)
+    centerC = np.mean(closest_pts, axis = 0) 
+    #print("center for light at camera coord: ", centerC)
+
+    #positive direction: 
+    #  
+    #   for lidar, x is front, y is left, z is up
+    # for camera, x is right, y is down, z is front
+    rotor_coords = ila.to_rotor_coord(closest_pts, cam_rotor_em).T
+    print("lidar: ", closest_pts[0])
+    print("rotor: ", rotor_coords[0])
+    centerR = np.mean(rotor_coords, axis = 0)
+    print("center for light at rotor coord: ", centerR)
+    arctanval = centerR[0,0]/centerR[0,2]
+    print("arctan val of angle: ", arctanval)
+    print("degrees: ", math.atan(arctanval)*180/(math.pi))
+    print(ila.to_degree(rotor_coords))
+
+
+    # print(closest_pts, dist)
