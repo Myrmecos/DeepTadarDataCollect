@@ -25,8 +25,8 @@ def get_camera_intrinsic_distortion_extrinsic(yaml_file_name):
         return IM, distort, EM
         
 
-MAX_PCD_MESSAGES = 6 # how many pcd messages we want to pool for processing
-NUM_OF_POINTS = 30 #how many number of points we want to cluster for the target
+MAX_PCD_MESSAGES = 30 # how many pcd messages we want to pool for processing
+NUM_OF_POINTS = 15 #how many number of points we want to cluster for the target
 CAMERA_PARAM_PATH = "/home/astar/dart_ws/src/livox_camera_calib/config/calib.yaml"
 
 im, distort, em = get_camera_intrinsic_distortion_extrinsic(CAMERA_PARAM_PATH)
@@ -60,7 +60,8 @@ class Listener:
         # self.vis.create_window("Point Cloud", width=800, height=600)
         # self.first_frame = True
         self.vis_pcd = o3d.geometry.PointCloud()
-        
+
+        #self.periodic_callback(None)
         rospy.Timer(rospy.Duration(0.2), self.periodic_callback)
         
 
@@ -68,7 +69,7 @@ class Listener:
         try:
             # Convert ROS Image to OpenCV (BGR8 format)
             cv_image = self.bridge.imgmsg_to_cv2(image_msg, "bgr8")
-
+            print("received image.")
             # store the image
             if not self.image_lock.acquire(blocking=False):
                 rospy.loginfo("image locked in image_callback, skipping")
@@ -109,6 +110,30 @@ class Listener:
         except Exception as e:
             rospy.logerr(f"Error processing point cloud: {e}")
         
+    def listen_image(self, myimg):
+        lightpos = self.glp.find_green_light(myimg)
+        print("green light position in image: ", lightpos)
+        pos_rounded = [0, 0]
+        if lightpos is not None:
+            print(lightpos)
+            pos_rounded[0] = round(lightpos[0])
+            pos_rounded[1] = round(lightpos[1])
+            lightpos=pos_rounded
+            height, width = myimg.shape[:2]
+            cv2.line(myimg, (0, lightpos[1]), (width-1, lightpos[1]), (255, 255, 255), 3)
+            cv2.line(myimg, (lightpos[0], 0), (lightpos[0], height-1), (255, 255, 255), 3)
+            myimg = cv2.cvtColor(myimg, cv2.COLOR_BGR2RGB)
+            myimg = cv2.resize(
+                myimg, 
+                None, 
+                fx=1/3,  # Scale factor for width
+                fy=1/3,  # Scale factor for height
+                interpolation=cv2.INTER_AREA  # Best for downscaling
+            )
+            cv2.imshow("Hikrobot Camera (detected)", myimg)
+            cv2.waitKey(1)
+        else: 
+            cv2.imshow("Hikrobot Camera (empty detection)", myimg)
     # task: retrieve the most recent images (self.image) and point cloud (self.pcd)
     # do some operations on them
     def periodic_callback(self, event):
@@ -125,8 +150,8 @@ class Listener:
             # wait to acquire lock and obtain images
             with self.image_lock:
                 rospy.loginfo("=====Periodic callback accessed image======")
-                myimg = copy.deepcopy(self.image)
-                myimg = cv2.cvtColor(myimg, cv2.COLOR_BGR2RGB)
+                if self.image is not None:
+                    myimg = copy.deepcopy(self.image)
             
             # Start processing if both mypts and myimg are not empty
             if mypts != None and myimg is not None:
@@ -136,8 +161,8 @@ class Listener:
                 # # example: show both image and point cloud
                 # # show image
                 print(myimg.shape)
-                cv2.imshow("Hikrobot Camera", myimg)
-                cv2.waitKey(1)
+                # cv2.imshow("Hikrobot Camera", myimg)
+                # cv2.waitKey(1)
 
                 # # show point cloud
                 # self.vis_pcd.points = mypts.points
@@ -150,19 +175,50 @@ class Listener:
                 # self.vis.update_renderer()
                 lightpos = self.glp.find_green_light(myimg)
                 print("green light position in image: ", lightpos)
+                pos_rounded = [0, 0]
                 if lightpos is not None:
-                    closest_pts,valid_pts,dist = self.ila.reportPoints(lightpos, mypts)
+                    closest_pts,pts_2d, valid_pts,dist = self.ila.reportPoints1(lightpos, mypts)
                     print("average distance from origin is: ", dist)
 
+                    
+                    height, width = myimg.shape[:2]
+                    pos_rounded[0] = round(lightpos[0])
+                    pos_rounded[1] = round(lightpos[1])
+                    lightpos=pos_rounded
+                    cv2.line(myimg, (0, lightpos[1]), (width-1, lightpos[1]), (255, 255, 255), 3)
+                    cv2.line(myimg, (lightpos[0], 0), (lightpos[0], height-1), (255, 255, 255), 3)
+                    myimg = cv2.cvtColor(myimg, cv2.COLOR_BGR2RGB)
+                    myimg = cv2.resize(
+                        myimg, 
+                        None, 
+                        fx=1/3,  # Scale factor for width
+                        fy=1/3,  # Scale factor for height
+                        interpolation=cv2.INTER_AREA  # Best for downscaling
+                    )
+                    cv2.imshow("Hikrobot Camera", myimg)
+                    cv2.waitKey(1)
                     ## DEBUG ONLY
                     # visualize result
+                    
+                    target_pts, _ = self.ila._project_points_to_image(closest_pts)
+                    #imagelidaraligner.visualize_points_by_distance1(pts_2d, valid_pts, im, myimg, target_pts)
+
                     closest_pts = imagelidaraligner.array_to_pointcloud(closest_pts)
                     valid_pts = imagelidaraligner.array_to_pointcloud(valid_pts)
-                    # imagelidaraligner.visualize_point_clouds(valid_pts, closest_pts)
+                    
+                    #save_im_pcd(image=myimg, point_cloud=mypts)
+                    #imagelidaraligner.visualize_point_clouds(valid_pts, closest_pts)
 
         except Exception as e:
             rospy.logerr(f"Error in periodic callback: {e}")
             traceback.print_exc()
+
+def save_im_pcd(image, point_cloud):
+    cv2.imwrite("/home/astar/dart_ws/src/dart_lidar_image_utils/src/dart_lidar_image_utils/test.jpg", image)
+
+    # Write PCD file
+    
+    o3d.io.write_point_cloud("/home/astar/dart_ws/src/dart_lidar_image_utils/src/dart_lidar_image_utils/test.pcd", point_cloud, write_ascii=True)
 
 if __name__ == '__main__':
     rospy.init_node('listener', anonymous=True)

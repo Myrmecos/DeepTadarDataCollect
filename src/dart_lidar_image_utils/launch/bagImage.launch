@@ -1,0 +1,6 @@
+   1 <launch>
+   2   <node pkg="rosbag" type="play" name="rosbag" required="true" args="$(find image_view)/test.bag"/>
+   3   <node name="extract" pkg="image_view" type="extract_images" respawn="false" required="true" output="screen" cwd="ROS_HOME">
+   4     <remap from="image" to="/hikrobot_camera/rgb"/>
+   5   </node>
+   6 </launch>

@@ -98,12 +98,12 @@ def visualize_points_by_distance1(points_2d, points_3d, cameraMatrix, image, tar
 
     # Create figure
     plt.figure(figsize=(20,16))
-    plt.imshow(image, alpha=0.5)  # Display the image
+    plt.imshow(image, alpha=0.8)  # Display the image
 
     # Plot points, colored by 3D distance
     scatter = plt.scatter(
         points_2d_pixel[:, 0], points_2d_pixel[:, 1],
-        c=distances, s=5, cmap='viridis', alpha=0.2
+        c=distances, s=0.5, cmap='viridis', alpha=0.8
     )
 
     # Plot target points (if provided)

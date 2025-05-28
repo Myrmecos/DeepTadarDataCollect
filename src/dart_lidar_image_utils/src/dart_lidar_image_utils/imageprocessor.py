@@ -96,9 +96,8 @@ class GLPosition():
     output, tuple (x, y). x and y can be float
     '''
     def find_green_light(self, image):
-        print(image)
         mask = cv.inRange(image, self.lower_color, self.upper_color)
-        self._compare_images(image, mask)
+        #self._compare_images(image, mask)
         contours, _ = cv.findContours(mask, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
         if contours: 
             roundest_contour = self.find_roundest_contour(contours)
