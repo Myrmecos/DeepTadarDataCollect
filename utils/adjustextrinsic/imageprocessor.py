@@ -153,7 +153,7 @@ if __name__=="__main__":
     #image = cv.imread("testImg/frame0000.jpg")
     image = cv.imread("/home/astar/Desktop/testing/test1_dotdot_rec.jpg")
 
-    glp = GLPosition(camera_param_path="/home/astar/dart_ws/src/livox_camera_calib/config/calib.yaml")
+    glp = GLPosition(camera_param_path="/home/astar/dart_ws/src/lidar_image_align/calib/calib.yaml")
     glp.lower_color = np.array([245, 245, 20])
     glp.upper_color = np.array([255, 255, 90])
     pos = glp.find_green_light(image)

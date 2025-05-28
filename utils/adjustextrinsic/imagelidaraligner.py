@@ -296,7 +296,7 @@ class ImageLidarAligner:
 if __name__=="__main__":
     # read extrinsic param
     #extrinsic = readExtrinsic("/home/astar/dart_ws/calib/extrinsic.txt")
-    CAMERA_PARAM_PATH = "/home/astar/dart_ws/src/livox_camera_calib/config/calib.yaml"
+    CAMERA_PARAM_PATH = "/home/astar/dart_ws/src/lidar_image_align/calib/calib.yaml"
     im, distort, em = get_camera_intrinsic_distortion_extrinsic(CAMERA_PARAM_PATH)
 
     # read image

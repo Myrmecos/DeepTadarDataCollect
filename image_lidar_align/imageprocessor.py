@@ -99,7 +99,7 @@ class GLPosition():
 image = cv.imread("/home/astar/dart_ws/calib/calibimage/test0.jpg")
 plt.imshow(image)
 plt.show()
-glp = GLPosition(camera_param_path="/home/astar/dart_ws/src/livox_camera_calib/config/calib.yaml")
+glp = GLPosition(camera_param_path="/home/astar/dart_ws/src/lidar_image_align/calib/calib.yaml")
 pos = glp.find_green_light(image)
 #rel_pos = glp.pos_relative_to_center(pos)
 #pos = (1024, 1280)

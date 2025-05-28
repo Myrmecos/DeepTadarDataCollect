@@ -28,7 +28,7 @@ def get_camera_intrinsic_distortion_extrinsic(yaml_file_name):
 
 MAX_PCD_MESSAGES = 35 # how many pcd messages we want to pool for processing
 NUM_OF_POINTS = 15 #how many number of points we want to cluster for the target
-CAMERA_PARAM_PATH = "/home/astar/dart_ws/src/livox_camera_calib/config/calib.yaml"
+CAMERA_PARAM_PATH = "/home/astar/dart_ws/src/lidar_image_align/calib/calib.yaml"
 
 im, distort, em = get_camera_intrinsic_distortion_extrinsic(CAMERA_PARAM_PATH)
 cam_rotor_em = imagelidaraligner.get_cam_rotor_matrix(CAMERA_PARAM_PATH)
