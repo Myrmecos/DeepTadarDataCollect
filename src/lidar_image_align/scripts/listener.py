@@ -30,6 +30,7 @@ NUM_OF_POINTS = 15 #how many number of points we want to cluster for the target
 CAMERA_PARAM_PATH = "/home/astar/dart_ws/src/livox_camera_calib/config/calib.yaml"
 
 im, distort, em = get_camera_intrinsic_distortion_extrinsic(CAMERA_PARAM_PATH)
+cam_rotor_em = imagelidaraligner.get_cam_rotor_matrix(CAMERA_PARAM_PATH)
 # print(im)
 # print(distort)
 # print(em)
@@ -175,43 +176,50 @@ class Listener:
                 # self.vis.update_renderer()
                 lightpos = self.glp.find_green_light(myimg)
                 print("green light position in image: ", lightpos)
-                pos_rounded = [0, 0]
                 if lightpos is not None:
                     closest_pts,pts_2d, valid_pts,dist = self.ila.reportPoints1(lightpos, mypts)
                     print("average distance from origin is: ", dist)
-
                     
-                    height, width = myimg.shape[:2]
-                    pos_rounded[0] = round(lightpos[0])
-                    pos_rounded[1] = round(lightpos[1])
-                    lightpos=pos_rounded
-                    cv2.line(myimg, (0, lightpos[1]), (width-1, lightpos[1]), (255, 255, 255), 3)
-                    cv2.line(myimg, (lightpos[0], 0), (lightpos[0], height-1), (255, 255, 255), 3)
-                    myimg = cv2.cvtColor(myimg, cv2.COLOR_BGR2RGB)
-                    myimg = cv2.resize(
-                        myimg, 
-                        None, 
-                        fx=1/3,  # Scale factor for width
-                        fy=1/3,  # Scale factor for height
-                        interpolation=cv2.INTER_AREA  # Best for downscaling
-                    )
-                    cv2.imshow("Hikrobot Camera", myimg)
-                    cv2.waitKey(1)
-                    ## DEBUG ONLY
-                    # visualize result
-                    
-                    target_pts, _ = self.ila._project_points_to_image(closest_pts)
+                    #target_pts, _ = self.ila._project_points_to_image(closest_pts)
                     #imagelidaraligner.visualize_points_by_distance1(pts_2d, valid_pts, im, myimg, target_pts)
+                    
+                    print("debug: closest pts: ", closest_pts)
+                    # get angle
+                    angle = self.ila.calc_yaw(closest_pts, cam_rotor_em)
+                    #angle = self.ila.to_rotor_coord(closest_pts, cam_rotor_em)
 
-                    closest_pts = imagelidaraligner.array_to_pointcloud(closest_pts)
-                    valid_pts = imagelidaraligner.array_to_pointcloud(valid_pts)
+                    self.show_img(myimg, lightpos, angle, dist)
                     
                     #save_im_pcd(image=myimg, point_cloud=mypts)
-                    #imagelidaraligner.visualize_point_clouds(valid_pts, closest_pts)
+                    # closest_pts = imagelidaraligner.array_to_pointcloud(closest_pts)
+                    # valid_pts = imagelidaraligner.array_to_pointcloud(valid_pts)
+                    # imagelidaraligner.visualize_point_clouds(valid_pts, closest_pts)
 
         except Exception as e:
             rospy.logerr(f"Error in periodic callback: {e}")
             traceback.print_exc()
+
+    def show_img(self, myimg, lightpos, angle, dist):
+        height, width = myimg.shape[:2]
+        pos_rounded = [0, 0]
+        pos_rounded[0] = round(lightpos[0])
+        pos_rounded[1] = round(lightpos[1])
+        lightpos=pos_rounded
+        cv2.line(myimg, (0, lightpos[1]), (width-1, lightpos[1]), (255, 255, 255), 3)
+        cv2.line(myimg, (lightpos[0], 0), (lightpos[0], height-1), (255, 255, 255), 3)
+        myimg = cv2.cvtColor(myimg, cv2.COLOR_BGR2RGB)
+        myimg = cv2.putText(myimg, f"yaw: {angle}", (lightpos[0]+30, lightpos[1]-40), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
+        myimg = cv2.putText(myimg, f"dist: {dist}", (lightpos[0]+30, lightpos[1]-20), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 0), 2) # for center
+        cv2.line(myimg, (int(im[0,2]), 0), (int(im[0,2]), height-1), (255, 255, 255), 3)
+        myimg = cv2.resize(
+            myimg, 
+            None, 
+            fx=1/3,  # Scale factor for width
+            fy=1/3,  # Scale factor for height
+            interpolation=cv2.INTER_AREA  # Best for downscaling
+        )
+        cv2.imshow("Hikrobot Camera", myimg)
+        cv2.waitKey(1)
 
 def save_im_pcd(image, point_cloud):
     cv2.imwrite("/home/astar/dart_ws/src/dart_lidar_image_utils/src/dart_lidar_image_utils/test.jpg", image)

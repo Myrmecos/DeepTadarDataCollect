@@ -298,11 +298,13 @@ class ImageLidarAligner:
     
     '''transform points from lidar coord to rotor coord'''
     def to_rotor_coord(self, pts, rotor_cam_em):
+        pts = np.array(pts)
         points_3d_homog = np.hstack([pts, np.ones((pts.shape[0], 1))])
         pts_camera = self.extrinsicMatrix @ points_3d_homog.T
+        #print(pts_camera.shape, "============+++++++++++++++++++")
         pts_rotor = rotor_cam_em @ pts_camera
-        print("camera: ", pts_camera[0, :])
-        return pts_rotor
+        #print("camera: ", pts_camera[0, :])
+        return pts_rotor.T
     
     '''transform points at rotor coord to yaw (pos direction: clockwise)'''
     def to_degree(self, rotor_coords):

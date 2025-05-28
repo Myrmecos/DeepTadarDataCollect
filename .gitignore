@@ -4,3 +4,8 @@ single_scene_calibration
 /home/astar/dart_ws/calib/backup/scenes
 calib/backup/scenes
 calib/calibpointcloud
+calib/
+image_lidar_align/*.pcd
+*.pcd
+*.bag
+src/dart_lidar_image_utils/src/dart_lidar_image_utils/*.pcd

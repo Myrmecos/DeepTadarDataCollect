@@ -7,6 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import cv2
 import yaml
+import time
 
 def readPcd(path):
     pcd = o3d.io.read_point_cloud(path)
@@ -73,7 +74,7 @@ class ImageLidarAligner:
         points_2d, points_3d = self._project_points_to_image(points_3d)
 
         #visualize_points_by_distance(points_2d, points_3d)
-        
+        1315
         # Find closest point
         closest_points, _ = self._find_closest_point(image_coord, points_2d, points_3d)
         
@@ -119,7 +120,7 @@ class ImageLidarAligner:
     Given image coordinate (normalized), pointcloud projected to image and pointcloud,
     return the points in pointcloud that are nearest to the pixel
     '''
-    def _find_closest_point(self, image_coord, valid_points_2d, valid_points_3d, num_of_pts=500):
+    def _find_closest_point(self, image_coord, valid_points_2d, valid_points_3d, num_of_pts=30):
         # Compute Euclidean distances in image plane
         distances = np.linalg.norm(valid_points_2d - image_coord, axis=1)
 
@@ -200,7 +201,8 @@ if __name__=="__main__":
 
     # read image
     #image = cv2.imread("/home/astar/dart_ws/single_scene_calibration/0.png")
-    image = cv2.imread("/home/astar/dart_ws/calib/calibimage/test0.jpg")
+    image = cv2.imread("/home/astar/dart_ws/calib/calibimage/test1.jpg") #testing
+    #image = cv2.imread("/home/astar/dart_ws/calib/backup/testinglight/test0.jpg")
     
     # undistort image
     # image = undistortImage(image)
@@ -211,12 +213,15 @@ if __name__=="__main__":
 
     # read point cloud
     #pcd = readPcd("/home/astar/dart_ws/single_scene_calibration/0.pcd")
-    pcd = readPcd("/home/astar/dart_ws/calib/calibpointcloud/calibscene_test_cropped.pcd")
+    #pcd = readPcd("/home/astar/dart_ws/calib/calibpointcloud/calibscene_test_cropped.pcd") 
+    pcd = readPcd("test2.pcd")
     #o3d.visualization.draw_geometries([pcd], window_name="Point Cloud Visualization", width=800, height=600)
 
     # get coordinates
     # coord = [645.952, 677.306]
-    coord = [1315, 1202]
+    #coord = [1278, 1220]
+    coord = [1206, 566]
+    time_start = time.time()
     for i in range(1):
         
         cameraMatrix = np.array(camera_matrix).reshape(3, 3)
@@ -231,7 +236,9 @@ if __name__=="__main__":
         closest_pts = array_to_pointcloud(closest_pts)
         valid_pts = array_to_pointcloud(valid_pts)
 
+        time_end = time.time()
+        print("time processing: ", time_end-time_start)
         visualize_point_clouds(valid_pts, closest_pts)
-
+        
         print(closest_pts, dist)
         coord[0] -= 200

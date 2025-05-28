@@ -28,11 +28,11 @@ class GLPosition():
         with open(yaml_file_name, 'r') as file:
             contents = yaml.safe_load(file)
     
-        self.IM = np.matrix(contents["intrinsic_matrix"])
-        self.distort = np.matrix(contents["distortion_coefficient"])
+        self.IM = np.matrix(contents["camera"]["camera_matrix"])
+        self.distort = np.matrix(contents["camera"]["dist_coeffs"])
 
-        self.lower_color = np.matrix(contents["lower_color"])
-        self.upper_color = np.matrix(contents["upper_color"])
+        self.lower_color = np.matrix(contents["colors"]["lower_color"])
+        self.upper_color = np.matrix(contents["colors"]["upper_color"])
 
     '''
     Task: given the image that contains a green dot
@@ -96,13 +96,15 @@ class GLPosition():
 
 
 
-# image = cv.imread("img_dir/0.png")
-# glp = GLPosition()
-# pos = glp.find_green_light(image)
-# #rel_pos = glp.pos_relative_to_center(pos)
-# pos = (1024, 1280)
-# print("relative position to center: ", pos)
-# glp.get_camera_intrinsic_distortion("camparam.yaml")
-# print("distortion coefficient: \n", glp.distort)
-# print("intrinsic matrix: \n", glp.IM)
+image = cv.imread("/home/astar/dart_ws/calib/calibimage/test0.jpg")
+plt.imshow(image)
+plt.show()
+glp = GLPosition(camera_param_path="/home/astar/dart_ws/src/livox_camera_calib/config/calib.yaml")
+pos = glp.find_green_light(image)
+#rel_pos = glp.pos_relative_to_center(pos)
+#pos = (1024, 1280)
+print("relative position to center: ", pos)
+#glp.get_camera_intrinsic_distortion("/home/astar/dart_ws/src/livox_camera_calib/config/calib.yaml")
+print("distortion coefficient: \n", glp.distort)
+print("intrinsic matrix: \n", glp.IM)
 # print("angle relative to camera center: ", glp.get_GL_angle_relative(rel_pos))
