@@ -14,6 +14,8 @@ from dart_lidar_image_utils import imagelidaraligner, imageprocessor
 import traceback
 import matplotlib.pyplot as plt
 import time
+import serial
+import struct
 
 def get_camera_intrinsic_distortion_extrinsic(yaml_file_name):
         with open(yaml_file_name, 'r') as file:
@@ -29,6 +31,35 @@ def get_camera_intrinsic_distortion_extrinsic(yaml_file_name):
 MAX_PCD_MESSAGES = 35 # how many pcd messages we want to pool for processing
 NUM_OF_POINTS = 15 #how many number of points we want to cluster for the target
 CAMERA_PARAM_PATH = "/home/astar/dart_ws/src/lidar_image_align/calib/calib.yaml"
+BAUD_RATE=9600
+PORTX="ttyUSB0"
+TIMEX=5
+ok_to_send = True
+ok_to_send_lock = threading.Lock()
+
+def recv_uart():
+    thread = threading.Thread(target = _recv_uart)
+    thread.daemon = True
+    thread.start()
+
+def _recv_uart():
+    global ok_to_send
+
+    # Open serial port (adjust parameters as needed)
+    with serial.Serial(PORTX, BAUD_RATE, timeout=TIMEX) as ser:  # Change 'COM3' to your port
+    
+        while True:
+            # Read one byte
+            received_byte = ser.read(1)
+
+            # Convert to boolean (assuming 0x00=False, 0x01=True)
+            bool_value = bool(int.from_bytes(received_byte, 'big')) if received_byte else None
+            if bool_value:
+                with ok_to_send_lock:
+                    ok_to_send_lock = True
+                print(f"Received: {bool_value}")
+                return
+recv_uart()
 
 im, distort, em = get_camera_intrinsic_distortion_extrinsic(CAMERA_PARAM_PATH)
 cam_rotor_em = imagelidaraligner.get_cam_rotor_matrix(CAMERA_PARAM_PATH)
@@ -189,6 +220,7 @@ class Listener:
                     hori_dist = self.ila.calc_horizontal_dist(closest_pts_rotor)
 
                     self.show_img(myimg, lightpos, angle, hori_dist)
+                    send_via_uart(angle, hori_dist)
                     
                     #save_im_pcd(image=myimg, point_cloud=mypts)
                     # closest_pts = imagelidaraligner.array_to_pointcloud(closest_pts)
@@ -225,8 +257,21 @@ def save_im_pcd(image, point_cloud):
     cv2.imwrite("/home/astar/dart_ws/src/dart_lidar_image_utils/src/dart_lidar_image_utils/test.jpg", image)
 
     # Write PCD file
-    
     o3d.io.write_point_cloud("/home/astar/dart_ws/src/dart_lidar_image_utils/src/dart_lidar_image_utils/test.pcd", point_cloud, write_ascii=True)
+            
+def send_via_uart(angleX, distance):
+    with ok_to_send_lock:
+        if not ok_to_send:
+            return
+    data = struct.pack("ff", angleX, distance)
+    try: 
+        with serial.Serial(PORTX, BAUD_RATE, timeout=TIMEX) as ser:
+            ser.write(data)
+            print("angle and distance sent")
+    except serial.SerialException as e:
+        print("error at serial port: ", e)
+    except Exception as e:
+        print("error occurred: ", e)
 
 if __name__ == '__main__':
     rospy.init_node('listener', anonymous=True)
