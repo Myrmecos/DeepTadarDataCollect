@@ -268,8 +268,6 @@ def send_via_uart(angleX, distance):
         with serial.Serial(PORTX, BAUD_RATE, timeout=TIMEX) as ser:
             ser.write(data)
             print("angle and distance sent")
-    except serial.SerialException as e:
-        print("error at serial port: ", e)
     except Exception as e:
         print("error occurred: ", e)
 
