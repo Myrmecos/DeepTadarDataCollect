@@ -51,3 +51,17 @@
     2. extract point clouds`rosrun pcl_ros bag_to_pcd xxx.bag /livox_points pcd`. For example, `rosrun pcl_ros bag_to_pcd data/test.bag /livox/lidar target/test`
     3. merge into one point cloud: `pcl_concatenate_points_pcd target/test/* && mv output.pcd target/test.pcd`
 2. full run
+
+typedef __packed struct
+{
+    uint8_t SOF;
+    fp32 yaw_angle;
+    fp32 pitch_angle;
+    uint8_t found;
+    uint8_t shoot_or_not;
+    uint_8_t done fitting;
+    uint8_t patrolling;
+    uint9_t is_updated;
+    fp32 base_dis;
+    uint8_t checksum;
+} vision_rx_t;
