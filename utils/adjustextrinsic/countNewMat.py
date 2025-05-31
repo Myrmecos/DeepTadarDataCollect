@@ -4,14 +4,7 @@ import cv2
 import matplotlib.pyplot as plt
 from imagelidaraligner import ImageLidarAligner, readPcd, array_to_pointcloud, visualize_points_by_distance1, visualize_point_clouds
 
-'''
-plot on the axis plt
-'''
-def interactive_compare(points_2d, points_3d, cameraMatrix, image, target_pts=[]):
-    # Limit to 600,000 points for performance
-    points_2d = points_2d[:600000]
-    points_3d = points_3d[:600000]
-
+def plot2dpoints(ax, points_2d, points_3d, cameraMatrix, target_pts = []):
     # Extract intrinsic parameters
     fx = cameraMatrix[0, 0]  # Focal length x
     fy = cameraMatrix[1, 1]  # Focal length y
@@ -33,23 +26,32 @@ def interactive_compare(points_2d, points_3d, cameraMatrix, image, target_pts=[]
 
     # Calculate Euclidean distance from origin for each 3D point
     distances = np.linalg.norm(points_3d, axis=1)
-
-    # Create figure=================================================
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 14))
-    ax1.imshow(image, alpha=0.8)  # Display the image
-
-    # Plot points, colored by 3D distance
-    scatter = ax2.scatter(
+    scatter = ax.scatter(
         points_2d_pixel[:, 0], points_2d_pixel[:, 1],
         c=distances, s=0.5, cmap='viridis', alpha=0.8
     )
 
     # Plot target points (if provided)
     if len(target_pts_pixel) != 0:
-        ax2.scatter(
+        ax.scatter(
             target_pts_pixel[:, 0], target_pts_pixel[:, 1],
             c="red", s=5, label='Target Points', alpha=0.3
         )
+
+'''
+plot on the axis plt
+'''
+def interactive_compare(points_2d, points_3d, cameraMatrix, image, target_pts=[]):
+    # Limit to 600,000 points for performance
+    points_2d = points_2d[:600000]
+    points_3d = points_3d[:600000]
+    
+
+    # Create figure=================================================
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 14))
+    ax1.imshow(image, alpha=0.8)  # Display the image
+
+    plot2dpoints(ax2, points_2d, points_3d, cameraMatrix, target_pts)
 
     # Add colorbar
     #plt.colorbar(scatter, label='3D Distance from Origin')
@@ -166,10 +168,10 @@ if __name__=="__main__":
     im, distort, em = get_camera_intrinsic_distortion_extrinsic(CAMERA_PARAM_PATH)
 
     # read image
-    image = cv2.imread("target/test.jpg")
+    image = cv2.imread("target/test4.jpg")
 
     # read point cloud
-    pcd=readPcd("target/test.pcd")
+    pcd=readPcd("target/test4.pcd")
 
     while (1):
         ila = ImageLidarAligner(em, im)
