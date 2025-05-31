@@ -4,7 +4,19 @@ import cv2
 import matplotlib.pyplot as plt
 from imagelidaraligner import ImageLidarAligner, readPcd, array_to_pointcloud, visualize_points_by_distance1, visualize_point_clouds
 
-def plot2dpoints(ax, points_2d, points_3d, cameraMatrix, target_pts = []):
+'''
+plot image on axis 1'''
+def _drawAxis1(ax, image):
+    ax.imshow(image)
+'''
+plot points that are transformed to 2d (for axis 2)
+and color them according to their distances from origin
+@param ax: the axis to plot the pts
+@param points_2d: lidar points mapped to 2d
+@param points_3d: original lidar points, ordering correspond to points_2d
+@param target_pts: the points of target, to be colored in red
+'''
+def _drawAxis2(ax, points_2d, points_3d, cameraMatrix, target_pts = []):
     # Extract intrinsic parameters
     fx = cameraMatrix[0, 0]  # Focal length x
     fy = cameraMatrix[1, 1]  # Focal length y
@@ -39,6 +51,14 @@ def plot2dpoints(ax, points_2d, points_3d, cameraMatrix, target_pts = []):
         )
 
 '''
+redraw ax1 and ax2'''
+def _updateAxes(ax1, ax2, image, points_2d, points_3d, cameraMatrix, target_pts):
+    ax1.clear()
+    ax2.clear()
+    _drawAxis1(ax1, image)
+    _drawAxis2(ax2, points_2d, points_3d, cameraMatrix, target_pts)
+
+'''
 plot on the axis plt
 '''
 def interactive_compare(points_2d, points_3d, cameraMatrix, image, target_pts=[]):
@@ -49,12 +69,8 @@ def interactive_compare(points_2d, points_3d, cameraMatrix, image, target_pts=[]
 
     # Create figure=================================================
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 14))
-    ax1.imshow(image, alpha=0.8)  # Display the image
 
-    plot2dpoints(ax2, points_2d, points_3d, cameraMatrix, target_pts)
-
-    # Add colorbar
-    #plt.colorbar(scatter, label='3D Distance from Origin')
+    _updateAxes(ax1, ax2, image, points_2d, points_3d, cameraMatrix, target_pts)
 
     image_size = image.shape
     # Set axes limits to match image dimensions
