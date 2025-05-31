@@ -47,9 +47,9 @@
 
 # May 28th
 1. streamline extrinsic adjustment procedures
-    1. record images and pcd into bag file
-    2. extract point clouds`rosrun pcl_ros bag_to_pcd xxx.bag /livox_points pcd`. For example, `rosrun pcl_ros bag_to_pcd data/test.bag /livox/lidar target/test`
-    3. merge into one point cloud: `pcl_concatenate_points_pcd target/test/* && mv output.pcd target/test.pcd`
+    1. record images and pcd into bag file `rosbag record -a -O target/testX.bag`
+    2. extract point clouds`rosrun pcl_ros bag_to_pcd xxx.bag /livox_points pcd`. For example, `rosrun pcl_ros bag_to_pcd data/test3.bag /livox/lidar target/test3`
+    3. merge into one point cloud: `pcl_concatenate_points_pcd target/test3/* && mv output.pcd target/test.pcd`
 2. full run
 
 typedef __packed struct

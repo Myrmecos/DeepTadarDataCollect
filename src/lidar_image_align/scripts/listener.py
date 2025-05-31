@@ -38,11 +38,20 @@ TIMEX=5
 ok_to_send = True
 ok_to_send_lock = threading.Lock()
 
+'''
+listening to messages from usb port
+if the message indicates we can start to send (the format of message: ?)
+we set the variable ok_to_send to true.
+this function is non-blocking
+'''
 def recv_uart():
     thread = threading.Thread(target = _recv_uart)
     thread.daemon = True
     thread.start()
 
+'''
+blocking version of recv_uart
+'''
 def _recv_uart():
     global ok_to_send, ok_to_send_lock
 
@@ -61,8 +70,9 @@ def _recv_uart():
                     ok_to_send = True
                 print(f"Received: {bool_value}")
                 return
-_recv_uart()
-print("DEBUG!")
+#_recv_uart() #uncomment to wait for start signal
+
+
 im, distort, em = get_camera_intrinsic_distortion_extrinsic(CAMERA_PARAM_PATH)
 cam_rotor_em = imagelidaraligner.get_cam_rotor_matrix(CAMERA_PARAM_PATH)
 # print(im)
@@ -70,7 +80,14 @@ cam_rotor_em = imagelidaraligner.get_cam_rotor_matrix(CAMERA_PARAM_PATH)
 # print(em)
 
 class Listener:
+    '''
+    Initialize listener class by:
+    1. initialize image subscriber, image variable (holding most recent image) and a lock protecting the image varialbe
+    2. initialize point cloud subscriber, point cloud queue (holding a pre-defined number of point cloud message contents), and a lock protecting the queue
+    3. initialize the processing classes to find green light position and find corresponding points
+    '''
     def __init__(self):
+
         # for image
         ##  obtaining images
         self.bridge = CvBridge()
@@ -90,16 +107,20 @@ class Listener:
         ## processing point cloud
         self.ila = imagelidaraligner.ImageLidarAligner(em, im, num_of_points = NUM_OF_POINTS)
 
-        #for visualization
+        # # for visualization
         # self.vis = o3d.visualization.Visualizer()
         # self.vis.create_window("Point Cloud", width=800, height=600)
         # self.first_frame = True
-        self.vis_pcd = o3d.geometry.PointCloud()
+        #self.vis_pcd = o3d.geometry.PointCloud()
         #time.sleep(3)
         #self.periodic_callback(None)
+
         rospy.Timer(rospy.Duration(0.2), self.periodic_callback)
         
-
+    '''
+    callback function listening to incoming image messages
+    it replaces self.image's previous variable with new image
+    '''
     def image_callback(self, image_msg):
         try:
             # Convert ROS Image to OpenCV (BGR8 format)
@@ -119,6 +140,12 @@ class Listener:
             rospy.logerr(f"Error processing image: {e}")
 
     # task: read point cloud message and store data from last MAX_PCD_MESSAGES messages into self.pcd
+    '''
+    callback function listeneing to incoming point cloud message
+    it plugs the point cloud into point_queue
+    if the queue is overflown with the new point cloud
+    we throw away the oldest point cloud
+    '''
     def pc_callback(self, pc_msg):
         try:
             # Extract points from PointCloud2
@@ -144,7 +171,9 @@ class Listener:
 
         except Exception as e:
             rospy.logerr(f"Error processing point cloud: {e}")
-        
+    
+    # no longer used
+    # directly displaying the image and visualize green light detection outcome
     def listen_image(self, myimg):
         lightpos = self.glp.find_green_light(myimg)
         print("green light position in image: ", lightpos)
@@ -169,8 +198,14 @@ class Listener:
             cv2.waitKey(1)
         else: 
             cv2.imshow("Hikrobot Camera (empty detection)", myimg)
+    
     # task: retrieve the most recent images (self.image) and point cloud (self.pcd)
     # do some operations on them
+    '''
+    callback function that is periodically called (period according to pre-defined interval time)
+    it obtains image in self.image and point clouds in self.point_queue
+    it then finds green light in the image and use the light's image coord to find corresponding points in point clouds.
+    '''
     def periodic_callback(self, event):
         try:
             mypts = None
@@ -221,19 +256,27 @@ class Listener:
                     angle = self.ila.to_degree(closest_pts_rotor)
                     hori_dist = self.ila.calc_horizontal_dist(closest_pts_rotor)
 
-                    self.show_img(myimg, lightpos, angle, hori_dist)
-                    send_via_uart(angle, hori_dist)
+                    self.show_img_and_target(myimg, lightpos, angle, hori_dist)
+                    #send_via_uart(angle, hori_dist)
                     
                     #save_im_pcd(image=myimg, point_cloud=mypts)
                     # closest_pts = imagelidaraligner.array_to_pointcloud(closest_pts)
                     # valid_pts = imagelidaraligner.array_to_pointcloud(valid_pts)
                     # imagelidaraligner.visualize_point_clouds(valid_pts, closest_pts)
-
+                else:
+                    self.show_img(myimg)
         except Exception as e:
             rospy.logerr(f"Error in periodic callback: {e}")
             traceback.print_exc()
 
-    def show_img(self, myimg, lightpos, angle, dist):
+    '''
+    visualize img and target info
+    @param myimg: the image collected by camera that contains target
+    @param lightpos: the detected pixel coordinate of light
+    @param angle: the detected yaw angle
+    @param dist: the distance of target from rotation center
+    '''
+    def show_img_and_target(self, myimg, lightpos, angle, dist):
         height, width = myimg.shape[:2]
         pos_rounded = [0, 0]
         pos_rounded[0] = round(lightpos[0])
@@ -254,15 +297,36 @@ class Listener:
         )
         cv2.imshow("Hikrobot Camera", myimg)
         cv2.waitKey(1)
+    
+    '''
+    showing image in half of original size
+    this image showing function is used when the original image is too large to fit into screen
+    '''
+    def show_img(self, myimg):
+        myimg = cv2.resize(
+            myimg, 
+            None, 
+            fx=1/3,  # Scale factor for width
+            fy=1/3,  # Scale factor for height
+            interpolation=cv2.INTER_AREA  # Best for downscaling
+        )
+        cv2.imshow("Hikrobot Camera", myimg)
+        cv2.waitKey(1)
 
+'''
+save image and point cloud to specific pos for debugging
+'''
 def save_im_pcd(image, point_cloud):
     cv2.imwrite("/home/astar/dart_ws/src/dart_lidar_image_utils/src/dart_lidar_image_utils/test.jpg", image)
 
     # Write PCD file
     o3d.io.write_point_cloud("/home/astar/dart_ws/src/dart_lidar_image_utils/src/dart_lidar_image_utils/test.pcd", point_cloud, write_ascii=True)
 
-
-
+'''
+compose data to be sent via uart through usb port
+@param yaw: yaw angle
+@param base_dis: distance from rotational center
+'''
 def make_data(yaw, pitch=0.0, found=0, shoot_or_not=0, done_fitting=0, patrolling=0, updated=0, base_dis=0.0, checksum=0):
     # Pack the data according to the struct format
     # Constants
@@ -281,6 +345,9 @@ def make_data(yaw, pitch=0.0, found=0, shoot_or_not=0, done_fitting=0, patrollin
     )
     return data
 
+'''
+send the yaw angle and distance via uart
+'''
 def send_via_uart(angleX, distance):
     with ok_to_send_lock:
         if not ok_to_send:
