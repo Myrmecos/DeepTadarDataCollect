@@ -9,6 +9,10 @@ import cv2
 import yaml
 import math
 
+'''
+read a pcd file
+returns an o3d point cloud (NOT a list of pts)
+'''
 def readPcd(path):
     pcd = o3d.io.read_point_cloud(path)
     if pcd.is_empty():
@@ -16,10 +20,17 @@ def readPcd(path):
         return
     return pcd
 
+'''
+read extrinsic matrix from a txt file
+deprecated
+'''
 def readExtrinsic(path):
     output = np.genfromtxt(path, delimiter=',', dtype=float)
     return output.reshape(4, 4)
 
+'''
+convert an array of points to an o3d point cloud
+'''
 def array_to_pointcloud(points_array):
     # Ensure points_array is Nx3
     points_array = np.asarray(points_array, dtype=float).reshape(-1, 3)
@@ -29,6 +40,9 @@ def array_to_pointcloud(points_array):
     pcd.points = o3d.utility.Vector3dVector(points_array)
     return pcd
 
+'''
+read from an yamlfile the intrinsic matrix, distortion coefficient and extrinsic matrix
+'''
 def get_camera_intrinsic_distortion_extrinsic(yaml_file_name):
         with open(yaml_file_name, 'r') as file:
             contents = yaml.safe_load(file)
@@ -39,11 +53,17 @@ def get_camera_intrinsic_distortion_extrinsic(yaml_file_name):
 
         return IM, distort, EM
 
+'''
+read translation matrix from camera coord to rotational center coord
+'''
 def get_cam_rotor_matrix(yaml_file_name):
     with open(yaml_file_name, 'r') as file:
         contents = yaml.safe_load(file)
     return np.asarray(contents["cam_rotor"]).reshape((4, 4))
-        
+
+'''
+visualize the points mapped to 2d. Color them according to their distances from camera
+'''   
 def visualize_points_by_distance(points_2d, points_3d, target_pts=[]):
     points_2d=points_2d[:600000,]
     points_3d = points_3d[:600000,]
@@ -67,6 +87,11 @@ def visualize_points_by_distance(points_2d, points_3d, target_pts=[]):
     
     plt.show()
 
+'''
+visualize point cloud in 3d space
+@param closest_pts: the points cloest to the position specified by image (these points are tentative green light position)
+@param pointcloud: an array of points of the whole arena
+'''
 def visualize_point_clouds(closest_pts, pointcloud):
     # Set colors: red for closest_pts, blue for pointcloud
     closest_pts.paint_uniform_color([1, 0, 0])  # Red
@@ -75,6 +100,9 @@ def visualize_point_clouds(closest_pts, pointcloud):
     # Visualize both point clouds
     o3d.visualization.draw_geometries([closest_pts, pointcloud])
 
+'''
+visualize the points, and also show the image on the same graph
+'''
 def visualize_points_by_distance1(points_2d, points_3d, cameraMatrix, image, target_pts=[]):
     # Limit to 600,000 points for performance
     points_2d = points_2d[:400000]
@@ -135,18 +163,11 @@ def visualize_points_by_distance1(points_2d, points_3d, cameraMatrix, image, tar
 
     plt.show()
 
-
-camera_matrix = [1364.45, 0.0,      958.327,
-                0.0,     1366.46,  535.074,
-                0.0,     0.0,      1.0     ]
-dist_coeffs = [0.0958277, -0.198233, -0.000147133, -0.000430056, 0.000000]
-
 class ImageLidarAligner:
     def __init__(self, extrinsicMatrix, cameraMatrix, num_of_points = 30):
         self.extrinsicMatrix = extrinsicMatrix
         self.cameraMatrix = cameraMatrix
         self.num_of_points = num_of_points
-        
 
     '''
     @param position: the (x, y) pixel coordinate in the image
@@ -174,7 +195,7 @@ class ImageLidarAligner:
 
         return closest_points, points_3d, distance
 
-        '''
+    '''
     @param position: the (x, y) pixel coordinate in the image
     @return correspondingPts: points near the pixel
     '''
@@ -216,7 +237,7 @@ class ImageLidarAligner:
 
     '''
     projects points to 2d
-    valid: points that are in front of camera
+    valid points: points that are in front of camera
     return: points_2d: indices of valid points converted to 2d
     '''
     def _project_points_to_image(self, points_3d):
@@ -277,6 +298,10 @@ class ImageLidarAligner:
         
         return filtered_points
     
+    '''
+    calculate average distance from origin (rotor rotation center)
+    @param pts: points in rotor coordinate
+    '''
     def _average_distance_from_origin(self, pts):
         """
         Calculate the average Euclidean distance of points from the origin (0,0,0).
@@ -312,10 +337,19 @@ class ImageLidarAligner:
         arctanval = centerR[0,0]/centerR[0,2]
         return math.atan(arctanval)/(math.pi)*180
 
+    '''
+    calculate the yaw angle according to the target points (in camera coordinate)
+    @param pts: points of green light in camera coordinate
+    @param rotor_cam_em: extrinsic matrix converting pts from camera to rotor center coordinate
+    '''
     def calc_yaw(self, pts, rotor_cam_em):
         rotor_coords = self.to_rotor_coord(pts, rotor_cam_em)
         return self.to_degree(rotor_coords)
     
+    '''
+    calculate horizontal distance from rotational center to green light (do not take into account y)
+    @param pts: points in rotational center coordinate
+    '''
     def calc_horizontal_dist(self, pts):
         centerR = np.mean(pts, axis = 0)
         return math.sqrt(centerR[0,0]**2+centerR[0,2]**2)
@@ -328,6 +362,10 @@ if __name__=="__main__":
     CAMERA_PARAM_PATH = "/home/astar/dart_ws/src/lidar_image_align/calib/calib.yaml"
     im, distort, em = get_camera_intrinsic_distortion_extrinsic(CAMERA_PARAM_PATH)
     cam_rotor_em = get_cam_rotor_matrix(CAMERA_PARAM_PATH)
+    camera_matrix = [1364.45, 0.0,      958.327,
+                0.0,     1366.46,  535.074,
+                0.0,     0.0,      1.0     ]
+    dist_coeffs = [0.0958277, -0.198233, -0.000147133, -0.000430056, 0.000000]
     # read image
     #image = cv2.imread("/home/astar/dart_ws/single_scene_calibration/0.png")
     #image = cv2.imread("/home/astar/dart_ws/calib/calibimage/test4.jpg")
