@@ -3,7 +3,7 @@ import numpy as np
 import cv2
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider
-from imagelidaraligner import ImageLidarAligner, readPcd, array_to_pointcloud, visualize_points_by_distance1, visualize_point_clouds
+from imagelidaraligner import ImageLidarAligner, readPcd
 
 class EMModifier:
     def __init__(self, em, im):
@@ -107,13 +107,12 @@ class EMModifier:
         slider_x_ax = self.fig.add_axes([0.25, 0.15, 0.5, 0.03])
         slider_x = Slider(ax=slider_x_ax, label="rotate around horizontal axis (rotate up)", valmin=-1.5, valmax=1.5, valinit=0)
         slider_y_ax = self.fig.add_axes([0.25, 0.1, 0.5, 0.03])
-        slider_y = Slider(ax=slider_y_ax, label="rotate around verticle axis (rotate up)", valmin=-1.5, valmax=1.5, valinit=0)
+        slider_y = Slider(ax=slider_y_ax, label="rotate around verticle axis (rotate right)", valmin=-1.5, valmax=1.5, valinit=0)
         slider_z_ax = self.fig.add_axes([0.25, 0.05, 0.5, 0.03])
-        slider_z = Slider(ax=slider_z_ax, label="rotate around outgoing axis (rotate up)", valmin=-1.5, valmax=1.5, valinit=0)
+        slider_z = Slider(ax=slider_z_ax, label="rotate around outgoing axis (rotate clockwise)", valmin=-1.5, valmax=1.5, valinit=0)
         
         #step 2: listener
         def updateX(val):
-            global em #extrinsic matrix
             x = val
             y = 0
             z = 0
@@ -124,8 +123,30 @@ class EMModifier:
             self.cross1, = self.ax1.plot([], [], '+', color='red', ms=10)  # Red cross on ax1
             self.cross2, = self.ax2.plot([], [], '+', color='red', ms=10)  # Red cross on ax2
         slider_x.on_changed(updateX)
-
+        def updateY(val):
+            x = 0
+            y = val
+            z = 0
+            self.em = self.rotate(x, y, z)
+            print_matrix(self.em)
+            self._updateAxes(image, points_3d, target_pts)
+            # interactiveness
+            self.cross1, = self.ax1.plot([], [], '+', color='red', ms=10)  # Red cross on ax1
+            self.cross2, = self.ax2.plot([], [], '+', color='red', ms=10)  # Red cross on ax2
+        slider_y.on_changed(updateY)
+        def updateZ(val):
+            x = 0
+            y = 0
+            z = val
+            self.em = self.rotate(x, y, z)
+            print_matrix(self.em)
+            self._updateAxes(image, points_3d, target_pts)
+            # interactiveness
+            self.cross1, = self.ax1.plot([], [], '+', color='red', ms=10)  # Red cross on ax1
+            self.cross2, = self.ax2.plot([], [], '+', color='red', ms=10)  # Red cross on ax2
+        slider_z.on_changed(updateZ)
         plt.show()
+
     def rotate(self, x, y, z):
         # Extract rotation and translation
         R = self.ori_em[:3, :3]
@@ -152,7 +173,6 @@ class EMModifier:
             [             0, 1,             0],
             [-np.sin(theta_y), 0, np.cos(theta_y)]
         ])
-
 
         # Apply yaw rotation
         R_new = R_yaw @ R
@@ -188,11 +208,6 @@ def print_matrix(mat):
         for col in range(y):
             print(mat[row, col], end=",")
         print("")
-
-    CAMERA_PARAM_PATH = "/home/astar/dart_ws/src/lidar_image_align/calib/calib.yaml"
-    im, distort, em = get_camera_intrinsic_distortion_extrinsic(CAMERA_PARAM_PATH)
-    print(em)
-
     
 # Construct new extrinsic matrix
 
@@ -217,25 +232,6 @@ if __name__=="__main__":
 
     emm = EMModifier(em, im)
     emm.interactive_compare(points_3d, image)
-
-#     while (1):
-#         ila = ImageLidarAligner(em, im)
-#         print("current extrinsic matrix: ")
-#         print_matrix(em)
-
-#         # transform
-#         pts = points_3d = np.asarray(pcd.points, dtype=float)
-#         pts_2d, pts_3d = ila._project_points_to_image(pts)
-
-#         # visualize result
-#         valid_pts = array_to_pointcloud(pts_3d)
-#         #visualize_points_by_distance1(pts_2d, pts_3d, im, image, [])
-#         interactive_compare(pts_2d, pts_3d, im, image)
-
-#         xyz = input("input x y z: ")
-#         x, y, z = xyz.split(" ")
-#         x, y, z = float(x), float(y), float(z)
-#         em = rotate(x, y, z, em)
 
 
 
