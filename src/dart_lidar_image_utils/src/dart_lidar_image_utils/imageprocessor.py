@@ -2,6 +2,7 @@ import cv2 as cv
 import numpy as np
 import matplotlib.pyplot as plt
 import yaml
+import math
 '''
 Green Light Position Determination
 A class to determine the relative position between camera and green light
@@ -130,7 +131,7 @@ class GLPosition():
     input: relative position of light to camera, 2-tuple (x_dev_from_center, y_dev_from_center)
     output: relative position of light to camera, 2-tuple (x_angle_from_center, y_angle_from_center)
     '''
-    def get_GL_angle_relative(self, pixel_pos):
+    def get_GL_angle(self, pixel_pos):
         # first, prepare the pixel coordinate
         x, y = pixel_pos
         pts = np.array([[[x, y]]], dtype=np.float32)
@@ -142,10 +143,11 @@ class GLPosition():
         x_norm, y_norm = undistorted_pts[0][0]
 
         # finally, get the tangent value of each side
-        angle_x = np.arctan2(x_norm, 1)
-        angle_y = np.arctan2(y_norm, 1)
+        angle_x = np.arctan2(x_norm, 1)*180/math.pi
+        angle_y = np.arctan2(y_norm, 1)*180/math.pi
 
         return (angle_x, -angle_y)
+    
 
 
 
@@ -163,5 +165,5 @@ if __name__=="__main__":
     # print("distortion coefficient: \n", glp.distort)
     # print("intrinsic matrix: \n", glp.IM)
     #print("angle relative to camera center: ", glp.get_GL_angle_relative(rel_pos))
-    print(glp.get_GL_angle_relative([0, 0]))
+    print(glp.get_GL_angle([1374.860012, 1083.353097]))
 

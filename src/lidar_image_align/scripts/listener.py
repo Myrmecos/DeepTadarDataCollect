@@ -17,6 +17,7 @@ import time
 import serial
 import struct
 import traceback
+import math
 
 def get_camera_intrinsic_distortion_extrinsic(yaml_file_name):
         with open(yaml_file_name, 'r') as file:
@@ -254,9 +255,12 @@ class Listener:
 
                     # get angle
                     angle = self.ila.to_degree(closest_pts_rotor)
+                    angle1 = self.glp.get_GL_angle(lightpos)[0]
+                    D=19; d=0.704
+                    angle1 = math.atan(D*math.tan(angle1*math.pi/180)/(D+d))*180/math.pi
                     hori_dist = self.ila.calc_horizontal_dist(closest_pts_rotor)
 
-                    self.show_img_and_target(myimg, lightpos, angle, hori_dist)
+                    self.show_img_and_target(myimg, lightpos, angle, angle1, hori_dist)
                     #send_via_uart(angle, hori_dist)
                     
                     #save_im_pcd(image=myimg, point_cloud=mypts)
@@ -276,7 +280,7 @@ class Listener:
     @param angle: the detected yaw angle
     @param dist: the distance of target from rotation center
     '''
-    def show_img_and_target(self, myimg, lightpos, angle, dist):
+    def show_img_and_target(self, myimg, lightpos, angle, angle1, dist):
         height, width = myimg.shape[:2]
         pos_rounded = [0, 0]
         pos_rounded[0] = round(lightpos[0])
@@ -285,6 +289,7 @@ class Listener:
         cv2.line(myimg, (0, lightpos[1]), (width-1, lightpos[1]), (255, 255, 255), 3)
         cv2.line(myimg, (lightpos[0], 0), (lightpos[0], height-1), (255, 255, 255), 3)
         myimg = cv2.cvtColor(myimg, cv2.COLOR_BGR2RGB)
+        myimg = cv2.putText(myimg, f"yaw directly from image: {angle1-angle}", (lightpos[0]+30, lightpos[1]-60), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
         myimg = cv2.putText(myimg, f"yaw: {angle}", (lightpos[0]+30, lightpos[1]-40), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
         myimg = cv2.putText(myimg, f"dist: {dist}", (lightpos[0]+30, lightpos[1]-20), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 0), 2) # for center
         cv2.line(myimg, (int(im[0,2]), 0), (int(im[0,2]), height-1), (255, 255, 0), 3)
