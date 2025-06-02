@@ -31,7 +31,7 @@ camera:
 cam_rotor: [ # forward, left and up are pos
     1,0,0,0,
     0,1,0,-0.54464,
-    0,0,1,0.70456,
+    0,0,1,0.704,
     0,0,0,1
 ]
 

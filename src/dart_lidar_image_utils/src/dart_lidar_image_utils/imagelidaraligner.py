@@ -168,6 +168,7 @@ class ImageLidarAligner:
         self.extrinsicMatrix = extrinsicMatrix
         self.cameraMatrix = cameraMatrix
         self.num_of_points = num_of_points
+        
 
     '''
     @param position: the (x, y) pixel coordinate in the image
