@@ -1,18 +1,18 @@
-# camera 
-
+# 1. Hikrobot camera data collection
+camera image topic: `/hikrobot_camera/rgb`
 ## camera calibration
 To run calibration, do: `rosrun camera_calibration cameracalibrator.py --size 11x8 --square 0.108 image:=/hikrobot_camera/rgb`
 
 ## save camera image
 To save image, run: `roslaunch hikrobot_camera hikrobot_camera_save.launch`
 
-## all 0 output situation
+## in case we get images with all pixel values equal to 0
 change from: `camera::frame = cv::Mat(stImageInfo.nHeight, stImageInfo.nWidth, CV_8UC3, m_pBufForSaveImage).clone(); //tmp.clone();`
 to `camera::frame = cv::Mat(stImageInfo.nHeight, stImageInfo.nWidth, CV_8UC3, m_pBufForDriver).clone();`
-#========================================================================================================================
 
-# lidar 
 
+# 2. Livox lidar point cloud collection
+point cloud topic: `/livox_points`
 ## livox point cloud publish
 1. To start publishing livox point cloud, do: 
 `sudo ip addr add 192.168.1.100/24 dev enp100s0` to configure the ip (the addr is an example. You have to make sure lidar and your computer is in the same subnet)
@@ -26,7 +26,7 @@ to `camera::frame = cv::Mat(stImageInfo.nHeight, stImageInfo.nWidth, CV_8UC3, m_
 
 3. terminal three: `rosbag record -a` or: `rosbag record -a -O calib/calibpointcloud/calibscene_test.bag`
 
-4. control + C to stop recording
+4. `control + C` to stop recording
 
 ## visualize collected point cloud in .bag file
 1. terminal one: `roscore`
@@ -44,22 +44,23 @@ For example, `rosrun pcl_ros bag_to_pcd calib/calibpointcloud/calibscene_test.ba
 
 2. then, merge all pcd files into one: `pcl_concatenate_points_pcd /home/astar/dart_ws/calib/calibpointcloud/calibscene_test/* && mv output.pcd /home/astar/dart_ws/calib/calibpointcloud/calibscene_test.pcd `
 
-convert to ascii: `pcl_convert_pcd_ascii_binary /home/astar/dart_ws/calib/calibpointcloud/calibscene_test.pcd /home/astar/dart_ws/calib/calibpointcloud/calibscene_test_ascii.pcd 0`
+3. convert to ascii: `pcl_convert_pcd_ascii_binary /home/astar/dart_ws/calib/calibpointcloud/calibscene_test.pcd /home/astar/dart_ws/calib/calibpointcloud/calibscene_test_ascii.pcd 0`
 
-3. visualize the final pcd file: `pcl_viewer /home/astar/dart_ws/calib/calibpointcloud/calibscene.pcd`
+4. visualize the final pcd file: `pcl_viewer /home/astar/dart_ws/calib/calibpointcloud/calibscene.pcd`
 
-`pcl_converter input.pcd output.txt -format txt`
+<!-- `pcl_converter input.pcd output.txt -format txt` -->
 
-#-------------------------------------------------------------------------------
+
 ### side notes
 1. if you installed Hikrobot camera SDK on this machine, you may encounter a problem when running bag_to_pcd:`undefined symbol: libusb_set_option`;\
-solution: add this line at the end of ~/.bashrc: `export LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH`. This ensures we can use the system's library.
+**solution**: add this line at the end of ~/.bashrc: `export LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH`. This ensures we can use the system's library.
 
-## change to readable form
-1. does not seem to work: `rostopic echo -b xxx.bag /livox_points > xxx.txt`.
+<!-- ## change to readable form
+1. does not seem to work: `rostopic echo -b xxx.bag /livox_points > xxx.txt`. -->
 
 ## cropping point cloud
-**Important!!!!!!! If you wish to manipulate point cloud, remember to include the intensity field. Otherwise, a point cloud without intensity field will lead to livox_camera_calib reporting error.**
+**Important!!!!!!!** If you wish to manipulate point cloud, remember to include the intensity field. Otherwise, a point cloud without intensity field will lead to livox_camera_calib reporting error.
+
 1. set parameters in `/home/astar/dart_ws/image_lidar_align/croppointcloud.py`
 
 2. run: `python3 /home/astar/dart_ws/image_lidar_align/croppointcloud.py`. 
@@ -67,7 +68,6 @@ solution: add this line at the end of ~/.bashrc: `export LD_LIBRARY_PATH=/usr/li
 Notes: To correctly use livox_camera_calib, you need to ensure intensity field exists in point cloud data. To read the intensity of point cloud, you can use pyntcloud. It allows you to extract the intensity field.\
 There does not seem to be a library that can directly write point cloud with "intensity" field, and you have to implement writing functionality on your own. For reference, see the end of the file croppointcloud.py.
 
-#=========================================================================================================================
 # Lidar camera calib
 1. transform point cloud to ascii encoding: `pcl_convert_pcd_ascii_binary /home/astar/dart_ws/calib/calibpointcloud/calibscene.pcd /home/astar/dart_ws/calib/calibpointcloud/calibscene_ascii.pcd 0`
 
@@ -76,7 +76,7 @@ run `roslaunch livox_camera_calib calib.launch`
 
 $_{L}^{C}T = (_{L}^{C}R, _{L}^{C}t)\in SE$
 
-#=======================================================================================================================
+
 # Working together
 
 ## Notes. 
@@ -104,10 +104,17 @@ roslaunch hikrobot_camera hikrobot_camera_save.launch
 
 caution: when livox_camera_calib reports empty point cloud, check your camera's distortion coefficient
 
-#===============================================================================================================
+
 # Test 
 ## collecting test data
-first, start publishing images: `roslaunch hikrobot_camera hikrobot_camera_rviz.launch`
+1. first, start publishing images: `roslaunch hikrobot_camera hikrobot_camera_rviz.launch`
 and start publishing point cloud: `roslaunch livox_ros_driver livox_lidar_rviz.launch`
-then, record: `rosbag record -a -O testing_data/test0.bag`
 
+2. then, record: `rosbag record -a -O testing_data/test0.bag`
+
+# Visualize lidar and camera
+1. run `roscore` in one terminal
+2. run `rviz` in another terminal
+3. in rviz window, change "fixed frame" property from "map" (or any other things) to "livox_frame". This ensures correct display of lidar points
+4. add->by topic->/hikrobot_camera/rgb-> select "image" (NOT camera)
+5. add->by topic->/livox/lidar/PointCloud2
