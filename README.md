@@ -80,6 +80,16 @@ $_{L}^{C}T = (_{L}^{C}R, _{L}^{C}t)\in SE$
 We have a bash file for converting a bag file directly to a cropped point cloud file in ascii format, then cropping it (such that we can correctly perform the alignment using MARS lab's algorithm).
 `bash /home/astar/dart_ws/bag2pcd.sh /home/astar/dart_ws/testing_data/test0.bag`
 
+# Lidar camera calib
+modify contents in livox_camera_calib/config/calib.yaml
+run `roslaunch livox_camera_calib calib.launch`
+
+P.S. if you want to fine-tune parameters,
+1. check which yaml file you are using for edge detection parameters, in: `/home/astar/dart_ws/src/livox_camera_calib/config/calib.yaml`'s `calib_config_file` field. It is usually: `/home/astar/dart_ws/src/livox_camera_calib/config/config_outdoor.yaml`
+2. go to to adjust your parameters for edge detection.
+and then run: `roslaunch livox_camera_calib adjust_calib_param.launch`
+see if the lines from image (blue) and lines from point cloud (red) are good.
+If they are good, you can go back to launch using calib.launch.
 
 # Working together
 

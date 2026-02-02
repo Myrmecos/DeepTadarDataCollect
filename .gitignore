@@ -9,3 +9,4 @@ image_lidar_align/*.pcd
 *.pcd
 *.bag
 src/dart_lidar_image_utils/src/dart_lidar_image_utils/*.pcd
+!/home/astar/dart_ws/src/livox_camera_calib/config
