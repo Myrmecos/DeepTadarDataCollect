@@ -249,7 +249,7 @@ class ImageLidarAligner:
         points_camera = np.asarray(points_camera)
         valid_mask = (points_camera[:, 2] > 0).flatten()
         valid_mask = valid_mask.flatten()
-        print("DEBUG: ", points_camera.shape, valid_mask.shape)
+        # print("DEBUG: ", points_camera.shape, valid_mask.shape)
     
         points_2d_valid = points_camera[valid_mask]
 

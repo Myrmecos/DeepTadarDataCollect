@@ -41,6 +41,6 @@ calib:
     use_rough_calib: true # set true if your initial_extrinsic is bad
 
 colors:
-    lower_color: [0, 240, 0]
-    upper_color: [150, 255, 150]
+    lower_color: [250, 250, 250]
+    upper_color: [255, 255, 255]
 

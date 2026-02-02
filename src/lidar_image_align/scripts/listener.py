@@ -256,7 +256,7 @@ class Listener:
                     # get angle
                     angle = self.ila.to_degree(closest_pts_rotor)
                     angle1 = self.glp.get_GL_angle(lightpos)[0]
-                    D=19; d=0.704
+                    D=25; d=0.704
                     angle1 = math.atan(D*math.tan(angle1*math.pi/180)/(D+d))*180/math.pi
                     hori_dist = self.ila.calc_horizontal_dist(closest_pts_rotor)
 
@@ -292,6 +292,7 @@ class Listener:
         myimg = cv2.putText(myimg, f"yaw directly from image: {angle1-angle}", (lightpos[0]+30, lightpos[1]-60), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
         myimg = cv2.putText(myimg, f"yaw: {angle}", (lightpos[0]+30, lightpos[1]-40), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
         myimg = cv2.putText(myimg, f"dist: {dist}", (lightpos[0]+30, lightpos[1]-20), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 0), 2) # for center
+        print(f"DEBUG: distance is {dist}")
         cv2.line(myimg, (int(im[0,2]), 0), (int(im[0,2]), height-1), (255, 255, 0), 3)
         myimg = cv2.resize(
             myimg, 

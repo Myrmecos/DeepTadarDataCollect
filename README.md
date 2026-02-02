@@ -76,6 +76,9 @@ run `roslaunch livox_camera_calib calib.launch`
 
 $_{L}^{C}T = (_{L}^{C}R, _{L}^{C}t)\in SE$
 
+# automated converting-cropping
+`bash /home/astar/dart_ws/bag2pcd.sh /home/astar/dart_ws/testing_data/test0.bag`
+
 
 # Working together
 
