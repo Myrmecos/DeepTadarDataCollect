@@ -5,6 +5,8 @@ To run calibration, do: `rosrun camera_calibration cameracalibrator.py --size 11
 
 ## save camera image
 To save image, run: `roslaunch hikrobot_camera hikrobot_camera_save.launch`
+or: `rosbag play calib/calibpointcloud/calibsceneCompRoomTest.bag`
+then in another terminal: `mkdir calib/calibpointcloud/calibsceneCompRoomTest/imgs`
 
 #========================================================================================================================
 
@@ -13,12 +15,13 @@ To save image, run: `roslaunch hikrobot_camera hikrobot_camera_save.launch`
 ## livox point cloud publish
 To start publishing livox point cloud, do: 
 `sudo ip addr add 192.168.1.100/24 dev enp100s0` to configure the ip
+go to Livox Viewer to check the IP of lidar (will show a warning message if computer is not on the same subnet as lidar, the warning message will contain lidar ip)
 `roslaunch livox_ros_driver livox_lidar_rviz.launch` to launch
 
 ## record point cloud
 terminal one: `roscore`
 terminal two: `roslaunch livox_ros_driver livox_lidar_rviz.launch`
-terminal three: `rosbag record -a` or: `rosbag record -O calib/calibpointcloud/calibscene.bag`
+terminal three: `rosbag record -a` or: `rosbag record -O calib/calibpointcloud/calibscene.bag -a`
 control + C to stop recording
 
 ## visualize point cloud

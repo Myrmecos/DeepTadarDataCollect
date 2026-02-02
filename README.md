@@ -1,3 +1,35 @@
+# ==========================================================================================================
+# Note about recording
+1. you can record point cloud and camera together by:
+    0. window 0: `roscore`
+    1. window 1: `roslaunch hikrobot_camera hikrobot_camera.launch`
+    2. window 2: `roslaunch livox_ros_driver livox_lidar_rviz.launch`
+    3. window 3: `rosbag record -a` or: `rosbag record -a -O calib/calibpointcloud/XXXXXXXXXXXXXXXXXXXX.bag`
+2. extract: 
+    1. `bash bag2img.sh calib/calibpointcloud/XXXXXXXXXXXXXXXXXXXX.bag`
+    2. `bash bag2pcd.sh calib/calibpointcloud/XXXXXXXXXXXXXXXXXXXX.bag`
+3. now the results should be in `calib/calibpointcloud/XXXXXXXXXXXXXXXXXXXX/` folder (`img` subfolder and `pcd` subfolder)
+
+
+# Lidar camera calib
+
+if you want to fine-tune parameters,
+1. check which yaml file you are using for edge detection parameters, in: `/home/astar/dart_ws/src/livox_camera_calib/config/calib.yaml`'s `calib_config_file` field. It is usually: `/home/astar/dart_ws/src/livox_camera_calib/config/config_outdoor.yaml`
+2. go to to adjust your parameters for edge detection.
+and then run: `roslaunch livox_camera_calib adjust_calib_param.launch`
+see if the lines from image (blue) and lines from point cloud (red) are good.
+If they are clear and easy to match, you can go back to launch using calib.launch.
+
+(don't forget to change camera matrix in calib.yaml!!!!)
+
+Finally, run `roslaunch livox_camera_calib calib.launch`
+Results will go here:`/home/astar/dart_ws/calib/extrinsic_test_tuning.txt` (you can change output path in `livox_camera_calib/config/calib.yaml`)
+# =========================================================================================================
+
+
+
+
+
 # 1. Hikrobot camera data collection
 camera image topic: `/hikrobot_camera/rgb`
 ## camera calibration
@@ -16,6 +48,7 @@ point cloud topic: `/livox_points`
 ## livox point cloud publish
 1. To start publishing livox point cloud, do: 
 `sudo ip addr add 192.168.1.100/24 dev enp100s0` to configure the ip (the addr is an example. You have to make sure lidar and your computer is in the same subnet)
+go to Livox Viewer to check the IP of lidar (will show a warning message if computer is not on the same subnet as lidar, the warning message will contain lidar ip)
 
 2. `roslaunch livox_ros_driver livox_lidar_rviz.launch` to launch
 
@@ -79,17 +112,6 @@ $_{L}^{C}T = (_{L}^{C}R, _{L}^{C}t)\in SE$
 # 3. automated converting-cropping
 We have a bash file for converting a bag file directly to a cropped point cloud file in ascii format, then cropping it (such that we can correctly perform the alignment using MARS lab's algorithm).
 `bash /home/astar/dart_ws/bag2pcd.sh /home/astar/dart_ws/testing_data/test0.bag`
-
-# Lidar camera calib
-modify contents in livox_camera_calib/config/calib.yaml
-run `roslaunch livox_camera_calib calib.launch`
-
-P.S. if you want to fine-tune parameters,
-1. check which yaml file you are using for edge detection parameters, in: `/home/astar/dart_ws/src/livox_camera_calib/config/calib.yaml`'s `calib_config_file` field. It is usually: `/home/astar/dart_ws/src/livox_camera_calib/config/config_outdoor.yaml`
-2. go to to adjust your parameters for edge detection.
-and then run: `roslaunch livox_camera_calib adjust_calib_param.launch`
-see if the lines from image (blue) and lines from point cloud (red) are good.
-If they are good, you can go back to launch using calib.launch.
 
 # Working together
 
