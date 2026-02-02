@@ -27,3 +27,4 @@ python3 /home/astar/dart_ws/image_lidar_align/croppointcloud.py $output_ascii
 # pcl_concatenate_points_pcd /home/astar/dart_ws/testing_data/test0/pcd/* && mv output.pcd /home/astar/dart_ws/testing_data/test0/output.pcd
 # pcl_convert_pcd_ascii_binary /home/astar/dart_ws/testing_data/test0/output.pcd /home/astar/dart_ws/testing_data/test0/output_ascii.pcd 0
 # python3 /home/astar/dart_ws/image_lidar_align/croppointcloud.py /home/astar/dart_ws/testing_data/test0/output_ascii.pcd
+

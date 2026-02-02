@@ -76,7 +76,8 @@ run `roslaunch livox_camera_calib calib.launch`
 
 $_{L}^{C}T = (_{L}^{C}R, _{L}^{C}t)\in SE$
 
-# automated converting-cropping
+# 3. automated converting-cropping
+We have a bash file for converting a bag file directly to a cropped point cloud file in ascii format, then cropping it (such that we can correctly perform the alignment using MARS lab's algorithm).
 `bash /home/astar/dart_ws/bag2pcd.sh /home/astar/dart_ws/testing_data/test0.bag`
 
 

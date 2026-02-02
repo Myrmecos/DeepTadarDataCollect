@@ -1,0 +1,15 @@
+<launch>
+  <rosparam command="load" file="$(find livox_camera_calib)/config/calib.yaml" />
+  <node 
+    pkg="livox_camera_calib"
+    type="adjust_param"
+    name="adjust_param"
+    output="screen"
+  />
+  <node 
+    pkg="rviz"
+    type="rviz"
+    name="rviz"
+    args="-d $(find livox_camera_calib)/rviz_cfg/calib.rviz"
+  />
+</launch>
