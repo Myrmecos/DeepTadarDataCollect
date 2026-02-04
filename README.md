@@ -4,11 +4,11 @@
     0. window 0: `roscore`
     1. window 1: `roslaunch hikrobot_camera hikrobot_camera.launch`
     2. window 2: `roslaunch livox_ros_driver livox_lidar_rviz.launch`
-    3. window 3: `rosbag record -a` or: `rosbag record -a -O calib/calibpointcloud/XXXXXXXXXXXXXXXXXXXX.bag`
+    3. window 3: `rosbag record -a` or: `rosbag record -a -O calib/calibpointcloud/inno0204.bag`
 2. extract: 
-    1. `bash bag2img.sh calib/calibpointcloud/XXXXXXXXXXXXXXXXXXXX.bag`
-    2. `bash bag2pcd.sh calib/calibpointcloud/XXXXXXXXXXXXXXXXXXXX.bag`
-3. now the results should be in `calib/calibpointcloud/XXXXXXXXXXXXXXXXXXXX/` folder (`img` subfolder and `pcd` subfolder)
+    1. `bash bag2img.sh calib/calibpointcloud/inno0204.bag`
+    2. `bash bag2pcd.sh calib/calibpointcloud/inno0204.bag`
+3. now the results should be in `calib/calibpointcloud/inno0204/` folder (`img` subfolder and `pcd` subfolder)
 
 
 # Lidar camera calib
@@ -26,7 +26,7 @@ Finally, run `roslaunch livox_camera_calib calib.launch`
 Results will go here:`/home/astar/dart_ws/calib/extrinsic_test_tuning.txt` (you can change output path in `livox_camera_calib/config/calib.yaml`)
 # =========================================================================================================
 
-
+TO prevent network manager from automatically overriding the ip that is associated with no DHCP server, we use: `sudo nmcli device set enp100s0 managed no`
 
 
 
@@ -124,7 +124,7 @@ roslaunch hikrobot_camera hikrobot_camera_save.launch
 2. set how many frames of point cloud we want to aggregate together for resolving target distance by: `MAX_PCD_MESSAGES = 6` (we collect 6 frames, pool all points together, and find the points corresponding to target object among these points)
 
 ## Step 2: Mock test (with fake data)
-1. point cloud: `rosbag play /home/astar/dart_ws/calib/calibpointcloud/calibscene_test.bag`
+1. point cloud: `rosbag play /home/astar/dart_ws/calib/calibpointcloud/inno0204.bag`
 
 2. image: `rosrun lidar_image_align talker.py`
 

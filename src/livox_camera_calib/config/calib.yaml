@@ -1,8 +1,8 @@
 # Data path. adjust them!
 common:
-    image_file: "/home/astar/dart_ws/calib/calibpointcloud/calibsceneCompRoomTest/img/000000.jpg" #"/home/astar/dart_ws/single_scene_calibration/0.png"
-    pcd_file: "/home/astar/dart_ws/calib/calibpointcloud/calibsceneCompRoomTest/output_ascii_cropped.pcd"
-    result_file: "/home/astar/dart_ws/calib/extrinsic_test_tuning.txt"
+    image_file: "/home/astar/dart_ws/calib/calibpointcloud/inno0204/img/000023.jpg" #"/home/astar/dart_ws/single_scene_calibration/0.png"
+    pcd_file: "/home/astar/dart_ws/calib/calibpointcloud/inno0204/output_ascii_cropped.pcd"
+    result_file: "/home/astar/dart_ws/calib/inno0204.txt"
 
 # Camera Parameters. Adjust them!
 camera:

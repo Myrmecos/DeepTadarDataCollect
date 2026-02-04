@@ -30,7 +30,7 @@ print(f"Shape of points: {points.shape}; shape of colors: {colors.shape}")
 
 # Define HFOV and VFOV in degrees
 hfov_deg = np.array([-15, 15])  # Horizontal field of view
-vfov_deg = np.array([-10, 10])  # Vertical field of view
+vfov_deg = np.array([-15, 15])  # Vertical field of view
 
 # Convert to radians for calculations
 hfov_rad = np.deg2rad(hfov_deg / 2)  # ±15 degrees
