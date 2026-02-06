@@ -1,32 +1,87 @@
-# ==========================================================================================================
-# Note about recording
+# Lidar target finding algorithm
+This package leverages lidar point cloud and RGB camera to detect target green light and report its position relative to the dart.
+It detects the light coordinate on the image,
+then projects the coordinate onto lidar point cloud as a ray.
+It finds the points closest to the ray,
+and cleans the point clusters to obtain the most likely points for the target.
+Finally, the center of the cluster is considered the target and we transform coordinate to obtain the target position relative to the dart center position.
+
+# Point cloud and image recording
+This section describes how point clouds and images can be recorded.
+This is important for camera-lidar calibration (finding extrinsic matrix between camera and lidar).
+The extrinsic matrix helps find correspondance between image pixels and lidar points.
+
 1. you can record point cloud and camera together by:
     0. window 0: `roscore`
     1. window 1: `roslaunch hikrobot_camera hikrobot_camera.launch`
     2. window 2: `roslaunch livox_ros_driver livox_lidar_rviz.launch`
-    3. window 3: `rosbag record -a` or: `rosbag record -a -O calib/calibpointcloud/inno0204.bag`
+    3. window 3: `rosbag record -a` or: `rosbag record -a -O calib/inno02042.bag`
+    4. Note: TO prevent network manager from automatically overriding the ip that is associated with no DHCP server, we use: `sudo nmcli device set enp100s0 managed no`
 2. extract: 
-    1. `bash bag2img.sh calib/calibpointcloud/inno0204.bag`
-    2. `bash bag2pcd.sh calib/calibpointcloud/inno0204.bag`
-3. now the results should be in `calib/calibpointcloud/inno0204/` folder (`img` subfolder and `pcd` subfolder)
+    1. `bash bag2img.sh calib/inno02042.bag`
+    2. `bash bag2pcd.sh calib/inno02042.bag`
+3. now the results should be in `calib/inno02042/` folder (`img` subfolder and `pcd` subfolder)
+    1. `calib/inno02042/img` contains images. select one which looks good (there may be blank images)
+    2. `calib/inno02042/output_ascii_cropped.pcd` contains the ascii form of point cloud, cropped to help with image alignment.
 
 
 # Lidar camera calib
+1. if you want to fine-tune parameters,
+    1. check which yaml file you are using for edge detection parameters, in: `/home/astar/dart_ws/src/livox_camera_calib/config/calib.yaml`'s `calib_config_file` field. It is usually: `/home/astar/dart_ws/src/livox_camera_calib/config/config_outdoor.yaml`
+    2. go to to adjust your parameters for edge detection.
+    and then run: `roslaunch livox_camera_calib adjust_calib_param.launch`
+    see if the lines from image (blue) and lines from point cloud (red) are good.
+    If they are clear and easy to match, you can go back to launch using calib.launch.
+    (don't forget to change camera matrix in `calib.yaml`!!!!)
 
-if you want to fine-tune parameters,
-1. check which yaml file you are using for edge detection parameters, in: `/home/astar/dart_ws/src/livox_camera_calib/config/calib.yaml`'s `calib_config_file` field. It is usually: `/home/astar/dart_ws/src/livox_camera_calib/config/config_outdoor.yaml`
-2. go to to adjust your parameters for edge detection.
-and then run: `roslaunch livox_camera_calib adjust_calib_param.launch`
-see if the lines from image (blue) and lines from point cloud (red) are good.
-If they are clear and easy to match, you can go back to launch using calib.launch.
-
-(don't forget to change camera matrix in calib.yaml!!!!)
-
-Finally, run `roslaunch livox_camera_calib calib.launch`
+2. Finally, run `roslaunch livox_camera_calib calib.launch`
 Results will go here:`/home/astar/dart_ws/calib/extrinsic_test_tuning.txt` (you can change output path in `livox_camera_calib/config/calib.yaml`)
-# =========================================================================================================
 
-TO prevent network manager from automatically overriding the ip that is associated with no DHCP server, we use: `sudo nmcli device set enp100s0 managed no`
+
+# target finding & reporting
+To test and modify the two classes for identifying object's pixel coordinate (GLPosition in imageprocessor.py) and matching pixel coordinate to point cloud points (ImageLidarAligner in imagelidaraligner.py), you can go to this directory to play around (this does not require the use of ros and should be faster): `/home/astar/dart_ws/image_lidar_align`.
+
+if the dart direction is pointing to the left of the target, we report a negative angle.
+
+## Step 1: general setup
+1. set camera param path in lidar_image_align's `listener.py`: `CAMERA_PARAM_PATH = "/home/astar/dart_ws/src/livox_camera_calib/config/calib_ori.yaml"` 
+roslaunch hikrobot_camera hikrobot_camera_save.launch
+2. set how many frames of point cloud we want to aggregate together for resolving target distance by: `MAX_PCD_MESSAGES = 6` (we collect 6 frames, pool all points together, and find the points corresponding to target object among these points)
+
+## Step 2: Mock test (with fake data)
+1. point cloud: `rosbag play /home/astar/dart_ws/calib/calibpointcloud/inno02042.bag /hikrobot_camera/rgb:=/dev_null/hikrobot_camera/rgb`
+2. image: `rosrun lidar_image_align talker.py`
+3. run main program: `rosrun lidar_image_align listener.py`
+
+## Step 2: actual run (with real data):
+1. point cloud: `roslaunch livox_ros_driver livox_lidar_rviz.launch`
+2. image: `roslaunch hikrobot_camera hikrobot_camera.launch`
+3. run main program: `rosrun lidar_image_align listener.py`
+
+## Step 3: debug
+uncomment these three lines in listener.py: 
+
+``` Python
+#save_im_pcd(image=myimg, point_cloud=mypts)
+closest_pts = imagelidaraligner.array_to_pointcloud(closest_pts)
+valid_pts = imagelidaraligner.array_to_pointcloud(valid_pts)
+imagelidaraligner.visualize_point_clouds(valid_pts, closest_pts)
+```
+
+then run according to step 2. We can see the background point cloud being red and selected points being blue. Check if the blue points correspond to the green light. If the point clouds are initially too spare, close the window several times until point cloud accumulates enough density.
+
+
+# Communication
+1. one of the USB port is not working. Please make sure you are not plugged into the wrong USB port
+2. remember to `sudo chmod 766 /dev/ttyUSB0`
+3. if you still encounter unknown issues, you can run `python test_usb.py`, which sends a 18-byte package starting with A3. This may help you debug.
+
+
+
+
+
+
+# === Below are more detailed descriptions about the software. If you encountered problems, you may refer to below contents. ===
 
 
 
@@ -45,6 +100,7 @@ to `camera::frame = cv::Mat(stImageInfo.nHeight, stImageInfo.nWidth, CV_8UC3, m_
 
 # 2. Livox lidar point cloud collection
 point cloud topic: `/livox_points`
+
 ## livox point cloud publish
 1. To start publishing livox point cloud, do: 
 `sudo ip addr add 192.168.1.100/24 dev enp100s0` to configure the ip (the addr is an example. You have to make sure lidar and your computer is in the same subnet)
@@ -118,13 +174,15 @@ We have a bash file for converting a bag file directly to a cropped point cloud 
 ## Notes. 
 To test and modify the two classes for identifying object's pixel coordinate (GLPosition in imageprocessor.py) and matching pixel coordinate to point cloud points (ImageLidarAligner in imagelidaraligner.py), you can go to this directory to play around (this does not require the use of ros and should be faster): `/home/astar/dart_ws/image_lidar_align`
 
+if the dart direction is pointing to the left of the target, we report a negative angle.
+
 ## Step 1: general setup
 1. set camera param path in lidar_image_align's listener.py: `CAMERA_PARAM_PATH = "/home/astar/dart_ws/src/livox_camera_calib/config/calib_ori.yaml"` 
 roslaunch hikrobot_camera hikrobot_camera_save.launch
 2. set how many frames of point cloud we want to aggregate together for resolving target distance by: `MAX_PCD_MESSAGES = 6` (we collect 6 frames, pool all points together, and find the points corresponding to target object among these points)
 
 ## Step 2: Mock test (with fake data)
-1. point cloud: `rosbag play /home/astar/dart_ws/calib/calibpointcloud/inno0204.bag`
+1. point cloud: `rosbag play /home/astar/dart_ws/calib/calibpointcloud/inno02042.bag /hikrobot_camera/rgb:=/dev_null/hikrobot_camera/rgb`
 
 2. image: `rosrun lidar_image_align talker.py`
 
@@ -154,3 +212,10 @@ and start publishing point cloud: `roslaunch livox_ros_driver livox_lidar_rviz.l
 3. in rviz window, change "fixed frame" property from "map" (or any other things) to "livox_frame". This ensures correct display of lidar points
 4. add->by topic->/hikrobot_camera/rgb-> select "image" (NOT camera)
 5. add->by topic->/livox/lidar/PointCloud2
+
+
+<!-- # ======================================================================== -->
+# Communication
+1. one of the USB port is not working. Please make sure you are not plugged into the wrong USB port
+2. remember to `sudo chmod 766 /dev/ttyUSB0`
+3. if you still encounter unknown issues, you can run `python test_usb.py`, which sends a 18-byte package starting with A3. This may help you debug.

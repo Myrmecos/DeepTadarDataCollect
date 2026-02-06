@@ -18,7 +18,7 @@ ExtrinsicMat: !!opencv-matrix
          0.0,   0.0,    0.0,    1.0]
 # Params for Canny Edge Extraction
 # blue lines corresponds to edges extracted from images
-Canny.gray_threshold: 18
+Canny.gray_threshold: 10
 Canny.len_threshold: 30
 
 # # Params for Voxel Cutting & Plane Fitting & Edge Extraction
@@ -35,7 +35,8 @@ Canny.len_threshold: 30
 
 # Params for Voxel Cutting & Plane Fitting & Edge Extraction
 # red lines represents edges extracted from point clouds
-Voxel.size: 0.5
+Voxel.size: 0.7
+
 Voxel.down_sample_size: 0.01
 Plane.min_points_size: 1 # Too large: no lines
 Plane.normal_theta_min: 1
@@ -43,8 +44,8 @@ Plane.normal_theta_max: 150
 Plane.max_size: 100 # increase max size to include more lines. This is very important because we want to have more lines in point cloud to align with lines in images!!!!!
 Ransac.dis_threshold: 0.01
 Ransac.iter_num: 200
-Edge.min_dis_threshold: 0.02
-Edge.max_dis_threshold: 0.010
+Edge.min_dis_threshold: 0.04
+Edge.max_dis_threshold: 0.01
 
 # Params for color point clouds
 Color.dense: 1

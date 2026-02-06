@@ -98,6 +98,7 @@ class GLPosition():
     '''
     def find_green_light(self, image):
         mask = cv.inRange(image, self.lower_color, self.upper_color)
+        cv.imwrite("mask_DEBUG.jpg", mask)
         #self._compare_images(image, mask)
         contours, _ = cv.findContours(mask, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
         if contours: 

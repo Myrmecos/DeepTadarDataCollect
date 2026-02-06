@@ -1,31 +1,27 @@
 # Data path. adjust them!
 common:
-    image_file: "/home/astar/dart_ws/calib/calibpointcloud/inno0204/img/000023.jpg" #"/home/astar/dart_ws/single_scene_calibration/0.png"
-    pcd_file: "/home/astar/dart_ws/calib/calibpointcloud/inno0204/output_ascii_cropped.pcd"
-    result_file: "/home/astar/dart_ws/calib/inno0204.txt"
+    image_file: "/home/astar/dart_ws/calib/calibpointcloud/inno02042/img/000018.jpg" #"/home/astar/dart_ws/single_scene_calibration/0.png"
+    pcd_file: "/home/astar/dart_ws/calib/calibpointcloud/inno02042/output_ascii_cropped.pcd"
+    result_file: "/home/astar/dart_ws/calib/inno02042.txt"
 
 # Camera Parameters. Adjust them!
 camera:
-    camera_matrix: [10013.414549, 0.0,      1374.860012,
-                0.0,     9973.556438,  1083.353097,
-                0.000000, 0.000000, 1.000000]
+    # camera_matrix: [10013.414549, 0.0,      1374.860012,
+    #             0.0,     9973.556438,  1083.353097,
+    #             0.000000, 0.000000, 1.000000]
 
-    dist_coeffs: [0.115390, 3.556332, 0.003539, 0.008989, 0.000000]
+    # dist_coeffs: [0.115390, 3.556332, 0.003539, 0.008989, 0.000000]
     
-    ex_matrix: [-0.010907660771714534,-0.9995656539023604,-0.027370230650677604,0.0865,
-        -0.0042406786882232895,0.02741785538243692,-0.9996148646232947,0.005,
-        0.9999319021102618,-0.010787380261507487,-0.004537910419960803,-0.00036764,
-        0.0,0.0,0.0,1.0,]
-    # original ex mat4rix
-    # ex_matrix: [0.0175889,-0.999817,0.00749667,-0.0262677,
-    #     -0.00757406,-0.00763085,-0.999942,0.0330689,
-    #     0.999817,0.0175311,-0.0077069,-0.00036764,
-    #     0,0,0,1]
-    # a good ext mat with slight misalignment on the left
-    # 0.0171551,-0.999824,0.00756723,-0.0202258
-    # -0.00710289,-0.00769002,-0.999945,0.028776
-    # 0.999828,0.0171004,-0.00723357,-0.0133762
-    # 0,0,0,1
+    ex_matrix: [0.00369442,-0.999963,0.00775564,0.101602,
+        0.00769984,-0.00772702,-0.999941,0.0190235,
+        0.999964,0.00375392,0.00767101,-0.0670998,
+        0,0,0,1
+    ]
+    camera_matrix: [10240.519092, 0.000000, 1235.589025,
+        0.000000, 10201.088569, 938.383012,
+        0.000000, 0.000000, 1.000000]
+    
+    dist_coeffs: [0.856451, -94.718525, 0.002609, 0.004210, 0.000000]
 
 # translation matrix from camera to rotor
 cam_rotor: [ # forward, left and up are pos
@@ -42,5 +38,5 @@ calib:
 
 colors:
     lower_color: [0, 240, 0]
-    upper_color: [150, 255, 150]
+    upper_color: [2, 255, 2]
 

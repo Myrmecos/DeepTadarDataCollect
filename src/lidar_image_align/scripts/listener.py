@@ -19,6 +19,11 @@ import struct
 import traceback
 import math
 
+'''
+Read camera intrinsic, distortion, and extrinsic parameters from yaml file
+@param yaml_file_name: the path of yaml file that contains camera parameters
+@return IM: camera intrinsic matrix; distort: camera distortion coefficients; EM: camera extrinsic matrix
+'''
 def get_camera_intrinsic_distortion_extrinsic(yaml_file_name):
         with open(yaml_file_name, 'r') as file:
             contents = yaml.safe_load(file)
@@ -32,53 +37,50 @@ def get_camera_intrinsic_distortion_extrinsic(yaml_file_name):
 
 MAX_PCD_MESSAGES = 50 # how many pcd messages we want to pool for processing
 NUM_OF_POINTS = 40 #how many number of points we want to cluster for the target
-CAMERA_PARAM_PATH = "/home/astar/dart_ws/src/lidar_image_align/calib/calib.yaml"
-BAUD_RATE=115200
+CAMERA_PARAM_PATH = "/home/astar/dart_ws/src/lidar_image_align/calib/calib.yaml" # the path of yaml file that contains camera parameters
+BAUD_RATE=115200 # baud rate for uart communication
 PORTX="/dev/ttyACM0"
 TIMEX=5
 ok_to_send = True
 ok_to_send_lock = threading.Lock()
 
-'''
-listening to messages from usb port
-if the message indicates we can start to send (the format of message: ?)
-we set the variable ok_to_send to true.
-this function is non-blocking
-'''
-def recv_uart():
-    thread = threading.Thread(target = _recv_uart)
-    thread.daemon = True
-    thread.start()
+# '''
+# listening to messages from usb port
+# if the message indicates we can start to send (the format of message: ?)
+# we set the variable ok_to_send to true.
+# this function is non-blocking
+# '''
+# def recv_uart():
+#     thread = threading.Thread(target = _recv_uart)
+#     thread.daemon = True
+#     thread.start()
 
-'''
-blocking version of recv_uart
-'''
-def _recv_uart():
-    global ok_to_send, ok_to_send_lock
+# '''
+# blocking version of recv_uart
+# '''
+# def _recv_uart():
+#     global ok_to_send, ok_to_send_lock
 
-    # Open serial port (adjust parameters as needed)
-    with serial.Serial(PORTX, BAUD_RATE, timeout=TIMEX) as ser:  # Change 'COM3' to your port
+#     # Open serial port (adjust parameters as needed)
+#     with serial.Serial(PORTX, BAUD_RATE, timeout=TIMEX) as ser:  # Change 'COM3' to your port
     
-        while True:
-            print("waiting...")
-            # Read one byte
-            received_byte = ser.read(1)
+#         while True:
+#             print("waiting...")
+#             # Read one byte
+#             received_byte = ser.read(1)
 
-            # Convert to boolean (assuming 0x00=False, 0x01=True)
-            bool_value = bool(int.from_bytes(received_byte, 'big')) if received_byte else None
-            if bool_value:
-                with ok_to_send_lock:
-                    ok_to_send = True
-                print(f"Received: {bool_value}")
-                return
-#_recv_uart() #uncomment to wait for start signal
+#             # Convert to boolean (assuming 0x00=False, 0x01=True)
+#             bool_value = bool(int.from_bytes(received_byte, 'big')) if received_byte else None
+#             if bool_value:
+#                 with ok_to_send_lock:
+#                     ok_to_send = True
+#                 print(f"Received: {bool_value}")
+#                 return
+# #_recv_uart() #uncomment to wait for start signal
 
 
 im, distort, em = get_camera_intrinsic_distortion_extrinsic(CAMERA_PARAM_PATH)
 cam_rotor_em = imagelidaraligner.get_cam_rotor_matrix(CAMERA_PARAM_PATH)
-# print(im)
-# print(distort)
-# print(em)
 
 class Listener:
     '''
@@ -96,7 +98,8 @@ class Listener:
         pc_sub = rospy.Subscriber('/livox/lidar', PointCloud2, self.pc_callback)
         self.image = None
         self.image_lock = threading.Lock()
-        ##  processing images
+
+        ## image processor for finding green light position
         self.glp = imageprocessor.GLPosition(camera_param_path = CAMERA_PARAM_PATH)
         # print("debug: ", glp.IM, glp.distort, glp.upper_color, glp.lower_color)
 
@@ -121,13 +124,16 @@ class Listener:
     '''
     callback function listening to incoming image messages
     it replaces self.image's previous variable with new image
+    @param image_msg: the incoming image message
     '''
     def image_callback(self, image_msg):
         try:
             # Convert ROS Image to OpenCV (BGR8 format)
             cv_image = self.bridge.imgmsg_to_cv2(image_msg, "bgr8")
             print("received image.")
-            # store the image
+
+            # store the image into self.image
+            # since self.image will be accessed in another thread, we need to acquire lock before accessing it
             if not self.image_lock.acquire(blocking=False):
                 rospy.loginfo("image locked in image_callback, skipping")
                 return
@@ -248,25 +254,22 @@ class Listener:
                 print("green light position in image: ", lightpos)
                 if lightpos is not None:
                     closest_pts,pts_2d, valid_pts,_ = self.ila.reportPoints1(lightpos, mypts)
-                    #print("average distance from origin is: ", dist)
                     closest_pts_rotor = self.ila.to_rotor_coord(closest_pts, cam_rotor_em)
-                    #target_pts, _ = self.ila._project_points_to_image(closest_pts)
-                    #imagelidaraligner.visualize_points_by_distance1(pts_2d, valid_pts, im, myimg, target_pts)
-
+                    
                     # get angle
                     angle = self.ila.to_degree(closest_pts_rotor)
                     angle1 = self.glp.get_GL_angle(lightpos)[0]
-                    D=25; d=0.704
+                    D=25; d=0.704 # D is the distance from camera to green light; d is the distance from camera to rotation center (horizontal dist)
                     angle1 = math.atan(D*math.tan(angle1*math.pi/180)/(D+d))*180/math.pi
                     hori_dist = self.ila.calc_horizontal_dist(closest_pts_rotor)
 
                     self.show_img_and_target(myimg, lightpos, angle, angle1, hori_dist)
-                    #send_via_uart(angle, hori_dist)
+                    send_via_uart(angle, hori_dist)
                     
                     #save_im_pcd(image=myimg, point_cloud=mypts)
-                    # closest_pts = imagelidaraligner.array_to_pointcloud(closest_pts)
-                    # valid_pts = imagelidaraligner.array_to_pointcloud(valid_pts)
-                    # imagelidaraligner.visualize_point_clouds(valid_pts, closest_pts)
+                    closest_pts = imagelidaraligner.array_to_pointcloud(closest_pts)
+                    valid_pts = imagelidaraligner.array_to_pointcloud(valid_pts)
+                    imagelidaraligner.visualize_point_clouds(valid_pts, closest_pts)
                 else:
                     self.show_img(myimg)
         except Exception as e:
