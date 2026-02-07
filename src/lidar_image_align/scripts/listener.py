@@ -192,33 +192,6 @@ class Listener:
         except Exception as e:
             rospy.logerr(f"Error processing point cloud: {e}")
     
-    # # no longer used
-    # # directly displaying the image and visualize green light detection outcome
-    # def listen_image(self, myimg):
-    #     lightpos = self.glp.find_green_light(myimg)
-    #     print("[listener]: green light position in image: ", lightpos)
-    #     pos_rounded = [0, 0]
-    #     if lightpos is not None:
-    #         print(lightpos)
-    #         pos_rounded[0] = round(lightpos[0])
-    #         pos_rounded[1] = round(lightpos[1])
-    #         lightpos=pos_rounded
-    #         height, width = myimg.shape[:2]
-    #         cv2.line(myimg, (0, lightpos[1]), (width-1, lightpos[1]), (255, 255, 255), 3)
-    #         cv2.line(myimg, (lightpos[0], 0), (lightpos[0], height-1), (255, 255, 255), 3)
-    #         myimg = cv2.cvtColor(myimg, cv2.COLOR_BGR2RGB)
-    #         myimg = cv2.resize(
-    #             myimg, 
-    #             None, 
-    #             fx=1/3,  # Scale factor for width
-    #             fy=1/3,  # Scale factor for height
-    #             interpolation=cv2.INTER_AREA  # Best for downscaling
-    #         )
-    #         cv2.imshow("Hikrobot Camera (detected)", myimg)
-    #         cv2.waitKey(1)
-    #     else: 
-    #         cv2.imshow("Hikrobot Camera (empty detection)", myimg)
-    
     # task: retrieve the most recent images (self.image) and point cloud (self.pcd)
     # do some operations on them
     '''

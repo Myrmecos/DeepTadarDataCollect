@@ -98,7 +98,7 @@ class GLPosition():
     '''
     def find_green_light(self, image):
         mask = cv.inRange(image, self.lower_color, self.upper_color)
-        cv.imwrite("mask_DEBUG.jpg", mask)
+        # cv.imwrite("mask_DEBUG.jpg", mask)
         print("[imageprocessor.py]: DEBUG: lower color: ", self.lower_color)
         print("[imageprocessor.py]: DEBUG: upper color: ", self.upper_color)
         #self._compare_images(image, mask)
