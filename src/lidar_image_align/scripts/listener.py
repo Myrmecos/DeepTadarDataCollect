@@ -18,6 +18,7 @@ import serial
 import struct
 import traceback
 import math
+import os
 
 time0 = time.time()
 showTime = True
@@ -134,7 +135,7 @@ class Listener:
         try:
             # Convert ROS Image to OpenCV (BGR8 format)
             cv_image = self.bridge.imgmsg_to_cv2(image_msg, "bgr8")
-            print("received image.")
+            print("[listener.py]: received image.")
 
             # store the image into self.image
             # since self.image will be accessed in another thread, we need to acquire lock before accessing it
@@ -165,6 +166,7 @@ class Listener:
             for point in pc2.read_points(pc_msg, field_names=("x", "y", "z"), skip_nans=True):
                 points.append([point[0], point[1], point[2]])
             points = np.array(points, dtype=np.float64)
+            print("listener.py]: received points")
             # add to point queue
             self.point_queue.append(points)
             if (len(self.point_queue) > MAX_PCD_MESSAGES):
@@ -190,32 +192,32 @@ class Listener:
         except Exception as e:
             rospy.logerr(f"Error processing point cloud: {e}")
     
-    # no longer used
-    # directly displaying the image and visualize green light detection outcome
-    def listen_image(self, myimg):
-        lightpos = self.glp.find_green_light(myimg)
-        print("green light position in image: ", lightpos)
-        pos_rounded = [0, 0]
-        if lightpos is not None:
-            print(lightpos)
-            pos_rounded[0] = round(lightpos[0])
-            pos_rounded[1] = round(lightpos[1])
-            lightpos=pos_rounded
-            height, width = myimg.shape[:2]
-            cv2.line(myimg, (0, lightpos[1]), (width-1, lightpos[1]), (255, 255, 255), 3)
-            cv2.line(myimg, (lightpos[0], 0), (lightpos[0], height-1), (255, 255, 255), 3)
-            myimg = cv2.cvtColor(myimg, cv2.COLOR_BGR2RGB)
-            myimg = cv2.resize(
-                myimg, 
-                None, 
-                fx=1/3,  # Scale factor for width
-                fy=1/3,  # Scale factor for height
-                interpolation=cv2.INTER_AREA  # Best for downscaling
-            )
-            cv2.imshow("Hikrobot Camera (detected)", myimg)
-            cv2.waitKey(1)
-        else: 
-            cv2.imshow("Hikrobot Camera (empty detection)", myimg)
+    # # no longer used
+    # # directly displaying the image and visualize green light detection outcome
+    # def listen_image(self, myimg):
+    #     lightpos = self.glp.find_green_light(myimg)
+    #     print("[listener]: green light position in image: ", lightpos)
+    #     pos_rounded = [0, 0]
+    #     if lightpos is not None:
+    #         print(lightpos)
+    #         pos_rounded[0] = round(lightpos[0])
+    #         pos_rounded[1] = round(lightpos[1])
+    #         lightpos=pos_rounded
+    #         height, width = myimg.shape[:2]
+    #         cv2.line(myimg, (0, lightpos[1]), (width-1, lightpos[1]), (255, 255, 255), 3)
+    #         cv2.line(myimg, (lightpos[0], 0), (lightpos[0], height-1), (255, 255, 255), 3)
+    #         myimg = cv2.cvtColor(myimg, cv2.COLOR_BGR2RGB)
+    #         myimg = cv2.resize(
+    #             myimg, 
+    #             None, 
+    #             fx=1/3,  # Scale factor for width
+    #             fy=1/3,  # Scale factor for height
+    #             interpolation=cv2.INTER_AREA  # Best for downscaling
+    #         )
+    #         cv2.imshow("Hikrobot Camera (detected)", myimg)
+    #         cv2.waitKey(1)
+    #     else: 
+    #         cv2.imshow("Hikrobot Camera (empty detection)", myimg)
     
     # task: retrieve the most recent images (self.image) and point cloud (self.pcd)
     # do some operations on them
@@ -231,24 +233,25 @@ class Listener:
 
             # Wait to acquire lock and obtain pts
             with self.pcd_lock:
-                rospy.loginfo("=====Periodic callback accessed pcd======")
+                rospy.loginfo("[listener.py]: =====Periodic callback accessed pcd======")
                 # Example: Access pcd points (modify as needed)
                 if len(self.pcd.points) > 0:
                     mypts = copy.deepcopy(self.pcd)
             # wait to acquire lock and obtain images
             with self.image_lock:
-                rospy.loginfo("=====Periodic callback accessed image======")
+                rospy.loginfo("[listener.py]: =====Periodic callback accessed image======")
                 if self.image is not None:
                     myimg = copy.deepcopy(self.image)
             
             # Start processing if both mypts and myimg are not empty
             if mypts != None and myimg is not None:
+                os.system('clear')
                 print("\n\n=====================================")
                 # plt.imshow(myimg)
                 # plt.show()
                 # # example: show both image and point cloud
                 # # show image
-                print(myimg.shape)
+                print("[listener.py]:", myimg.shape)
                 # cv2.imshow("Hikrobot Camera", myimg)
                 # cv2.waitKey(1)
 
@@ -262,7 +265,7 @@ class Listener:
                 # self.vis.poll_events()
                 # self.vis.update_renderer()
                 lightpos = self.glp.find_green_light(myimg)
-                print("green light position in image: ", lightpos)
+                print("[listener.py]: green light position in image: ", lightpos)
                 if lightpos is not None:
                     closest_pts,pts_2d, valid_pts,_ = self.ila.reportPoints1(lightpos, mypts)
                     closest_pts_rotor = self.ila.to_rotor_coord(closest_pts, cam_rotor_em)
@@ -306,7 +309,7 @@ class Listener:
         myimg = cv2.putText(myimg, f"yaw directly from image: {angle1}", (lightpos[0]+30, lightpos[1]-60), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
         myimg = cv2.putText(myimg, f"yaw: {angle}", (lightpos[0]+30, lightpos[1]-40), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
         myimg = cv2.putText(myimg, f"dist: {dist}", (lightpos[0]+30, lightpos[1]-20), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 0), 2) # for center
-        print(f"DEBUG: distance is {dist}")
+        print(f"[listener]: distance is {dist}")
         cv2.line(myimg, (int(im[0,2]), 0), (int(im[0,2]), height-1), (255, 255, 0), 3)
         myimg = cv2.resize(
             myimg, 
@@ -377,7 +380,7 @@ def send_via_uart(angleX, distance):
     try: 
         with serial.Serial(PORTX, BAUD_RATE, timeout=TIMEX) as ser:
             ser.write(data)
-            print("angle and distance sent")
+            print("[listener.py]: angle and distance sent")
     except Exception as e:
         traceback.print_exc()
         print("error occurred: ", e)

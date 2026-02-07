@@ -18,6 +18,7 @@ import serial
 import struct
 import traceback
 import math
+import os
 
 '''
 Read camera intrinsic, distortion, and extrinsic parameters from yaml file
@@ -232,6 +233,7 @@ class Listener:
             
             # Start processing if both mypts and myimg are not empty
             if myimg is not None:
+                os.system('clear')
                 print("\n\n=====================================")
                 # plt.imshow(myimg)
                 # plt.show()

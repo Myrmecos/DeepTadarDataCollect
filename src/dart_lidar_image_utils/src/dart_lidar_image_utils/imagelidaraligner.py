@@ -207,7 +207,7 @@ class ImageLidarAligner:
 
         points_3d = np.asarray(points_3d.points, dtype=float)
 
-        print(points_3d.shape)
+        print("[imagelidaraligner.py]: point cloud shape", points_3d.shape)
         
         # Project points to image
         points_2d, points_3d = self._project_points_to_image(points_3d)
