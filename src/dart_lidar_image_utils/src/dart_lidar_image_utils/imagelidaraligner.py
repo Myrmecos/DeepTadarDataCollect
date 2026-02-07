@@ -172,7 +172,7 @@ class ImageLidarAligner:
 
     '''
     @param position: the (x, y) pixel coordinate in the image
-    @return correspondingPts: points near the pixel
+    @return closest_points: points near the image pixel's projected line in the point cloud; points_3d: the valid points in the point cloud that are projected to the image; distance: the average distance from the closest points to the origin (rotor center)
     '''
     def reportPoints(self, image_coord, points_3d):
         # Convert inputs
@@ -198,7 +198,7 @@ class ImageLidarAligner:
 
     '''
     @param position: the (x, y) pixel coordinate in the image
-    @return correspondingPts: points near the pixel
+    @return closest_points: points near the image pixel's projected line in the point cloud; points_2d: valid points in the point cloud that are projected to the image points_3d: the valid points in the point cloud, corresponding to points_2d; distance: the average distance from the closest points to the origin (rotor center)
     '''
     def reportPoints1(self, image_coord, points_3d):
         # Convert inputs
@@ -223,7 +223,8 @@ class ImageLidarAligner:
         return closest_points, points_2d, points_3d, distance
 
     '''
-    Given image pixel coordinate, return its normalized coordinate
+    Given image pixel coordinate (1 pixel), return its normalized coordinate
+    @param x: x pixel coordinate; y: y pixel coordinate
     '''
     def _normalize_image_coord(self, x, y):
 
@@ -239,7 +240,8 @@ class ImageLidarAligner:
     '''
     projects points to 2d
     valid points: points that are in front of camera
-    return: points_2d: indices of valid points converted to 2d
+    @param points_3d: a list of original 3d points in the point cloud
+    @return: points_2d_valid: valid points converted to 2d; points_3d_valid: valid 3d points corresponding to valid_points_2d
     '''
     def _project_points_to_image(self, points_3d):
         points_3d_homog = np.hstack([points_3d, np.ones((points_3d.shape[0], 1))])
@@ -262,20 +264,28 @@ class ImageLidarAligner:
     '''
     Given image coordinate (normalized), pointcloud projected to image and pointcloud,
     return the points in pointcloud that are nearest to the pixel
+    @param image_coord: the NORMALIZED coordinate of the pixel in the image; 
+    @param valid_points_2d: the points in the point cloud that are projected to the image (after filtering out points behind camera); 
+    @param valid_points_3d: the original 3d points in the point cloud that correspond to valid_points_2d
+    @param num_of_pts: the number of closest points near the pixel's projected line we want to find
+    @return valid_points_3d[closest_indices]: the points in the point cloud that are closest to the pixel; 
+    @preturndistances: the distances of these points to the pixel in the image coordinate (normalized)
     '''
     def _find_closest_point(self, image_coord, valid_points_2d, valid_points_3d, num_of_pts=50):
         # Compute Euclidean distances in image plane
         distances = np.linalg.norm(valid_points_2d - image_coord, axis=1)
 
-        # Find indices of the 5000 closest points
+        # Find indices of the closest points
         num_points = min(num_of_pts, len(distances))  # Handle cases with fewer than 5000 points
         closest_indices = np.argsort(distances)[:num_points]
         
         return valid_points_3d[closest_indices], distances
         
     '''
+    remove outliers from the closest points using IQR method
     @param pts: a list of points
     @param percentile: the upper and lower percentiles to filter out. for example, percentile=0.25 indicates we select 25% to 75% points and clear other outliers.
+    @param k: the multiplier for IQR to determine the lower and upper bounds. For example, k=1.5 means we consider points that are within 1.5*IQR from the first and third quartiles as inliers.
     @return clearedPts: a list of points that had outliers removed
     '''
     def clearOutliers(self, points, percentile=25,k=1.5):
@@ -300,8 +310,9 @@ class ImageLidarAligner:
         return filtered_points
     
     '''
-    calculate average distance from origin (rotor rotation center)
+    calculate average distance from origin (camera, instead of rotor center) for a list of points
     @param pts: points in rotor coordinate
+    @return average distance from origin (camera) for the points
     '''
     def _average_distance_from_origin(self, pts):
         """
@@ -322,7 +333,11 @@ class ImageLidarAligner:
         # Return the average distance
         return np.mean(distances)
     
-    '''transform points from lidar coord to rotor coord'''
+    '''transform points from lidar coord to rotor coord
+    @param pts: a list of points in lidar coordinate
+    @param rotor_cam_em: extrinsic matrix converting pts from camera to rotor center coordinate
+    @return pts_rotor: a list of points in rotor coordinate
+    '''
     def to_rotor_coord(self, pts, rotor_cam_em):
         pts = np.array(pts)
         points_3d_homog = np.hstack([pts, np.ones((pts.shape[0], 1))])

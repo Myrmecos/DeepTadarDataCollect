@@ -52,7 +52,7 @@ filtered_intensity = colors[mask]
 # Compute distances from origin (0,0,0)
 distances = np.linalg.norm(filtered_points, axis=1)  # shape: (N,)
 # Create mask (True if distance <= 10m)
-mask = distances <= 16.0
+mask = distances <= 40.0
 
 filtered_points = filtered_points[mask]
 filtered_intensity = filtered_intensity[mask]

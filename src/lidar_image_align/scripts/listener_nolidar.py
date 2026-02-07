@@ -19,9 +19,6 @@ import struct
 import traceback
 import math
 
-time0 = time.time()
-showTime = True
-
 '''
 Read camera intrinsic, distortion, and extrinsic parameters from yaml file
 @param yaml_file_name: the path of yaml file that contains camera parameters
@@ -38,8 +35,8 @@ def get_camera_intrinsic_distortion_extrinsic(yaml_file_name):
         return IM, distort, EM
         
 
-MAX_PCD_MESSAGES = 30 # how many pcd messages we want to pool for processing
-NUM_OF_POINTS = 30 #how many number of points we want to cluster for the target
+MAX_PCD_MESSAGES = 50 # how many pcd messages we want to pool for processing
+NUM_OF_POINTS = 40 #how many number of points we want to cluster for the target
 CAMERA_PARAM_PATH = "/home/astar/dart_ws/src/lidar_image_align/calib/calib.yaml" # the path of yaml file that contains camera parameters
 BAUD_RATE=115200 # baud rate for uart communication
 PORTX="/dev/ttyACM0"
@@ -85,7 +82,6 @@ ok_to_send_lock = threading.Lock()
 im, distort, em = get_camera_intrinsic_distortion_extrinsic(CAMERA_PARAM_PATH)
 cam_rotor_em = imagelidaraligner.get_cam_rotor_matrix(CAMERA_PARAM_PATH)
 
-
 class Listener:
     '''
     Initialize listener class by:
@@ -109,17 +105,17 @@ class Listener:
 
         # for point cloud
         ##  obtainging point cloud
-        self.pcd = o3d.geometry.PointCloud()
-        self.point_queue = []
-        self.pcd_lock = threading.Lock()
-        ## processing point cloud
-        self.ila = imagelidaraligner.ImageLidarAligner(em, im, num_of_points = NUM_OF_POINTS)
+        # self.pcd = o3d.geometry.PointCloud()
+        # self.point_queue = []
+        # self.pcd_lock = threading.Lock()
+        # ## processing point cloud
+        # self.ila = imagelidaraligner.ImageLidarAligner(em, im, num_of_points = NUM_OF_POINTS)
 
         # # for visualization
         # self.vis = o3d.visualization.Visualizer()
         # self.vis.create_window("Point Cloud", width=800, height=600)
         # self.first_frame = True
-        #self.vis_pcd time= o3d.geometry.PointCloud()
+        #self.vis_pcd = o3d.geometry.PointCloud()
         #time.sleep(3)
         #self.periodic_callback(None)
 
@@ -151,44 +147,37 @@ class Listener:
             rospy.logerr(f"Error processing image: {e}")
 
     # task: read point cloud message and store data from last MAX_PCD_MESSAGES messages into self.pcd
-    '''
-    callback function listeneing to incoming point cloud message
-    it plugs the point cloud into point_queue
-    if the queue is overflown with the new point cloud
-    we throw away the oldest point cloud
-    '''
-    def pc_callback(self, pc_msg):
-        global showTime
-        try:
-            # Extract points from PointCloud2
-            points = []
-            for point in pc2.read_points(pc_msg, field_names=("x", "y", "z"), skip_nans=True):
-                points.append([point[0], point[1], point[2]])
-            points = np.array(points, dtype=np.float64)
-            # add to point queue
-            self.point_queue.append(points)
-            if (len(self.point_queue) > MAX_PCD_MESSAGES):
-                self.point_queue=self.point_queue[1:]
-            # prepare the point cloud that contains all recent points in queue
-            points_in_last_half_second = np.concatenate(self.point_queue, axis=0)
+    # '''
+    # callback function listeneing to incoming point cloud message
+    # it plugs the point cloud into point_queue
+    # if the queue is overflown with the new point cloud
+    # we throw away the oldest point cloud
+    # '''
+    # def pc_callback(self, pc_msg):
+    #     try:
+    #         # Extract points from PointCloud2
+    #         points = []
+    #         for point in pc2.read_points(pc_msg, field_names=("x", "y", "z"), skip_nans=True):
+    #             points.append([point[0], point[1], point[2]])
+    #         points = np.array(points, dtype=np.float64)
+    #         # add to point queue
+    #         self.point_queue.append(points)
+    #         if (len(self.point_queue) > MAX_PCD_MESSAGES):
+    #             self.point_queue=self.point_queue[1:]
+    #         # prepare the point cloud that contains all recent points in queue
+    #         points_in_last_half_second = np.concatenate(self.point_queue, axis=0)
 
-            # lock and try to access pcd (since pcd will be accessed in another thread) 
-            if not self.pcd_lock.acquire(blocking=False):
-                rospy.loginfo("pcd locked in pc_callback, skipping")
-                return
-            try:
-                self.pcd.points = o3d.utility.Vector3dVector(points_in_last_half_second)
-            finally:
-                self.pcd_lock.release()
+    #         # lock and try to access pcd (since pcd will be accessed in another thread) 
+    #         if not self.pcd_lock.acquire(blocking=False):
+    #             rospy.loginfo("pcd locked in pc_callback, skipping")
+    #             return
+    #         try:
+    #             self.pcd.points = o3d.utility.Vector3dVector(points_in_last_half_second)
+    #         finally:
+    #             self.pcd_lock.release()
 
-            # # check how long it takes to accumulate enough pts for processing
-            # if len(self.point_queue) == MAX_PCD_MESSAGES and showTime:
-            #     time1 = time.time()
-            #     showTime = False
-            #     print("total time: ", time1-time0)
-
-        except Exception as e:
-            rospy.logerr(f"Error processing point cloud: {e}")
+    #     except Exception as e:
+    #         rospy.logerr(f"Error processing point cloud: {e}")
     
     # no longer used
     # directly displaying the image and visualize green light detection outcome
@@ -226,15 +215,15 @@ class Listener:
     '''
     def periodic_callback(self, event):
         try:
-            mypts = None
+            # mypts = None
             myimg = None
 
-            # Wait to acquire lock and obtain pts
-            with self.pcd_lock:
-                rospy.loginfo("=====Periodic callback accessed pcd======")
-                # Example: Access pcd points (modify as needed)
-                if len(self.pcd.points) > 0:
-                    mypts = copy.deepcopy(self.pcd)
+            # # Wait to acquire lock and obtain pts
+            # with self.pcd_lock:
+            #     rospy.loginfo("=====Periodic callback accessed pcd======")
+            #     # Example: Access pcd points (modify as needed)
+            #     if len(self.pcd.points) > 0:
+            #         mypts = copy.deepcopy(self.pcd)
             # wait to acquire lock and obtain images
             with self.image_lock:
                 rospy.loginfo("=====Periodic callback accessed image======")
@@ -242,7 +231,7 @@ class Listener:
                     myimg = copy.deepcopy(self.image)
             
             # Start processing if both mypts and myimg are not empty
-            if mypts != None and myimg is not None:
+            if myimg is not None:
                 print("\n\n=====================================")
                 # plt.imshow(myimg)
                 # plt.show()
@@ -264,18 +253,18 @@ class Listener:
                 lightpos = self.glp.find_green_light(myimg)
                 print("green light position in image: ", lightpos)
                 if lightpos is not None:
-                    closest_pts,pts_2d, valid_pts,_ = self.ila.reportPoints1(lightpos, mypts)
-                    closest_pts_rotor = self.ila.to_rotor_coord(closest_pts, cam_rotor_em)
+                    # closest_pts,pts_2d, valid_pts,_ = self.ila.reportPoints1(lightpos, mypts)
+                    # closest_pts_rotor = self.ila.to_rotor_coord(closest_pts, cam_rotor_em)
                     
                     # get angle
-                    angle = self.ila.to_degree(closest_pts_rotor)
+                    # angle = self.ila.to_degree(closest_pts_rotor)
                     angle1 = self.glp.get_GL_angle(lightpos)[0]
                     D=25; d=0.704 # D is the distance from camera to green light; d is the distance from camera to rotation center (horizontal dist)
                     angle1 = math.atan(D*math.tan(angle1*math.pi/180)/(D+d))*180/math.pi
-                    hori_dist = self.ila.calc_horizontal_dist(closest_pts_rotor)
+                    # hori_dist = self.ila.calc_horizontal_dist(closest_pts_rotor)
 
-                    self.show_img_and_target(myimg, lightpos, angle, angle1, hori_dist)
-                    send_via_uart(angle, hori_dist)
+                    self.show_img_and_target(myimg, lightpos, 0, angle1, 0)
+                    send_via_uart(angle1, hori_dist)
                     
                     #save_im_pcd(image=myimg, point_cloud=mypts)
                     # closest_pts = imagelidaraligner.array_to_pointcloud(closest_pts)
@@ -304,7 +293,7 @@ class Listener:
         cv2.line(myimg, (lightpos[0], 0), (lightpos[0], height-1), (255, 255, 255), 3)
         myimg = cv2.cvtColor(myimg, cv2.COLOR_BGR2RGB)
         myimg = cv2.putText(myimg, f"yaw directly from image: {angle1}", (lightpos[0]+30, lightpos[1]-60), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
-        myimg = cv2.putText(myimg, f"yaw: {angle}", (lightpos[0]+30, lightpos[1]-40), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
+        # myimg = cv2.putText(myimg, f"yaw: {angle}", (lightpos[0]+30, lightpos[1]-40), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
         myimg = cv2.putText(myimg, f"dist: {dist}", (lightpos[0]+30, lightpos[1]-20), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 0), 2) # for center
         print(f"DEBUG: distance is {dist}")
         cv2.line(myimg, (int(im[0,2]), 0), (int(im[0,2]), height-1), (255, 255, 0), 3)

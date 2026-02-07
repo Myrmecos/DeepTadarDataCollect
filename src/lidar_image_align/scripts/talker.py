@@ -43,7 +43,7 @@ def talker():
     # pointcloud = imagelidaraligner.readPcd("/home/astar/dart_ws/single_scene_calibration/0.pcd")
 
     # image = np.asarray(cv2.imread("/home/astar/Desktop/testing/test1_dotdot_rec.jpg"))
-    image = np.asarray(cv2.imread("/home/astar/Desktop/adjustextrinsic/000023_with_dot.jpg"))
+    image = np.asarray(cv2.imread("/home/astar/dart_ws/calib/temp/img/000000.jpg"))
     #pointcloud = imagelidaraligner.readPcd("/home/astar/dart_ws/single_scene_calibration/0.pcd")
 
     #points = np.asarray(pointcloud.points)

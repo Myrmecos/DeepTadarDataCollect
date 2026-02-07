@@ -15,14 +15,14 @@ The extrinsic matrix helps find correspondance between image pixels and lidar po
     0. window 0: `roscore`
     1. window 1: `roslaunch hikrobot_camera hikrobot_camera.launch`
     2. window 2: `roslaunch livox_ros_driver livox_lidar_rviz.launch`
-    3. window 3: `rosbag record -a` or: `rosbag record -a -O calib/inno02042.bag`
+    3. window 3: `rosbag record -a` or: `rosbag record -a -O calib/shenzhen0207.bag`
     4. Note: TO prevent network manager from automatically overriding the ip that is associated with no DHCP server, we use: `sudo nmcli device set enp100s0 managed no`
 2. extract: 
-    1. `bash bag2img.sh calib/inno02042.bag`
-    2. `bash bag2pcd.sh calib/inno02042.bag`
-3. now the results should be in `calib/inno02042/` folder (`img` subfolder and `pcd` subfolder)
-    1. `calib/inno02042/img` contains images. select one which looks good (there may be blank images)
-    2. `calib/inno02042/output_ascii_cropped.pcd` contains the ascii form of point cloud, cropped to help with image alignment.
+    1. `bash bag2img.sh calib/shenzhen0207.bag`
+    2. `bash bag2pcd.sh calib/shenzhen0207.bag`
+3. now the results should be in `calib/shenzhen0207/` folder (`img` subfolder and `pcd` subfolder)
+    1. `calib/shenzhen0207/img` contains images. select one which looks good (there may be blank images)
+    2. `calib/shenzhen0207/output_ascii_cropped.pcd` contains the ascii form of point cloud, cropped to help with image alignment.
 
 
 # Lidar camera calib
@@ -49,7 +49,7 @@ roslaunch hikrobot_camera hikrobot_camera_save.launch
 2. set how many frames of point cloud we want to aggregate together for resolving target distance by: `MAX_PCD_MESSAGES = 6` (we collect 6 frames, pool all points together, and find the points corresponding to target object among these points)
 
 ## Step 2: Mock test (with fake data)
-1. point cloud: `rosbag play /home/astar/dart_ws/calib/calibpointcloud/inno02042.bag /hikrobot_camera/rgb:=/dev_null/hikrobot_camera/rgb`
+1. point cloud: `rosbag play /home/astar/dart_ws/calib/shenzhen0207.bag /hikrobot_camera/rgb:=/dev_null/hikrobot_camera/rgb`
 2. image: `rosrun lidar_image_align talker.py`
 3. run main program: `rosrun lidar_image_align listener.py`
 
@@ -182,7 +182,7 @@ roslaunch hikrobot_camera hikrobot_camera_save.launch
 2. set how many frames of point cloud we want to aggregate together for resolving target distance by: `MAX_PCD_MESSAGES = 6` (we collect 6 frames, pool all points together, and find the points corresponding to target object among these points)
 
 ## Step 2: Mock test (with fake data)
-1. point cloud: `rosbag play /home/astar/dart_ws/calib/calibpointcloud/inno02042.bag /hikrobot_camera/rgb:=/dev_null/hikrobot_camera/rgb`
+1. point cloud: `rosbag play /home/astar/dart_ws/calib/calibpointcloud/shenzhen0207.bag /hikrobot_camera/rgb:=/dev_null/hikrobot_camera/rgb`
 
 2. image: `rosrun lidar_image_align talker.py`
 

@@ -99,6 +99,8 @@ class GLPosition():
     def find_green_light(self, image):
         mask = cv.inRange(image, self.lower_color, self.upper_color)
         cv.imwrite("mask_DEBUG.jpg", mask)
+        print("DEBUG: lower color: ", self.lower_color)
+        print("DEBUG: upper color: ", self.upper_color)
         #self._compare_images(image, mask)
         contours, _ = cv.findContours(mask, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
         if contours: 
@@ -162,7 +164,7 @@ if __name__=="__main__":
     pos = glp.find_green_light(image)
     #rel_pos = glp.pos_relative_to_center(pos)
     print("pixel coord: ", pos)
-    #glp.get_camera_intrinsic_distortion()
+    # glp.get_camera_intrinsic_distortion()
     # print("distortion coefficient: \n", glp.distort)
     # print("intrinsic matrix: \n", glp.IM)
     #print("angle relative to camera center: ", glp.get_GL_angle_relative(rel_pos))

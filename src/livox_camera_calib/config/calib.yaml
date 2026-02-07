@@ -1,8 +1,8 @@
 # Data path. adjust them!
 common:
-    image_file: "/home/astar/dart_ws/calib/calibpointcloud/inno02042/img/000018.jpg" #"/home/astar/dart_ws/single_scene_calibration/0.png"
-    pcd_file: "/home/astar/dart_ws/calib/calibpointcloud/inno02042/output_ascii_cropped.pcd"
-    result_file: "/home/astar/dart_ws/calib/inno02042.txt"
+    image_file: "/home/astar/dart_ws/calib/shenzhen0207/img/000001.jpg" #"/home/astar/dart_ws/single_scene_calibration/0.png"
+    pcd_file: "/home/astar/dart_ws/calib/shenzhen0207/output_ascii_cropped.pcd"
+    result_file: "/home/astar/dart_ws/calib/shenzhen0207.txt"
 
 # Camera Parameters. Adjust them!
 camera:
@@ -36,7 +36,7 @@ calib:
     calib_config_file: "/home/astar/dart_ws/src/livox_camera_calib/config/config_outdoor.yaml"
     use_rough_calib: true # set true if your initial_extrinsic is bad
 
-colors:
-    lower_color: [0, 240, 0]
-    upper_color: [2, 255, 2]
+# colors:
+#     lower_color: [250, 80, 250]
+#     upper_color: [256, 150, 255]
 
