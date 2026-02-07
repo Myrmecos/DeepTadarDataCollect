@@ -13,6 +13,9 @@ class GLPosition():
     taken by our camera.
     The width and height will be used to determine the relative angle between camera and green light.
     camera_param_path is the path to yaml file containing camera intrinsic matrix and distortion coefficient
+    @param image_width: the width of the image taken by our camera
+    @param image_height: the height of the image taken by our camera
+    @param camera_param_path: the path to yaml file containing camera intrinsic matrix and distortion coefficient
     '''
     def __init__(self, image_width=1280, image_height=1024, camera_param_path = "camparam.yaml"):
         
@@ -23,6 +26,7 @@ class GLPosition():
 
     '''
     task: load camera intrinsic from a yaml file
+    @param yaml_file_name: the path to yaml file containing camera intrinsic matrix, distortion coefficient, and color range for green light detection
     '''
     def get_camera_intrinsic_distortion(self, yaml_file_name):
         with open(yaml_file_name, 'r') as file:
@@ -39,6 +43,8 @@ class GLPosition():
     report its center coordinate in the image
     input: image
     output, tuple (x, y). x and y can be float
+    @param image: the input image that contains a green dot
+    @return center: the center coordinate of the green dot in the image; if no green dot is found, return None
     '''
     def find_green_light(self, image):
         mask = cv.inRange(image, self.lower_color, self.upper_color)
@@ -56,7 +62,7 @@ class GLPosition():
             else:
                 center = None
         else: 
-            print("found none")
+            print("[imageprocessor]: found no green light")
             center=None
         return center
     '''
@@ -64,6 +70,11 @@ class GLPosition():
     return its position (coordinate) relative to center
     input: pos = [x_coordinate, y_coordinate]
     output: tuple (x, y). x and y can be float
+    @param pos: the absolute image coordiate
+    @return: the position relative the the geometric center
+    WARNING: this function assumes geometric center is the optical center
+    Therefore, we no longer use this function
+    center is instead calculated using camera intrinsic matrix.
     '''
     def pos_relative_to_center(self, pos):
         relative_x = pos[0] - self.image_width/2
@@ -75,6 +86,9 @@ class GLPosition():
     calculate the angle differnence between camera direction and green light
     input: relative position of light to camera, 2-tuple (x_dev_from_center, y_dev_from_center)
     output: relative position of light to camera, 2-tuple (x_angle_from_center, y_angle_from_center)
+    @param pixel_pos: the pixel position of the green light in the image
+    @return: the angle difference between camera direction and green light in x and y direction.
+    the angle is in radians
     '''
     def get_GL_angle_relative(self, pixel_pos):
         # first, prepare the pixel coordinate
