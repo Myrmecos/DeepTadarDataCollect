@@ -76,8 +76,16 @@ then run according to step 2. We can see the background point cloud being red an
 2. remember to `sudo chmod 766 /dev/ttyUSB0`
 3. if you still encounter unknown issues, you can run `python test_usb.py`, which sends a 18-byte package starting with A3. This may help you debug.
 
+# Start on startup
+1. `/etc/systemd/system/rm-dart-vision.service`
+2. `sudo chmod 777 /etc/systemd/system/rm-dart-vision.service`
+3. `sudo systemctl enable rm-dart-vision.service`
+4. `sudo systemctl start rm-dart-vision.service`
+5. `sudo systemctl stop rm-dart-vision.service`
 
 
+# Important:
+1. `/home/astar/dart_ws/src/livox_ros_driver/livox_ros_driver/launch/livox_lidar_rviz.launch`: required=true to respawn=true for `livox_lidar_publisher`
 
 
 

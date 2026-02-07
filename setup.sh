@@ -1,2 +1,2 @@
 source ~/.zshrc
-source devel/setup.sh
+source /home/astar/dart_ws/devel/setup.sh

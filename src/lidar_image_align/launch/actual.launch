@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<launch>
+  
+  <!-- Launch everything with default settings -->
+  <include file="$(find livox_ros_driver)/launch/livox_lidar_rviz.launch"/>
+  <include file="$(find hikrobot_camera)/launch/hikrobot_camera.launch"/>
+  
+  <node 
+    pkg="lidar_image_align" 
+    type="listener.py" 
+    name="lidar_image_align" 
+    output="screen"
+  />
+  
+</launch>
