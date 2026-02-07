@@ -21,7 +21,7 @@ import math
 import os
 
 time0 = time.time()
-showTime = True
+doneAccumulation = False
 
 '''
 Read camera intrinsic, distortion, and extrinsic parameters from yaml file
@@ -159,7 +159,7 @@ class Listener:
     we throw away the oldest point cloud
     '''
     def pc_callback(self, pc_msg):
-        global showTime
+        global doneAccumulation
         try:
             # Extract points from PointCloud2
             points = []
@@ -184,10 +184,10 @@ class Listener:
                 self.pcd_lock.release()
 
             # # check how long it takes to accumulate enough pts for processing
-            # if len(self.point_queue) == MAX_PCD_MESSAGES and showTime:
-            #     time1 = time.time()
-            #     showTime = False
-            #     print("total time: ", time1-time0)
+            if len(self.point_queue) == MAX_PCD_MESSAGES and doneAccumulation == False:
+                time1 = time.time()
+                doneAccumulation = True
+                print("\033[41m[listener.py]: total time for point cloud accumulation: \033[0m", time1-time0)
 
         except Exception as e:
             rospy.logerr(f"Error processing point cloud: {e}")
@@ -327,6 +327,9 @@ def make_data(yaw, pitch=0.0, found=0, shoot_or_not=0, done_fitting=0, patrollin
     # Pack the data according to the struct format
     # Constants
     SOF = 0xA3  # Start of Frame marker
+    global doneAccumulation
+    if doneAccumulation:
+        done_fitting = 1
     data = struct.pack(
         '<BffBBBBBf',  # Format: < for little-endian, B=uint8, f=float32
         SOF,
