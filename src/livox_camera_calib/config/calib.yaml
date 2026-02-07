@@ -35,8 +35,3 @@ cam_rotor: [ # forward, left and up are pos
 calib:
     calib_config_file: "/home/astar/dart_ws/src/livox_camera_calib/config/config_outdoor.yaml"
     use_rough_calib: true # set true if your initial_extrinsic is bad
-
-# colors:
-#     lower_color: [250, 80, 250]
-#     upper_color: [256, 150, 255]
-

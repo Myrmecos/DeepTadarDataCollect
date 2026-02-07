@@ -107,18 +107,16 @@ class GLPosition():
 
         return (angle_x, -angle_y)
 
-
-
-
-image = cv.imread("/home/astar/dart_ws/calib/calibimage/test0.jpg")
-plt.imshow(image)
-plt.show()
-glp = GLPosition(camera_param_path="/home/astar/dart_ws/src/lidar_image_align/calib/calib.yaml")
-pos = glp.find_green_light(image)
-#rel_pos = glp.pos_relative_to_center(pos)
-#pos = (1024, 1280)
-print("relative position to center: ", pos)
-#glp.get_camera_intrinsic_distortion("/home/astar/dart_ws/src/livox_camera_calib/config/calib.yaml")
-print("distortion coefficient: \n", glp.distort)
-print("intrinsic matrix: \n", glp.IM)
-# print("angle relative to camera center: ", glp.get_GL_angle_relative(rel_pos))
+if __name__ == "__main__":
+    image = cv.imread("/home/astar/dart_ws/calib/calibimage/test0.jpg")
+    plt.imshow(image)
+    plt.show()
+    glp = GLPosition(camera_param_path="/home/astar/dart_ws/src/lidar_image_align/calib/calib.yaml")
+    pos = glp.find_green_light(image)
+    #rel_pos = glp.pos_relative_to_center(pos)
+    #pos = (1024, 1280)
+    print("relative position to center: ", pos)
+    #glp.get_camera_intrinsic_distortion("/home/astar/dart_ws/src/lidar_image_align/config/calib.yaml")
+    print("distortion coefficient: \n", glp.distort)
+    print("intrinsic matrix: \n", glp.IM)
+    # print("angle relative to camera center: ", glp.get_GL_angle_relative(rel_pos))

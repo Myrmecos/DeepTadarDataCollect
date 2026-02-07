@@ -176,7 +176,7 @@ class ImageLidarAligner:
         return np.mean(distances)
         
 # def undistortImage(image):
-#     with open('/home/astar/dart_ws/src/livox_camera_calib/config/calib.yaml', 'r') as file:
+#     with open('/home/astar/dart_ws/src/lidar_image_align/config/calib.yaml', 'r') as file:
 #         data = yaml.safe_load(file)['camera']
 #         camera_matrix = np.array(data['camera_matrix']).reshape(3, 3)
 #         dist_coeffs = np.array(data['dist_coeffs'])
