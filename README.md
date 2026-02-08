@@ -1,3 +1,5 @@
+# export LD_LIBRARY_PATH=/opt/MVS/lib/64:/opt/MVS/lib/32:/opt/MVS/lib/64:/opt/MVS/lib/32:/opt/MVS/bin if you cannot find xcb
+
 # Lidar target finding algorithm
 This package leverages lidar point cloud and RGB camera to detect target green light and report its position relative to the dart.
 It detects the light coordinate on the image,
@@ -82,6 +84,8 @@ then run according to step 2. We can see the background point cloud being red an
 3. `sudo systemctl enable rm-dart-vision.service`
 4. `sudo systemctl start rm-dart-vision.service`
 5. `sudo systemctl stop rm-dart-vision.service`
+6. `sudo systemctl disable rm-dart-vision.service`
+*Note: be very careful because starting it as a system service will hold camera's lock, making running the program on the computer impossible (and the problem is very hard to detect! When you have something to do with systemctl and you encounter camera problem, check if the lock of camera is held by another process. Disable the service instead of killing it, since it may respawn.*
 
 
 # Important:
